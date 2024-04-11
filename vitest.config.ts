@@ -1,7 +1,7 @@
 // eslint-disable-next-line antfu/no-import-dist
-import { defineNitroTestConfig } from './dist/config.mjs'
+import { defineConfig } from './dist/config.mjs'
 
-export default defineNitroTestConfig({
+export default defineConfig({
   nitro: {
     rootDir: 'test/fixture',
   },

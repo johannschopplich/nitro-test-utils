@@ -28,22 +28,22 @@ yarn add -D nitro-test-utils vitest
 Setting up the Nitro test environment for Vitest is as simple as creating a new `vitest.config.ts` configuration file in your project root.
 
 ```ts
-import { defineNitroTestConfig } from 'nitro-test-utils/config'
+import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineNitroTestConfig({})
+export default defineConfig({})
 ```
 
 > [!TIP]
-> Under the hood, the `defineNitroTestConfig` function will automatically spin up a Nitro server before running your tests and shut it down afterwards.
+> Under the hood, the `defineConfig` function will automatically spin up a Nitro server before running your tests and shut it down afterwards.
 
 ### Nitro Root Directory
 
 If your Nitro server is located in a different directory, you can specify the `rootDir` option in the Nitro configuration. It should be the path to the `nitro.config.ts` configuration file:
 
 ```ts
-import { defineNitroTestConfig } from 'nitro-test-utils/config'
+import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineNitroTestConfig({
+export default defineConfig({
   nitro: {
     // Set the root directory of your Nitro app
     rootDir: 'my/server',
