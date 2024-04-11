@@ -45,8 +45,7 @@ export async function setupContext({
     dev: ctx.isDev,
     rootDir: ctx.rootDir,
     buildDir: resolve(ctx.outDir, '.nitro'),
-    serveStatic:
-      !ctx.isDev,
+    serveStatic: !ctx.isDev,
     output: {
       dir: ctx.outDir,
     },
@@ -102,7 +101,7 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
     ignoreResponseError: true,
     redirect: 'manual',
     headers: {
-      // Enforce JSON response when routes fail
+      // Enforce Nitro error response in JSON when routes fail
       accept: 'application/json',
       ...headersToObject(options?.headers),
     },

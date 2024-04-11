@@ -5,22 +5,22 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 ## Features
 
 - 🚀 Simple setup
-- ✅ Vitest for testing
-- 📡 `$fetch` just like Nuxt test utils
+- ✅ Seamless integration with Vitest
+- 📡 Familiar [`$fetch`](#fetch) helper like Nuxt test utils
 
 ## Installation
 
-Add the `nitro-test-utils` to your project with your favorite package manager:
+Add the `nitro-test-utils` as well as `vitest` to your project with your favorite package manager:
 
 ```bash
 # pnpm
-pnpm add -D nitro-test-utils
+pnpm add -D nitro-test-utils vitest
 
 # npm
-npm install -D nitro-test-utils
+npm install -D nitro-test-utils vitest
 
 # yarn
-yarn add -D nitro-test-utils
+yarn add -D nitro-test-utils vitest
 ```
 
 ## Usage
@@ -55,22 +55,20 @@ By default, the Vitest working directory is used.
 
 ## Testing
 
-Write your tests in a dedicated location, e.g. `tests`. You can use the `$fetch` function to make requests to your Nitro server. A simple example could look like this:
+Write your tests in a dedicated location, e.g. a `tests` directory. You can use the `$fetch` function to make requests to the Nitro server that is started by the test environment.
+
+A simple example could look like this:
 
 ```ts
 import { describe, expect, it } from 'vitest'
 import { $fetch } from 'nitro-test-utils'
 
 describe('routes', () => {
-  it('responds with 200 status code', async () => {
-    const { body, status } = await $fetch('/api/hello')
+  it('responds successfully', async () => {
+    const { body, status } = await $fetch('/api/health')
 
     expect(status).toBe(200)
-    expect(body).toMatchInlineSnapshot(`
-      {
-        "ok": true,
-      }
-    `)
+    expect(body).toMatchSnapshot()
   })
 })
 ```
@@ -89,7 +87,7 @@ The `$fetch` function is a simple wrapper around [`ofetch`](https://github.com/u
 
 **Usage:**
 
-In your test file:
+Inside a test definition:
 
 ```ts
 const { body, status, headers } = await $fetch('/api/hello')
@@ -111,11 +109,14 @@ declare function $fetch<T = any, R extends ResponseType = 'json'>(
 }>
 ```
 
+> [!TIP]
+> Fetch options will be merged with the default options.
+
 ## Roadmap
 
 As of right now, the following features are planned:
 
-- [ ] Rebuild server when dependencies like routes change
+- [ ] Rebuild server and rerun test when dependencies like routes change
 - [ ] Better environment setup, maybe just like Nuxt test utils with `environment` Vitest option?
 - [ ] Support `.env.test` files
 
