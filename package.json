@@ -1,7 +1,7 @@
 {
   "name": "nitro-test-utils",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "pnpm@8.15.6",
   "description": "Test utilities for Nitro",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
