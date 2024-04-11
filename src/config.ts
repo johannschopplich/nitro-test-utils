@@ -22,6 +22,12 @@ export function defineNitroTestConfig(config: ViteUserConfig): ViteUserConfig {
 
   return mergeConfig(resolvedConfig, {
     test: {
+      poolOptions: {
+        threads: {
+          isolate: false,
+          singleThread: true,
+        },
+      },
       globalSetup: [join(currentDir, 'setup.mjs')],
       // Duplicate Nitro config to resolved Vitest config for global setup file
       nitro: config.nitro,
