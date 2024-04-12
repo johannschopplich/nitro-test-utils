@@ -1,7 +1,5 @@
 import { resolve } from 'pathe'
-import { joinURL } from 'ufo'
 import { listen } from 'listhen'
-import { ofetch } from 'ofetch'
 import {
   build,
   copyPublicAssets,
@@ -11,8 +9,13 @@ import {
   prerender,
 } from 'nitropack'
 import type { Listener } from 'listhen'
-import type { FetchOptions, ResponseType } from 'ofetch'
 import type { Nitro, NitroOptions } from 'nitropack'
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    nitroServerUrl: string
+  }
+}
 
 export interface Context {
   preset: NitroOptions['preset']
@@ -22,6 +25,8 @@ export interface Context {
   server?: Listener
   isDev: boolean
 }
+
+export { $fetch } from './e2e'
 
 export async function setupContext({
   preset = 'node',
@@ -86,40 +91,5 @@ export async function startServer(ctx: Context) {
       await ctx.server.close()
     if (ctx.nitro)
       await ctx.nitro.close()
-  }
-}
-
-export async function $fetch<T = any, R extends ResponseType = 'json'>(
-  url: string,
-  options?: FetchOptions<R>,
-) {
-  const { inject } = await import('vitest')
-  const serverUrl = inject('nitroServerUrl')
-
-  const response = await ofetch.raw<T, R>(joinURL(serverUrl, url), {
-    ...options,
-    ignoreResponseError: true,
-    redirect: 'manual',
-    headers: {
-      // Enforce Nitro error response in JSON when routes fail
-      accept: 'application/json',
-      ...headersToObject(options?.headers),
-    },
-  })
-
-  return {
-    body: response._data as T,
-    status: response.status,
-    headers: Object.fromEntries(response.headers.entries()),
-  }
-}
-
-function headersToObject(headers?: HeadersInit) {
-  return Object.fromEntries(new Headers(headers).entries())
-}
-
-declare module 'vitest' {
-  export interface ProvidedContext {
-    nitroServerUrl: string
   }
 }
