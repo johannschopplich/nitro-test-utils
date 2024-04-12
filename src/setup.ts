@@ -1,5 +1,6 @@
 import process from 'node:process'
 import type { GlobalSetupContext } from 'vitest/node'
+import type { NitroOptions } from 'nitropack'
 import type { NitroInlineConfig } from './config'
 import { setupContext } from './index'
 
@@ -10,7 +11,7 @@ type SetupContext = GlobalSetupContext & {
 // Setup shared Nitro instance
 // See https://vitest.dev/config/#globalsetup
 export default async function ({ config, provide }: SetupContext) {
-  const preset = config.nitro?.preset || 'nitro-dev'
+  const preset: NitroOptions['preset'] = config.nitro?.mode === 'production' ? 'node' : 'nitro-dev'
 
   // Serve or build Nitro
   const ctx = await setupContext({

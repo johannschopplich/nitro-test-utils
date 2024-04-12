@@ -47,22 +47,22 @@ import { $fetch } from 'nitro-test-utils/e2e'
 
 describe('routes', () => {
   it('responds successfully', async () => {
-    const { body, status } = await $fetch('/api/health')
+    const { _data, status } = await $fetch('/api/health')
 
     expect(status).toBe(200)
-    expect(body).toMatchSnapshot()
+    expect(_data).toMatchSnapshot()
   })
 })
 ```
 
 > [!NOTE]
-> Whenever Nitro is rebuilt, the tests will rerun automatically.
+> Whenever Nitro is rebuilt, the tests will rerun automatically (unless you have set the `mode` option to `production` in the Vitest configuration).
 
 ## Configuration
 
 ### Nitro Root Directory
 
-If your Nitro server is located in a different directory, you can specify the `rootDir` option in the Nitro configuration. It should be the path to the `nitro.config.ts` configuration file:
+If your Nitro server is located in a different directory, you can specify the `rootDir` option in the Nitro configuration. It should be the path where the `nitro.config.ts` file lives.
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
@@ -70,26 +70,25 @@ import { defineConfig } from 'nitro-test-utils/config'
 export default defineConfig({
   nitro: {
     // Set the root directory of your Nitro app
-    rootDir: 'my/server',
+    rootDir: 'server',
   },
 })
 ```
 
 By default, the Vitest working directory is used.
 
-## Development Vs. Production Build
+## Development vs. Production Build
 
 By default, the Nitro server starts in development mode. This makes development easier, as Nitro will automatically reload when you make changes to your code and the tests will also automatically re-run.
 
-To test the production build of your Nitro server, you can set the `preset` option in the `vitest.config.ts` configuration file:
+To test the production build of your Nitro server, set the `mode` option in the Vitest configuration:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
 
 export default defineConfig({
   nitro: {
-    // Set the preset to `node` for production build
-    preset: 'node'
+    mode: 'production',
   },
 })
 ```
@@ -98,42 +97,33 @@ export default defineConfig({
 
 ### `$fetch`
 
-The `$fetch` function is a simple wrapper around [`ofetch`](https://github.com/unjs/ofetch) and is used to make requests to your Nitro server during tests. It will dynamically include the base URL of the test server.
+The `$fetch` function is a simple wrapper around [`ofetch`](https://github.com/unjs/ofetch) and is used to make requests to your Nitro server during testing. Import the function from the `nitro-test-utils/e2e` module. It will dynamically use the base URL of the active test server.
 
-Import the function from the `nitro-test-utils/e2e` module.
-
-`$fetch` returns a promise that resolves with the following properties:
-
-- `body`: The response body
-- `status`: The response status code
-- `headers`: The response headers
+`$fetch` returns a promise that resolves with the raw response from [`ofetch.raw`](https://github.com/unjs/ofetch?tab=readme-ov-file#-access-to-raw-response). This is useful because it allows you to access the response status code, headers, and body, even if the response failed.
 
 **Usage:**
 
 Inside a test definition:
 
 ```ts
-const { body, status, headers } = await $fetch('/api/hello')
+// Use `_data` instead of `body` for the parsed response body
+const { _data_, status, headers } = await $fetch('/api/hello')
 
 expect(status).toBe(200)
-expect(body).toMatchSnapshot()
+expect(_data_).toMatchSnapshot()
 ```
 
 **Type Declaration:**
 
 ```ts
-declare function $fetch<T = any, R extends ResponseType = 'json'>(
+function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>
-): Promise<{
-  body: T
-  status: number
-  headers: Record<string, string>
-}>
+): Promise<FetchResponse<MappedResponseType<R, T>>>
 ```
 
 > [!TIP]
-> Fetch options will be merged with the default options.
+> Fetch options will be merged with sensible default options, like [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
 
 ## Roadmap
 
