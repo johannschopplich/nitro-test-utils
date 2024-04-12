@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  defu:
+    specifier: ^6.1.4
+    version: 6.1.4
   listhen:
     specifier: ^1.7.2
     version: 1.7.2
