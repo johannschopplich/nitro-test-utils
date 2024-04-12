@@ -24,7 +24,7 @@ npm install -D nitro-test-utils vitest
 yarn add -D nitro-test-utils vitest
 ```
 
-## Usage
+## Basic Usage
 
 Setting up the Nitro test environment for Vitest is as simple as creating a new `vitest.config.ts` configuration file in your project root.
 
@@ -36,25 +36,6 @@ export default defineConfig()
 
 > [!TIP]
 > Under the hood, the `defineConfig` function will automatically spin up a Nitro server in development mode before running your tests and shut it down afterwards.
-
-### Nitro Root Directory
-
-If your Nitro server is located in a different directory, you can specify the `rootDir` option in the Nitro configuration. It should be the path to the `nitro.config.ts` configuration file:
-
-```ts
-import { defineConfig } from 'nitro-test-utils/config'
-
-export default defineConfig({
-  nitro: {
-    // Set the root directory of your Nitro app
-    rootDir: 'my/server',
-  },
-})
-```
-
-By default, the Vitest working directory is used.
-
-## Testing
 
 Write your tests in a dedicated location, e.g. a `tests` directory. You can use the `$fetch` function to make requests to the Nitro server that is started by the test environment.
 
@@ -77,7 +58,43 @@ describe('routes', () => {
 > [!NOTE]
 > Whenever Nitro is rebuilt, the tests will rerun automatically.
 
-## Test Utils
+## Configuration
+
+### Nitro Root Directory
+
+If your Nitro server is located in a different directory, you can specify the `rootDir` option in the Nitro configuration. It should be the path to the `nitro.config.ts` configuration file:
+
+```ts
+import { defineConfig } from 'nitro-test-utils/config'
+
+export default defineConfig({
+  nitro: {
+    // Set the root directory of your Nitro app
+    rootDir: 'my/server',
+  },
+})
+```
+
+By default, the Vitest working directory is used.
+
+## Development Vs. Production Build
+
+By default, the Nitro server starts in development mode. This makes development easier, as Nitro will automatically reload when you make changes to your code and the tests will also automatically re-run.
+
+To test the production build of your Nitro server, you can set the `preset` option in the `vitest.config.ts` configuration file:
+
+```ts
+import { defineConfig } from 'nitro-test-utils/config'
+
+export default defineConfig({
+  nitro: {
+    // Set the preset to `node` for production build
+    preset: 'node'
+  },
+})
+```
+
+## Test Utilities
 
 ### `$fetch`
 
@@ -106,7 +123,7 @@ expect(body).toMatchSnapshot()
 
 ```ts
 declare function $fetch<T = any, R extends ResponseType = 'json'>(
-  url: string,
+  path: string,
   options?: FetchOptions<R>
 ): Promise<{
   body: T
@@ -122,7 +139,7 @@ declare function $fetch<T = any, R extends ResponseType = 'json'>(
 
 As of right now, the following features are planned:
 
-- [ ] Better environment setup, maybe just like Nuxt test utils with `environment` Vitest option?
+- [ ] Make environment setup work within Nuxt projects
 - [ ] Support `.env.test` files
 
 ## License
