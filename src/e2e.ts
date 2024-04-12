@@ -9,14 +9,14 @@ declare module 'vitest' {
 }
 
 export async function $fetch<T = any, R extends ResponseType = 'json'>(
-  url: string,
+  path: string,
   options?: FetchOptions<R>,
 ) {
   const { inject } = await import('vitest')
   const serverUrl = inject('nitroServerUrl')
 
   const response = await ofetch.raw<T, R>(
-    joinURL(serverUrl, url),
+    joinURL(serverUrl, path),
     mergeFetchOptions<R>(options, {
       ignoreResponseError: true,
       redirect: 'manual',

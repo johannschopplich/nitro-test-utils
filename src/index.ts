@@ -10,7 +10,7 @@ import {
 } from 'nitropack'
 import type { Listener } from 'listhen'
 import type { Nitro, NitroOptions } from 'nitropack'
-import { NITRO_OUT_DIR } from './constants'
+import { NITRO_OUTPUT_DIR } from './constants'
 
 export interface Context {
   preset: NitroOptions['preset']
@@ -37,7 +37,7 @@ export async function setupContext({
     preset,
     isDev: preset === 'nitro-dev',
     rootDir,
-    outDir: resolve(rootDir, NITRO_OUT_DIR),
+    outDir: resolve(rootDir, NITRO_OUTPUT_DIR),
   }
 
   const nitro = (ctx.nitro = await createNitro({
@@ -63,7 +63,7 @@ export async function setupContext({
     await build(ctx.nitro)
     await ready
   }
-  // Production build
+  // Build and serve production
   else {
     await prepare(nitro)
     await copyPublicAssets(nitro)

@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'pathe'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { NITRO_OUT_DIR } from './constants'
+import { NITRO_OUTPUT_DIR } from './constants'
 
 export interface NitroInlineConfig {
   /** @default 'nitro-dev' */
@@ -42,7 +42,7 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
         // Re-run tests when Nitro is rebuilt
         join(
           config.nitro?.rootDir || '',
-          NITRO_OUT_DIR,
+          NITRO_OUTPUT_DIR,
           config.nitro?.preset === 'nitro-dev' ? '.nitro/dev' : 'server',
           'index.mjs',
         ),

@@ -1,1 +1,1 @@
-export const NITRO_OUT_DIR = '.output'
+export const NITRO_OUTPUT_DIR = '.output'
