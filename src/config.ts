@@ -16,7 +16,7 @@ declare module 'vite' {
   }
 }
 
-export function defineConfig(config: ViteUserConfig): ViteUserConfig {
+export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
   const currentDir = fileURLToPath(new URL('.', import.meta.url))
   const resolvedConfig = defineVitestConfig(config)
 
