@@ -107,10 +107,10 @@ Inside a test definition:
 
 ```ts
 // Use `_data` instead of `body` for the parsed response body
-const { _data_, status, headers } = await $fetch('/api/hello')
+const { _data, status, headers } = await $fetch('/api/hello')
 
 expect(status).toBe(200)
-expect(_data_).toMatchSnapshot()
+expect(_data).toMatchSnapshot()
 ```
 
 **Type Declaration:**
