@@ -30,7 +30,7 @@ Setting up the Nitro test environment for Vitest is as simple as creating a new 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineConfig({})
+export default defineConfig()
 ```
 
 > [!TIP]
