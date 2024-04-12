@@ -2,6 +2,12 @@ import { joinURL } from 'ufo'
 import { ofetch } from 'ofetch'
 import type { FetchOptions, ResponseType } from 'ofetch'
 
+declare module 'vitest' {
+  export interface ProvidedContext {
+    nitroServerUrl: string
+  }
+}
+
 export async function $fetch<T = any, R extends ResponseType = 'json'>(
   url: string,
   options?: FetchOptions<R>,

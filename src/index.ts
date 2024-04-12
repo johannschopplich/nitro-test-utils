@@ -11,12 +11,6 @@ import {
 import type { Listener } from 'listhen'
 import type { Nitro, NitroOptions } from 'nitropack'
 
-declare module 'vitest' {
-  export interface ProvidedContext {
-    nitroServerUrl: string
-  }
-}
-
 export interface Context {
   preset: NitroOptions['preset']
   nitro?: Nitro
