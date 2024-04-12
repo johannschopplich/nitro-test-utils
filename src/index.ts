@@ -73,9 +73,10 @@ export async function setupContext({
     const entryPath = resolve(ctx.outDir, 'server/index.mjs')
     const { listener } = await import(entryPath)
     ctx.server = await listen(listener)
-    // eslint-disable-next-line no-console
-    console.log('>', ctx.server!.url)
   }
+
+  // eslint-disable-next-line no-console
+  console.log('> Nitro server running at', ctx.server.url)
 
   return ctx
 }

@@ -23,11 +23,11 @@ export default async function ({ config, provide }: SetupContext) {
   provide('nitroServerUrl', ctx.server!.url)
 
   return async function () {
-    // End Nitro server after all tests
-    if (ctx.nitro)
-      await ctx.nitro.close()
     // Close the server if it was started
     if (ctx.server)
       await ctx.server.close()
+    // End Nitro server after all tests
+    if (ctx.nitro)
+      await ctx.nitro.close()
   }
 }
