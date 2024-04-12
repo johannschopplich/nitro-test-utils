@@ -5,8 +5,8 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import { NITRO_OUTPUT_DIR } from './constants'
 
 export interface NitroInlineConfig {
-  /** @default 'nitro-dev' */
-  preset?: 'nitro-dev' | 'node'
+  /** @default 'development' */
+  mode?: 'development' | 'production'
   rootDir?: string
 }
 
@@ -23,7 +23,7 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
   const currentDir = fileURLToPath(new URL('.', import.meta.url))
 
   config.nitro ||= {}
-  config.nitro.preset ||= 'nitro-dev'
+  config.nitro.mode ||= 'development'
 
   return defineVitestConfig({
     test: {
@@ -43,7 +43,7 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
         join(
           config.nitro?.rootDir || '',
           NITRO_OUTPUT_DIR,
-          config.nitro?.preset === 'nitro-dev' ? '.nitro/dev' : 'server',
+          config.nitro?.mode === 'development' ? '.nitro/dev' : 'server',
           'index.mjs',
         ),
       ],
