@@ -15,47 +15,17 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   const { inject } = await import('vitest')
   const serverUrl = inject('nitroServerUrl')
 
-  return ofetch.raw<T, R>(
-    joinURL(serverUrl, path),
-    mergeFetchOptions<R>(options, {
-      ignoreResponseError: true,
-      redirect: 'manual',
-      headers: {
-        accept: 'application/json',
-      },
-    }),
+  const fetcher = ofetch.create({
+    baseURL: serverUrl,
+    ignoreResponseError: true,
+    redirect: 'manual',
+    headers: {
+      accept: 'application/json',
+    },
+  })
+
+  return fetcher.raw<T, R>(
+    path,
+    options,
   )
-}
-
-export function mergeFetchOptions<R extends ResponseType = 'json'>(
-  input: FetchOptions<R> | undefined,
-  defaults: FetchOptions<R> | undefined,
-): FetchOptions<R> {
-  const merged: FetchOptions<R> = {
-    ...defaults,
-    ...input,
-  }
-
-  // Merge params and query
-  if (defaults?.params && input?.params) {
-    merged.params = {
-      ...defaults.params,
-      ...input.params,
-    }
-  }
-  if (defaults?.query && input?.query) {
-    merged.query = {
-      ...defaults.query,
-      ...input.query,
-    }
-  }
-
-  // Merge headers
-  if (defaults?.headers && input?.headers) {
-    merged.headers = new Headers(defaults.headers)
-    for (const [key, value] of new Headers(input.headers))
-      merged.headers.set(key, value)
-  }
-
-  return merged
 }
