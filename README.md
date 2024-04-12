@@ -4,7 +4,8 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 
 ## Features
 
-- 🚀 Simple setup
+- 🚀 Automatic Nitro server start and stop
+- ↪️ Reruns tests on Nitro rebuild
 - ✅ Seamless integration with Vitest
 - 📡 Familiar [`$fetch`](#fetch) helper like Nuxt test utils
 
@@ -34,7 +35,7 @@ export default defineConfig()
 ```
 
 > [!TIP]
-> Under the hood, the `defineConfig` function will automatically spin up a Nitro server before running your tests and shut it down afterwards.
+> Under the hood, the `defineConfig` function will automatically spin up a Nitro server in development mode before running your tests and shut it down afterwards.
 
 ### Nitro Root Directory
 
@@ -73,11 +74,16 @@ describe('routes', () => {
 })
 ```
 
+> [!NOTE]
+> Whenever Nitro is rebuilt, the tests will rerun automatically.
+
 ## Test Utils
 
 ### `$fetch`
 
 The `$fetch` function is a simple wrapper around [`ofetch`](https://github.com/unjs/ofetch) and is used to make requests to your Nitro server during tests. It will dynamically include the base URL of the test server.
+
+Import the function from the `nitro-test-utils/e2e` module.
 
 `$fetch` returns a promise that resolves with the following properties:
 
@@ -116,7 +122,6 @@ declare function $fetch<T = any, R extends ResponseType = 'json'>(
 
 As of right now, the following features are planned:
 
-- [ ] Rebuild server and rerun test when dependencies like routes change
 - [ ] Better environment setup, maybe just like Nuxt test utils with `environment` Vitest option?
 - [ ] Support `.env.test` files
 

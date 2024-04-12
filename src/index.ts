@@ -10,6 +10,7 @@ import {
 } from 'nitropack'
 import type { Listener } from 'listhen'
 import type { Nitro, NitroOptions } from 'nitropack'
+import { NITRO_OUT_DIR } from './constants'
 
 export interface Context {
   preset: NitroOptions['preset']
@@ -23,7 +24,7 @@ export interface Context {
 export { $fetch } from './e2e'
 
 export async function setupContext({
-  preset = 'node',
+  preset = 'nitro-dev',
   // eslint-disable-next-line node/prefer-global/process
   rootDir = process.cwd(),
 }: {
@@ -36,7 +37,7 @@ export async function setupContext({
     preset,
     isDev: preset === 'nitro-dev',
     rootDir,
-    outDir: resolve(rootDir, '.output'),
+    outDir: resolve(rootDir, NITRO_OUT_DIR),
   }
 
   const nitro = (ctx.nitro = await createNitro({
@@ -51,8 +52,8 @@ export async function setupContext({
     timing: true,
   }))
 
+  // Setup development server
   if (ctx.isDev) {
-    // Setup development server
     const devServer = createDevServer(ctx.nitro)
     ctx.server = await devServer.listen({})
     await prepare(ctx.nitro)
@@ -62,28 +63,19 @@ export async function setupContext({
     await build(ctx.nitro)
     await ready
   }
+  // Production build
   else {
-    // Production build
     await prepare(nitro)
     await copyPublicAssets(nitro)
     await prerender(nitro)
     await build(nitro)
+
+    const entryPath = resolve(ctx.outDir, 'server/index.mjs')
+    const { listener } = await import(entryPath)
+    ctx.server = await listen(listener)
+    // eslint-disable-next-line no-console
+    console.log('>', ctx.server!.url)
   }
 
   return ctx
-}
-
-export async function startServer(ctx: Context) {
-  const entryPath = resolve(ctx.outDir, 'server/index.mjs')
-  const { listener } = await import(entryPath)
-  ctx.server = await listen(listener)
-  // eslint-disable-next-line no-console
-  console.log('>', ctx.server!.url)
-
-  return async function () {
-    if (ctx.server)
-      await ctx.server.close()
-    if (ctx.nitro)
-      await ctx.nitro.close()
-  }
 }
