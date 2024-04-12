@@ -45,21 +45,21 @@ export function mergeFetchOptions<R extends ResponseType = 'json'>(
   // Merge params and query
   if (defaults?.params && input?.params) {
     merged.params = {
-      ...defaults?.params,
-      ...input?.params,
+      ...defaults.params,
+      ...input.params,
     }
   }
   if (defaults?.query && input?.query) {
     merged.query = {
-      ...defaults?.query,
-      ...input?.query,
+      ...defaults.query,
+      ...input.query,
     }
   }
 
   // Merge headers
   if (defaults?.headers && input?.headers) {
-    merged.headers = new Headers(defaults?.headers || {})
-    for (const [key, value] of new Headers(input?.headers || {}))
+    merged.headers = new Headers(defaults.headers)
+    for (const [key, value] of new Headers(input.headers))
       merged.headers.set(key, value)
   }
 
