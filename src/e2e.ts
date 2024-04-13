@@ -1,4 +1,3 @@
-import { joinURL } from 'ufo'
 import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 
