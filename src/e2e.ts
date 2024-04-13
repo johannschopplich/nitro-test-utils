@@ -12,10 +12,8 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   options?: FetchOptions<R>,
 ): Promise<FetchResponse<MappedResponseType<R, T>>> {
   const { inject } = await import('vitest')
-  const serverUrl = inject('nitroServerUrl')
-
   const fetcher = ofetch.create({
-    baseURL: serverUrl,
+    baseURL: inject('nitroServerUrl'),
     ignoreResponseError: true,
     redirect: 'manual',
     headers: {
