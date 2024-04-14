@@ -7,12 +7,17 @@ declare module 'vitest' {
   }
 }
 
+export interface TestFetchResponse<T> extends FetchResponse<T> {
+  /** Alias for `response._data` */
+  data?: T
+}
+
 export async function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
-): Promise<FetchResponse<MappedResponseType<R, T>>> {
+) {
   const { inject } = await import('vitest')
-  const fetcher = ofetch.create({
+  const localFetch = ofetch.create({
     baseURL: inject('nitroServerUrl'),
     ignoreResponseError: true,
     redirect: 'manual',
@@ -21,8 +26,16 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
     },
   })
 
-  return fetcher.raw<T, R>(
+  const response = await localFetch.raw<T, R>(
     path,
     options,
   )
+
+  Object.defineProperty(response, 'data', {
+    get() {
+      return response._data
+    },
+  })
+
+  return response as TestFetchResponse<MappedResponseType<R, T>>
 }

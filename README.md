@@ -47,10 +47,10 @@ import { $fetch } from 'nitro-test-utils/e2e'
 
 describe('routes', () => {
   it('responds successfully', async () => {
-    const { _data, status } = await $fetch('/api/health')
+    const { data, status } = await $fetch('/api/health')
 
     expect(status).toBe(200)
-    expect(_data).toMatchSnapshot()
+    expect(data).toMatchSnapshot()
   })
 })
 ```
@@ -106,11 +106,11 @@ The `$fetch` function is a simple wrapper around [`ofetch`](https://github.com/u
 Inside a test definition:
 
 ```ts
-// Use `_data` instead of `body` for the parsed response body
-const { _data, status, headers } = await $fetch('/api/hello')
+// Use `data` instead of `body` for the parsed response body
+const { data, status, headers } = await $fetch('/api/hello')
 
 expect(status).toBe(200)
-expect(_data).toMatchSnapshot()
+expect(data).toMatchSnapshot()
 ```
 
 **Type Declaration:**
