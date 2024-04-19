@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "defu": "^6.1.4",
+    "dotenv": "^16.4.5",
     "listhen": "^1.7.2",
     "ofetch": "^1.3.4",
     "pathe": "^1.1.2",

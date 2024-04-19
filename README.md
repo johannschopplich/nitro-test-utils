@@ -77,7 +77,7 @@ export default defineConfig({
 
 By default, the Vitest working directory is used.
 
-## Development vs. Production Build
+### Development vs. Production Build
 
 By default, the Nitro server starts in development mode. This makes development easier, as Nitro will automatically reload when you make changes to your code and the tests will also automatically re-run.
 
@@ -91,6 +91,15 @@ export default defineConfig({
     mode: 'production',
   },
 })
+```
+
+### Custom Test Environment Variables
+
+You can set custom environment variables for your tests by creating a `.env.test` file in your Nitro project root. The variables will be loaded automatically when the Nitro server is started.
+
+```ini
+# .env.test
+FOO=bar
 ```
 
 ## Test Utilities

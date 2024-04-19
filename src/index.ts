@@ -1,5 +1,9 @@
+import process from 'node:process'
+import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { resolve } from 'pathe'
 import { listen } from 'listhen'
+import * as dotenv from 'dotenv'
 import {
   build,
   copyPublicAssets,
@@ -12,11 +16,9 @@ import type { Listener } from 'listhen'
 import type { Nitro, NitroOptions } from 'nitropack'
 import { NITRO_OUTPUT_DIR } from './constants'
 
-export interface Context {
+export interface NitroTestContext {
   preset: NitroOptions['preset']
-  nitro?: Nitro
-  rootDir: string
-  outDir: string
+  nitro: Nitro
   server?: Listener
   isDev: boolean
 }
@@ -25,7 +27,6 @@ export { $fetch } from './e2e'
 
 export async function setupContext({
   preset = 'nitro-dev',
-  // eslint-disable-next-line node/prefer-global/process
   rootDir = process.cwd(),
 }: {
   preset?: NitroOptions['preset']
@@ -33,24 +34,25 @@ export async function setupContext({
 } = {
 
 }) {
-  const ctx: Context = {
-    preset,
-    isDev: preset === 'nitro-dev',
-    rootDir,
-    outDir: resolve(rootDir, NITRO_OUTPUT_DIR),
-  }
+  await setupDotenv({ rootDir })
 
-  const nitro = (ctx.nitro = await createNitro({
-    preset: ctx.preset,
-    dev: ctx.isDev,
-    rootDir: ctx.rootDir,
-    buildDir: resolve(ctx.outDir, '.nitro'),
-    serveStatic: !ctx.isDev,
-    output: {
-      dir: ctx.outDir,
-    },
-    timing: true,
-  }))
+  const isDev = preset === 'nitro-dev'
+  const outDir = resolve(rootDir, NITRO_OUTPUT_DIR)
+  const ctx: NitroTestContext = {
+    preset,
+    isDev,
+    nitro: await createNitro({
+      preset,
+      dev: isDev,
+      rootDir,
+      buildDir: resolve(outDir, '.nitro'),
+      serveStatic: !isDev,
+      output: {
+        dir: outDir,
+      },
+      timing: true,
+    }),
+  }
 
   // Setup development server
   if (ctx.isDev) {
@@ -65,12 +67,12 @@ export async function setupContext({
   }
   // Build and serve production
   else {
-    await prepare(nitro)
-    await copyPublicAssets(nitro)
-    await prerender(nitro)
-    await build(nitro)
+    await prepare(ctx.nitro)
+    await copyPublicAssets(ctx.nitro)
+    await prerender(ctx.nitro)
+    await build(ctx.nitro)
 
-    const entryPath = resolve(ctx.outDir, 'server/index.mjs')
+    const entryPath = resolve(outDir, 'server/index.mjs')
     const { listener } = await import(entryPath)
     ctx.server = await listen(listener)
   }
@@ -79,4 +81,30 @@ export async function setupContext({
   console.log('> Nitro server running at', ctx.server.url)
 
   return ctx
+}
+
+export async function setupDotenv({
+  rootDir = process.cwd(),
+  fileName = '.env.test',
+  override = true,
+}: {
+  rootDir?: string
+  fileName?: string
+  override?: boolean
+} = {}) {
+  const environment = Object.create(null) as Record<string, string>
+  const dotenvFile = resolve(rootDir, fileName)
+
+  if (existsSync(dotenvFile)) {
+    const parsed = dotenv.parse(await readFile(dotenvFile, 'utf8'))
+    Object.assign(environment, parsed)
+  }
+
+  // Fill environment variables
+  for (const key in environment) {
+    if (override || process.env[key] === undefined)
+      process.env[key] = environment[key]
+  }
+
+  return environment
 }
