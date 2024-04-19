@@ -33,8 +33,7 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
     test: {
       poolOptions: {
         threads: {
-          // Test isolation impacts performance negatively and
-          // is not needed in Node environment
+          // Disabling isolation improves performance in this case
           isolate: false,
           singleThread: true,
         },

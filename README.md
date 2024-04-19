@@ -5,8 +5,9 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 ## Features
 
 - 🚀 Automatic Nitro server start and stop
-- ↪️ Reruns tests on Nitro rebuild
+- ↪️ Reruns tests whenever Nitro is rebuilt
 - ✅ Seamless integration with Vitest
+- 🪝 Detect test mode with `import.meta.test`
 - 📡 Familiar [`$fetch`](#fetch) helper like Nuxt test utils
 
 ## Installation
@@ -31,7 +32,7 @@ Setting up the Nitro test environment for Vitest is as simple as creating a new 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineConfig()
+export default defineConfig({})
 ```
 
 > [!TIP]
@@ -42,6 +43,7 @@ Write your tests in a dedicated location, e.g. a `tests` directory. You can use 
 A simple example could look like this:
 
 ```ts
+// `test/routes.test.ts`
 import { describe, expect, it } from 'vitest'
 import { $fetch } from 'nitro-test-utils/e2e'
 
@@ -57,6 +59,26 @@ describe('routes', () => {
 
 > [!NOTE]
 > Whenever Nitro is rebuilt, the tests will rerun automatically (unless you have set the `mode` option to `production` in the Vitest configuration).
+
+## Detecting Test Mode
+
+You can detect whether your code is running in test mode by checking the `import.meta.test` property. This is useful if you want to conditionally run code only in test mode, but not in production.
+
+```ts
+// `routes/api/my-handler.ts`
+export default defineEventHandler(() => ({
+  isTest: import.meta.test,
+}))
+```
+
+### Custom Test Environment Variables
+
+You can set custom environment variables for your tests by creating a `.env.test` file in your Nitro project root. The variables will be loaded automatically when the Nitro server is started.
+
+```ini
+# .env.test
+FOO=bar
+```
 
 ## Configuration
 
@@ -91,15 +113,6 @@ export default defineConfig({
     mode: 'production',
   },
 })
-```
-
-### Custom Test Environment Variables
-
-You can set custom environment variables for your tests by creating a `.env.test` file in your Nitro project root. The variables will be loaded automatically when the Nitro server is started.
-
-```ini
-# .env.test
-FOO=bar
 ```
 
 ## Test Utilities
@@ -139,7 +152,6 @@ function $fetch<T = any, R extends ResponseType = 'json'>(
 As of right now, the following features are planned:
 
 - [ ] Make environment setup work within Nuxt projects
-- [ ] Support `.env.test` files
 
 ## License
 

@@ -51,6 +51,9 @@ export async function setupContext({
         dir: outDir,
       },
       timing: true,
+      replace: {
+        'import.meta.test': JSON.stringify(true),
+      },
     }),
   }
 
@@ -92,7 +95,7 @@ export async function setupDotenv({
   fileName?: string
   override?: boolean
 } = {}) {
-  const environment = Object.create(null) as Record<string, string>
+  const environment: Record<string, string> = Object.create(null)
   const dotenvFile = resolve(rootDir, fileName)
 
   if (existsSync(dotenvFile)) {

@@ -15,8 +15,12 @@ describe('routes', () => {
     const { data } = await $fetch('/api/env')
     expect(data).toMatchInlineSnapshot(`
       {
-        "NODE_ENV": "development",
-        "TEST_FOO": "bar",
+        "isDev": true,
+        "isTest": true,
+        "process": {
+          "NODE_ENV": "development",
+          "TEST_FOO": "bar",
+        },
       }
     `)
   })
