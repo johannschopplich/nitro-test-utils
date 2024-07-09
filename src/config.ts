@@ -32,10 +32,10 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
   return defineVitestConfig({
     test: {
       poolOptions: {
-        threads: {
+        forks: {
           // Disabling isolation improves performance in this case
           isolate: false,
-          singleThread: true,
+          singleFork: true,
         },
       },
       forceRerunTriggers: [
