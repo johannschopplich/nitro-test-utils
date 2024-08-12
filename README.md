@@ -32,7 +32,22 @@ Setting up the Nitro test environment for Vitest is as simple as creating a new 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineConfig({})
+export default defineConfig({
+  /*
+   * You may specify configuration options in here.
+   *
+   * The following configurations cannot be overridden:
+   * - `test.poolOptions.forks.isolate`: always set to `false`
+   * - `test.poolOptions.forks.singleFork`: always set to `true`
+   *
+   * The following options have special behaviors:
+   * - `test.forceRerunTriggers`:
+   *   - If unspecified, includes `vitest` defaults
+   *   - Always include `nitro` output
+   * - `test.globalSetup`:
+   *   - Always include a script that starts `nitro` server and configures `.env.test`
+   */
+})
 ```
 
 > [!TIP]

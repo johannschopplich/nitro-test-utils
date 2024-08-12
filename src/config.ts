@@ -28,20 +28,31 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
       mode: 'development',
     },
   })
+  const { test } = config
 
   return defineVitestConfig({
+    ...config,
     test: {
+      ...test,
       poolOptions: {
+        ...test?.poolOptions,
         forks: {
+          ...test?.poolOptions?.forks,
           // Disabling isolation improves performance in this case
           isolate: false,
           singleFork: true,
         },
       },
       forceRerunTriggers: [
-        // Vitest defaults
-        '**/package.json/**',
-        '**/{vitest,vite}.config.*/**',
+        ...(
+          test?.forceRerunTriggers
+            ? test?.forceRerunTriggers
+            : [
+              // Vitest defaults
+                '**/package.json/**',
+                '**/{vitest,vite}.config.*/**',
+              ]
+        ),
         // Re-run tests when Nitro is rebuilt
         join(
           _config.nitro?.rootDir || '',
@@ -51,6 +62,7 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
         ),
       ],
       globalSetup: [
+        ...(test?.globalSetup ? test?.globalSetup : []),
         join(currentDir, 'setup.mjs'),
       ],
       // @ts-expect-error: Append Nitro config to access in global setup file
