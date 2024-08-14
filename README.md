@@ -36,7 +36,7 @@ export default defineConfig({
   /*
    * You may specify configuration options in here.
    *
-   * The following configurations cannot be overridden:
+   * The following options cannot be overridden:
    * - `test.poolOptions.forks.isolate`: always set to `false`
    * - `test.poolOptions.forks.singleFork`: always set to `true`
    *
