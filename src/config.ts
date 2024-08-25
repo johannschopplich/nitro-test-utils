@@ -1,17 +1,15 @@
-import { fileURLToPath } from 'node:url'
-import { join } from 'pathe'
-import { defu } from 'defu'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { type UserConfig as ViteUserConfig, mergeConfig } from 'vite'
+import defu from 'defu'
+import { loadOptions as loadNitroOptions } from 'nitropack'
 
 export interface NitroInlineConfig {
   /**
-   * The mode to run Nitro in.
+   * Whether to add the Nitro source directory to force rerun triggers.
    *
-   * @default 'development'
+   * @default true
    */
-  mode?: 'development' | 'production'
-  rootDir?: string
+  forceRerunTriggersOnSrcDir?: boolean
 }
 
 declare module 'vite' {
@@ -23,12 +21,14 @@ declare module 'vite' {
   }
 }
 
-export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
-  const { nitro, ..._config } = defu<ViteUserConfig, [ViteUserConfig]>(config, {
+export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<ViteUserConfig> {
+  const { nitro, ..._config } = defu<ViteUserConfig, [ViteUserConfig]>(userConfig, {
     nitro: {
-      mode: 'development',
+      forceRerunTriggersOnSrcDir: true,
     },
   })
+
+  const nitroOptions = await loadNitroOptions()
 
   const overrides = defineVitestConfig({
     test: {
@@ -39,6 +39,11 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
           singleFork: true,
         },
       },
+      forceRerunTriggers: nitro?.forceRerunTriggersOnSrcDir
+        ? [
+        `${nitroOptions.srcDir}/**/*.ts`,
+          ]
+        : [],
     },
   }) as ViteUserConfig
 

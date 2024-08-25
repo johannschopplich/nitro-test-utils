@@ -6,12 +6,6 @@ import { listen } from 'listhen'
 import { createTestContext, useTestContext } from './context'
 import type { SetupOptions } from './types'
 
-declare module 'vitest' {
-  export interface ProvidedContext {
-    nitroServerUrl: string
-  }
-}
-
 export interface TestFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
   data?: T
