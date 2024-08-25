@@ -28,8 +28,6 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
     },
   })
 
-  const nitroOptions = await loadNitroOptions()
-
   const overrides = defineVitestConfig({
     test: {
       poolOptions: {
@@ -41,7 +39,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
       },
       forceRerunTriggers: nitro?.forceRerunTriggersOnSrcDir
         ? [
-        `${nitroOptions.srcDir}/**/*.ts`,
+        `${(await loadNitroOptions()).srcDir}/**/*.ts`,
           ]
         : [],
     },
