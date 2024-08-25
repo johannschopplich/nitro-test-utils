@@ -2,6 +2,7 @@ import process from 'node:process'
 import type { GlobalSetupContext } from 'vitest/node'
 import type { NitroOptions } from 'nitropack'
 import type { NitroInlineConfig } from './config'
+import { useTestContext } from './context'
 import { setupContext } from './index'
 
 type NitroSetupContext = GlobalSetupContext & {
@@ -21,7 +22,7 @@ export default async function ({ config, provide }: NitroSetupContext) {
 
   // Global setup is run in a different global scope, so tests don't have access
   // to variables defined here. We need to expose the server URL for tests.
-  provide('nitroServerUrl', ctx.server!.url)
+  // provide('nitroServerUrl', ctx.server!.url)
 
   return async function () {
     // Close the server if it was started

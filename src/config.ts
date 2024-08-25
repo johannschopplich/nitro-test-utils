@@ -47,18 +47,17 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
               '**/{vitest,vite}.config.*/**',
             ]),
         // Re-run tests when Nitro is rebuilt
-        join(
-          nitro?.rootDir || '',
-          NITRO_OUTPUT_DIR,
-          nitro?.mode === 'production' ? 'server' : '.nitro/dev',
-          'index.mjs',
-        ),
+        // join(
+        //   nitro?.rootDir || '',
+        //   NITRO_OUTPUT_DIR,
+        //   nitro?.mode === 'production' ? 'server' : '.nitro/dev',
+        //   'index.mjs',
+        // ),
       ],
-      globalSetup: [
-        join(currentDir, 'setup.mjs'),
-      ],
-      // @ts-expect-error: Append Nitro config to access in global setup file
-      nitro,
+      // globalSetup: [
+      //   join(currentDir, 'setup.mjs'),
+      // ],
+      // nitro,
     },
   }) as ViteUserConfig
 

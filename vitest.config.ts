@@ -3,7 +3,7 @@ import { defineConfig } from './dist/config.mjs'
 
 export default defineConfig({
   test: {
-    include: ['test/routes.test.ts'],
+    include: ['test/routes.test.ts', 'test/setup.test.ts'],
   },
   nitro: {
     rootDir: 'test/fixture',
