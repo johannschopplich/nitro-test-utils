@@ -3,10 +3,13 @@ import { join } from 'pathe'
 import { defu } from 'defu'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { type UserConfig as ViteUserConfig, mergeConfig } from 'vite'
-import { NITRO_OUTPUT_DIR } from './constants'
 
 export interface NitroInlineConfig {
-  /** @default 'development' */
+  /**
+   * The mode to run Nitro in.
+   *
+   * @default 'development'
+   */
   mode?: 'development' | 'production'
   rootDir?: string
 }
@@ -21,8 +24,6 @@ declare module 'vite' {
 }
 
 export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
-  const currentDir = fileURLToPath(new URL('.', import.meta.url))
-
   const { nitro, ..._config } = defu<ViteUserConfig, [ViteUserConfig]>(config, {
     nitro: {
       mode: 'development',
@@ -38,26 +39,6 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
           singleFork: true,
         },
       },
-      forceRerunTriggers: [
-        ...(_config.test?.forceRerunTriggers
-          ? []
-          : [
-              // Vitest defaults
-              '**/package.json/**',
-              '**/{vitest,vite}.config.*/**',
-            ]),
-        // Re-run tests when Nitro is rebuilt
-        // join(
-        //   nitro?.rootDir || '',
-        //   NITRO_OUTPUT_DIR,
-        //   nitro?.mode === 'production' ? 'server' : '.nitro/dev',
-        //   'index.mjs',
-        // ),
-      ],
-      // globalSetup: [
-      //   join(currentDir, 'setup.mjs'),
-      // ],
-      // nitro,
     },
   }) as ViteUserConfig
 

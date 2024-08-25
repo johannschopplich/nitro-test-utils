@@ -4,8 +4,7 @@ import { $fetch, setup } from '../src/e2e'
 
 describe('routes', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('fixture', import.meta
-      .url)),
+    rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
   })
 
   it('responds with 200 status code', async () => {
