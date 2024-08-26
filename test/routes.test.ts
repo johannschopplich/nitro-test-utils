@@ -22,6 +22,7 @@ describe('routes', async () => {
     expect(data).toMatchInlineSnapshot(`
       {
         "isDev": true,
+        "isTest": true,
         "process": {
           "NODE_ENV": "development",
           "TEST_FOO": "bar",

@@ -29,6 +29,7 @@ export async function startServer() {
         PORT: String(port),
         HOST: host,
         NODE_ENV: 'development',
+        TEST: String(true),
       },
     })
 
