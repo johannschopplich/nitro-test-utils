@@ -1,10 +1,9 @@
 import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
-import { resolve } from 'pathe'
 import { build, copyPublicAssets, createDevServer, prepare, prerender } from 'nitropack'
-import { listen } from 'listhen'
-import { createTestContext, useTestContext } from './context'
-import type { SetupOptions } from './types'
+import { createTestContext, setTestContext, useTestContext } from './context'
+import type { TestOptions } from './types'
+import { startServer, stopServer } from './server'
 
 export interface TestFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
@@ -17,8 +16,12 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
 ) {
   const ctx = useTestContext()
 
+  if (!ctx.url) {
+    throw new Error('No server URL is available.')
+  }
+
   const localFetch = ofetch.create({
-    baseURL: ctx.server!.url,
+    baseURL: ctx.url,
     ignoreResponseError: true,
     redirect: 'manual',
     headers: {
@@ -51,44 +54,28 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
  * })
  *
  */
-export async function setup(options: SetupOptions) {
+export async function setup(options: Partial<TestOptions> = {}) {
   const ctx = await createTestContext(options)
 
   const vitest = await import('vitest')
 
   vitest.beforeAll(async () => {
-    // Setup development server
-    if (ctx.isDev) {
-      const devServer = createDevServer(ctx.nitro)
-      ctx.server = await devServer.listen({})
-      await prepare(ctx.nitro)
-      const ready = new Promise<void>((resolve) => {
-        ctx.nitro!.hooks.hook('dev:reload', () => resolve())
-      })
-      await build(ctx.nitro)
-      await ready
-    }
-    // Build and serve production
-    else {
+    // Build
+    if (!ctx.options.dev) {
       await prepare(ctx.nitro)
       await copyPublicAssets(ctx.nitro)
       await prerender(ctx.nitro)
       await build(ctx.nitro)
-
-      const entryPath = resolve(ctx.nitro.options.output.dir, 'server/index.mjs')
-      const { listener } = await import(entryPath)
-      ctx.server = await listen(listener)
     }
 
-    // eslint-disable-next-line no-console
-    console.log('> Nitro server running at', ctx.server.url)
+    await startServer()
   })
 
   vitest.afterAll(async () => {
-    if (ctx.server)
-      await ctx.server.close()
-    // End Nitro server after all tests
-    if (ctx.nitro)
-      await ctx.nitro.close()
+    if (ctx.serverProcess) {
+      await stopServer()
+    }
+
+    setTestContext(undefined)
   })
 }

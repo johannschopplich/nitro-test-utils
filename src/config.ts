@@ -1,7 +1,7 @@
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { type UserConfig as ViteUserConfig, mergeConfig } from 'vite'
 import defu from 'defu'
-import { loadOptions as loadNitroOptions } from 'nitropack'
+import { type NitroOptions, loadOptions as loadNitroOptions } from 'nitropack'
 
 export interface NitroInlineConfig {
   /**

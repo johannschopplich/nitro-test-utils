@@ -1,54 +1,38 @@
 import process from 'node:process'
 import { existsSync, readFileSync } from 'node:fs'
-import { type NitroOptions, createNitro } from 'nitropack'
+import { createNitro } from 'nitropack'
 import { resolve } from 'pathe'
 import * as dotenv from 'dotenv'
-import type { NitroTestContext } from './types'
-import { NITRO_OUTPUT_DIR } from './constants'
+import type { TestContext, TestOptions } from './types'
 
-let currentContext: NitroTestContext | undefined
+let currentContext: TestContext | undefined
 
-export async function createTestContext({
-  preset = 'nitro-dev',
-  rootDir = process.cwd(),
-}: {
-  preset?: NitroOptions['preset']
-  rootDir?: string
-} = {}): Promise<NitroTestContext> {
+export async function createTestContext(options: Partial<TestOptions>): Promise<TestContext> {
+  const { preset, rootDir = process.cwd(), dev = false } = options
+
   setupDotenv({ rootDir })
 
-  const isDev = preset === 'nitro-dev'
-  const outDir = resolve(rootDir, NITRO_OUTPUT_DIR)
-  const ctx: NitroTestContext = {
-    preset,
-    isDev,
+  const ctx: TestContext = {
+    options: { rootDir, preset: preset || dev ? '' : 'node-server', dev },
     nitro: await createNitro({
       preset,
-      dev: isDev,
       rootDir,
-      buildDir: resolve(outDir, '.nitro'),
-      serveStatic: !isDev,
-      output: {
-        dir: outDir,
-      },
-      timing: true,
-      replace: {
-        'import.meta.test': JSON.stringify(true),
-      },
     }),
   }
 
   return setTestContext(ctx)
 }
 
-export function useTestContext(): NitroTestContext {
+export function useTestContext(): TestContext {
   if (!currentContext) {
     throw new Error('No context is available. (Forgot calling setup or createContext?)')
   }
   return currentContext
 }
 
-export function setTestContext(context: NitroTestContext): NitroTestContext {
+export function setTestContext(context: TestContext): TestContext
+export function setTestContext(context?: TestContext): TestContext | undefined
+export function setTestContext(context?: TestContext): TestContext | undefined {
   currentContext = context
   return context
 }

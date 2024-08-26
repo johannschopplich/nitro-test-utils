@@ -1,21 +1,32 @@
-import type { Listener } from 'listhen'
+import type { ChildProcess } from 'node:child_process'
 import type { Nitro, NitroOptions } from 'nitropack'
 
-export interface NitroTestContext {
-  preset: NitroOptions['preset']
-  nitro: Nitro
-  server?: Listener
-  isDev: boolean
-}
-
-export interface SetupOptions {
+/**
+ * Options for the test context.
+ */
+export interface TestOptions {
   /**
-   * The root directory of the Nitro project to test against.
+   * Path th a directory with a Nitro app to be put under test.
    *
    * @example
    * fileURLToPath(new URL('fixture', import.meta.url))
    *
    * @default process.cwd()
    */
-  rootDir?: string
+  rootDir: string
+  dev: boolean
+  /**
+   * The preset to use for the Nitro project.
+   */
+  preset: NitroOptions['preset']
+}
+
+/**
+ * The context created before all tests.
+ */
+export interface TestContext {
+  options: TestOptions
+  nitro: Nitro
+  url?: string
+  serverProcess?: ChildProcess
 }

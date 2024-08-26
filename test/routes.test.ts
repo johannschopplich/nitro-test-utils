@@ -5,6 +5,7 @@ import { $fetch, setup } from '../src/e2e'
 describe('routes', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
+    dev: true,
   })
 
   it('responds with 200 status code', async () => {
@@ -21,7 +22,6 @@ describe('routes', async () => {
     expect(data).toMatchInlineSnapshot(`
       {
         "isDev": true,
-        "isTest": true,
         "process": {
           "NODE_ENV": "development",
           "TEST_FOO": "bar",
