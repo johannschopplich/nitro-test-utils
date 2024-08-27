@@ -1,10 +1,11 @@
-import process, { cwd } from 'node:process'
-import { execa } from 'execa'
 import { resolve } from 'pathe'
-import { getRandomPort, waitForPort } from 'get-port-please'
-import type { FetchOptions } from 'ofetch'
-import { ofetch } from 'ofetch'
-import { joinURL } from 'ufo'
+import { getRandomPort } from 'get-port-please'
+import { listen } from 'listhen'
+import {
+  build,
+  createDevServer,
+  prepare,
+} from 'nitropack'
 import { useTestContext } from './context'
 
 /**
@@ -16,57 +17,24 @@ export async function startServer() {
   const ctx = useTestContext()
 
   const host = '127.0.0.1'
-  const port = await getRandomPort(host)
+  const port = 3000 || await getRandomPort(host)
 
   ctx.url = `http://${host}:${port}`
 
-  if (ctx.options.dev) {
-    ctx.serverProcess = execa('nitro', ['dev'], {
-      cwd: ctx.options.rootDir,
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        PORT: String(port),
-        HOST: host,
-        NODE_ENV: 'development',
-        TEST: String(true),
-      },
+  if (ctx.options.isDev) {
+    const server = createDevServer(ctx.nitro)
+    ctx.server = await server.listen(port, { hostname: host })
+    await prepare(ctx.nitro)
+    const ready = new Promise<void>((resolve) => {
+      ctx.nitro!.hooks.hook('dev:reload', () => resolve())
     })
-
-    await waitForPort(port, { retries: 32, host })
-
-    // Dev server starts instantly, so we need to wait a bit more
-    let lastError
-    for (let i = 0; i < 150; i++) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-      try {
-        const res = await ofetch<string, 'text'>(ctx.url, {
-          ignoreResponseError: true,
-          parseResponse: txt => txt,
-        })
-        if (!res.includes('Reloading server...')) {
-          return
-        }
-      }
-      catch (e) {
-        lastError = e
-      }
-    }
-    ctx.serverProcess.kill()
-    throw lastError || new Error('Timeout waiting for dev server!')
+    await build(ctx.nitro)
+    await ready
   }
   else {
-    ctx.serverProcess = execa('node', [resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')], {
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        PORT: String(port),
-        HOST: host,
-        NODE_ENV: 'test',
-      },
-    })
-
-    await waitForPort(port, { retries: 20, host })
+    const entryPath = resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
+    const { listener } = await import(entryPath)
+    ctx.server = await listen(listener)
   }
 }
 
@@ -76,7 +44,10 @@ export async function startServer() {
 export async function stopServer() {
   const ctx = useTestContext()
 
-  if (ctx.serverProcess) {
-    ctx.serverProcess.kill()
+  if (ctx.server) {
+    ctx.server.close()
+  }
+  if (ctx.nitro) {
+    await ctx.nitro.close()
   }
 }

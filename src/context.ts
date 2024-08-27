@@ -8,15 +8,26 @@ import type { TestContext, TestOptions } from './types'
 let currentContext: TestContext | undefined
 
 export async function createTestContext(options: Partial<TestOptions>): Promise<TestContext> {
-  const { preset, rootDir = process.cwd(), dev = false } = options
+  const { preset = 'nitro-dev', rootDir = process.cwd() } = options
 
   setupDotenv({ rootDir })
 
+  const isDev = preset === 'nitro-dev'
   const ctx: TestContext = {
-    options: { rootDir, preset: preset || dev ? '' : 'node-server', dev },
-    nitro: await createNitro({
+    options: {
       preset,
       rootDir,
+      isDev,
+    },
+    nitro: await createNitro({
+      preset,
+      dev: isDev,
+      rootDir,
+      serveStatic: !isDev,
+      timing: true,
+      replace: {
+        'import.meta.test': JSON.stringify(true),
+      },
     }),
   }
 

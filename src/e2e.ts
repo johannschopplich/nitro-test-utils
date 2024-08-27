@@ -61,7 +61,7 @@ export async function setup(options: Partial<TestOptions> = {}) {
 
   vitest.beforeAll(async () => {
     // Build
-    if (!ctx.options.dev) {
+    if (!ctx.options.isDev) {
       await prepare(ctx.nitro)
       await copyPublicAssets(ctx.nitro)
       await prerender(ctx.nitro)
@@ -72,7 +72,7 @@ export async function setup(options: Partial<TestOptions> = {}) {
   })
 
   vitest.afterAll(async () => {
-    if (ctx.serverProcess) {
+    if (ctx.server) {
       await stopServer()
     }
 

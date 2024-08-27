@@ -1,5 +1,5 @@
-import type { ChildProcess } from 'node:child_process'
 import type { Nitro, NitroOptions } from 'nitropack'
+import type { Listener } from 'listhen'
 
 /**
  * Options for the test context.
@@ -14,7 +14,7 @@ export interface TestOptions {
    * @default process.cwd()
    */
   rootDir: string
-  dev: boolean
+  isDev: boolean
   /**
    * The preset to use for the Nitro project.
    */
@@ -28,5 +28,5 @@ export interface TestContext {
   options: TestOptions
   nitro: Nitro
   url?: string
-  serverProcess?: ChildProcess
+  server?: Listener
 }
