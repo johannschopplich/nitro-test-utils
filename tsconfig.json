@@ -12,6 +12,7 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "test/fixture"
+    "test/fixture",
+    "test/fixture2"
   ]
 }

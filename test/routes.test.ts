@@ -1,7 +1,12 @@
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { $fetch } from '../src/e2e'
+import { $fetch, setup } from '../src/e2e'
 
-describe('routes', () => {
+describe('routes', async () => {
+  await setup({
+    rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
+  })
+
   it('responds with 200 status code', async () => {
     const { data } = await $fetch('/api/health')
     expect(data).toMatchInlineSnapshot(`

@@ -1,14 +1,15 @@
-import { fileURLToPath } from 'node:url'
-import { join } from 'pathe'
-import { defu } from 'defu'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { type UserConfig as ViteUserConfig, mergeConfig } from 'vite'
-import { NITRO_OUTPUT_DIR } from './constants'
+import defu from 'defu'
+import { loadOptions as loadNitroOptions } from 'nitropack'
 
 export interface NitroInlineConfig {
-  /** @default 'development' */
-  mode?: 'development' | 'production'
-  rootDir?: string
+  /**
+   * Whether to add the Nitro source directory to force rerun triggers.
+   *
+   * @default true
+   */
+  forceRerunTriggersOnSrcDir?: boolean
 }
 
 declare module 'vite' {
@@ -20,12 +21,10 @@ declare module 'vite' {
   }
 }
 
-export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
-  const currentDir = fileURLToPath(new URL('.', import.meta.url))
-
-  const { nitro, ..._config } = defu<ViteUserConfig, [ViteUserConfig]>(config, {
+export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<ViteUserConfig> {
+  const { nitro, ..._config } = defu(userConfig, {
     nitro: {
-      mode: 'development',
+      forceRerunTriggersOnSrcDir: true,
     },
   })
 
@@ -38,27 +37,9 @@ export function defineConfig(config: ViteUserConfig = {}): ViteUserConfig {
           singleFork: true,
         },
       },
-      forceRerunTriggers: [
-        ...(_config.test?.forceRerunTriggers
-          ? []
-          : [
-              // Vitest defaults
-              '**/package.json/**',
-              '**/{vitest,vite}.config.*/**',
-            ]),
-        // Re-run tests when Nitro is rebuilt
-        join(
-          nitro?.rootDir || '',
-          NITRO_OUTPUT_DIR,
-          nitro?.mode === 'production' ? 'server' : '.nitro/dev',
-          'index.mjs',
-        ),
-      ],
-      globalSetup: [
-        join(currentDir, 'setup.mjs'),
-      ],
-      // @ts-expect-error: Append Nitro config to access in global setup file
-      nitro,
+      forceRerunTriggers: nitro?.forceRerunTriggersOnSrcDir
+        ? [`${(await loadNitroOptions()).srcDir}/**/*.ts`]
+        : [],
     },
   }) as ViteUserConfig
 

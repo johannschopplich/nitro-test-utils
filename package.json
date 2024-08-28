@@ -45,7 +45,7 @@
     "test": "vitest",
     "test:types": "tsc --noEmit",
     "release": "bumpp",
-    "prepare": "pnpm run build && pnpm -C test/fixture prepare"
+    "prepare": "pnpm run build && pnpm -C test/fixture prepare && pnpm -C test/fixture2 prepare"
   },
   "peerDependencies": {
     "nitropack": "^2",
