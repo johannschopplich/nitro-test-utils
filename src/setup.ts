@@ -8,14 +8,6 @@ type NitroSetupContext = GlobalSetupContext & {
   config: { nitro?: NitroInlineConfig }
 }
 
-declare module 'vitest' {
-  export interface ProvidedContext {
-    server?: {
-      url: string
-    }
-  }
-}
-
 // Setup shared Nitro instance
 // See https://vitest.dev/config/#globalsetup
 export default async function ({ config, provide }: NitroSetupContext) {

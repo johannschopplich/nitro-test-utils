@@ -7,7 +7,7 @@ describe('routes', async () => {
     rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
   })
 
-  it('responds with 200 status code', async () => {
+  it('should respond with 200 status code', async () => {
     const { data } = await $fetch('/api/health')
     expect(data).toMatchInlineSnapshot(`
       {
@@ -16,7 +16,7 @@ describe('routes', async () => {
     `)
   })
 
-  it('returns custom environment variable', async () => {
+  it('should return custom environment variables', async () => {
     const { data } = await $fetch('/api/env')
     expect(data).toMatchInlineSnapshot(`
       {

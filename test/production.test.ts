@@ -8,7 +8,7 @@ describe('production', async () => {
     mode: 'production',
   })
 
-  it('should respond from production server bundle', async () => {
+  it('should respond from production server build', async () => {
     const { data } = await $fetch('/')
     expect(data).toBe('Hello, production build!')
   })

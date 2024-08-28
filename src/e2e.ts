@@ -9,6 +9,14 @@ export interface TestFetchResponse<T> extends FetchResponse<T> {
   data?: T
 }
 
+declare module 'vitest' {
+  export interface ProvidedContext {
+    server?: {
+      url: string
+    }
+  }
+}
+
 export async function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
@@ -58,9 +66,14 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
  * })
  */
 export async function setup(options: Partial<TestOptions> = {}) {
-  await createTestContext(options)
-
   const vitest = await import('vitest')
+  const server = vitest.inject('server')
+
+  if (server) {
+    throw new Error('Nitro server is already running in global setup.')
+  }
+
+  await createTestContext(options)
 
   vitest.beforeAll(async () => {
     await startServer()

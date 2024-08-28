@@ -59,7 +59,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
         // Vitest defaults
         '**/package.json/**',
         '**/{vitest,vite}.config.*/**',
-        ...(userConfig.test?.forceRerunTriggers || []),
+        ...(userConfig.test?.forceRerunTriggers ?? []),
         ...(nitro?.global
           ? [join(
               nitro?.global?.rootDir || '',
@@ -67,9 +67,9 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
               nitro?.global?.mode === 'production' ? 'server' : '.nitro/dev',
               'index.mjs',
             )]
-          : nitro?.rerunOnSourceChanges
-            ? [`${(await loadNitroOptions()).srcDir}/**/*.ts`]
-            : []
+          : (nitro?.rerunOnSourceChanges ?? true)
+              ? [`${(await loadNitroOptions()).srcDir}/**/*.ts`]
+              : []
         ),
       ],
       globalSetup: nitro?.global

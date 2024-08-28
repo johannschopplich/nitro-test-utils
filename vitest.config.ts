@@ -2,14 +2,7 @@
 import { defineConfig } from './dist/config.mjs'
 
 export default defineConfig({
-  test: {
-    forceRerunTriggers: [
-      '**/test/fixture/**/*.ts',
-      '**/test/fixture2/**/*.ts',
-      '**/src/**/*.ts',
-    ],
-  },
   nitro: {
-    rerunOnSourceChanges: false,
+    rerunOnSourceChanges: true,
   },
 })
