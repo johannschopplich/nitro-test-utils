@@ -1,7 +1,6 @@
 import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
-import { build, copyPublicAssets, prepare, prerender } from 'nitropack'
-import { createTestContext, injectTestContext, provideTestContext } from './context'
+import { clearTestContext, createTestContext, injectTestContext } from './context'
 import type { TestOptions } from './types'
 import { startServer, stopServer } from './server'
 
@@ -14,14 +13,19 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
 ) {
-  const ctx = injectTestContext()
+  let serverUrl = injectTestContext()?.server?.url
 
-  if (!ctx?.server?.url) {
+  if (!serverUrl) {
+    const vitest = await import('vitest')
+    serverUrl = vitest.inject('server')?.url
+  }
+
+  if (!serverUrl) {
     throw new Error('Nitro server is not running.')
   }
 
   const localFetch = ofetch.create({
-    baseURL: ctx.server.url,
+    baseURL: serverUrl,
     ignoreResponseError: true,
     redirect: 'manual',
     headers: {
@@ -54,27 +58,17 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
  * })
  */
 export async function setup(options: Partial<TestOptions> = {}) {
-  const ctx = await createTestContext(options)
+  await createTestContext(options)
 
   const vitest = await import('vitest')
 
   vitest.beforeAll(async () => {
-    // Build the server
-    if (!ctx.isDev) {
-      await prepare(ctx.nitro)
-      await copyPublicAssets(ctx.nitro)
-      await prerender(ctx.nitro)
-      await build(ctx.nitro)
-    }
-
     await startServer()
   })
 
   vitest.afterAll(async () => {
-    if (ctx.server) {
-      await stopServer()
-    }
+    await stopServer()
 
-    provideTestContext(undefined)
+    clearTestContext()
   })
 }

@@ -10,6 +10,6 @@ export default defineConfig({
     ],
   },
   nitro: {
-    forceRerunTriggersOnSrcDir: false,
+    rerunOnSourceChanges: false,
   },
 })

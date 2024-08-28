@@ -2,8 +2,10 @@ import { resolve } from 'pathe'
 import { listen } from 'listhen'
 import {
   build,
+  copyPublicAssets,
   createDevServer,
   prepare,
+  prerender,
 } from 'nitropack'
 import { injectTestContext } from './context'
 
@@ -14,6 +16,10 @@ export async function startServer() {
   await stopServer()
 
   const ctx = injectTestContext()
+
+  if (!ctx) {
+    throw new Error('Nitro test context is not initialized.')
+  }
 
   if (ctx.isDev) {
     const server = createDevServer(ctx.nitro)
@@ -26,6 +32,11 @@ export async function startServer() {
     await ready
   }
   else {
+    await prepare(ctx.nitro)
+    await copyPublicAssets(ctx.nitro)
+    await prerender(ctx.nitro)
+    await build(ctx.nitro)
+
     const entryPath = resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
     const { listener } = await import(entryPath)
     ctx.server = await listen(listener)
@@ -33,6 +44,8 @@ export async function startServer() {
 
   // eslint-disable-next-line no-console
   console.log('> Nitro server running at', ctx.server.url)
+
+  return ctx
 }
 
 /**
@@ -41,8 +54,8 @@ export async function startServer() {
 export async function stopServer() {
   const ctx = injectTestContext()
 
-  if (ctx.server)
+  if (ctx?.server)
     await ctx.server.close()
-  if (ctx.nitro)
+  if (ctx?.nitro)
     await ctx.nitro.close()
 }

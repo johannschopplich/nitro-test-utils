@@ -2,7 +2,7 @@ import process from 'node:process'
 import { existsSync, readFileSync } from 'node:fs'
 import { createNitro } from 'nitropack'
 import type { NitroOptions } from 'nitropack'
-import { resolve } from 'pathe'
+import { join, resolve } from 'pathe'
 import * as dotenv from 'dotenv'
 import type { TestContext, TestOptions } from './types'
 
@@ -12,6 +12,7 @@ export async function createTestContext(options: Partial<TestOptions>): Promise<
   const { mode = 'development', rootDir = process.cwd() } = options
   const isDev = mode === 'development'
   const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node'
+  const outDir = resolve(rootDir, '.output')
 
   setupDotenv({ rootDir })
 
@@ -26,7 +27,11 @@ export async function createTestContext(options: Partial<TestOptions>): Promise<
       preset,
       dev: isDev,
       rootDir,
+      buildDir: join(outDir, '.nitro'),
       serveStatic: !isDev,
+      output: {
+        dir: outDir,
+      },
       timing: true,
       replace: {
         'import.meta.test': JSON.stringify(true),
@@ -39,19 +44,16 @@ export async function createTestContext(options: Partial<TestOptions>): Promise<
   return ctx
 }
 
-export function injectTestContext(): TestContext {
-  if (!currentContext) {
-    throw new Error('No Nitro context available. Did you forget to call "setup"?')
-  }
-
+export function injectTestContext() {
   return currentContext
 }
 
-export function provideTestContext(context: TestContext): TestContext
-export function provideTestContext(context?: TestContext): TestContext | undefined
-export function provideTestContext(context?: TestContext): TestContext | undefined {
+export function provideTestContext(context: TestContext) {
   currentContext = context
-  return context
+}
+
+export function clearTestContext() {
+  currentContext = undefined
 }
 
 export function setupDotenv({
