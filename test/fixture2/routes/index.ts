@@ -1,3 +1,3 @@
-export default defineEventHandler(async () => {
-  return 'Load fixture2'
+export default defineEventHandler(() => {
+  return 'Hello, fixture2!'
 })

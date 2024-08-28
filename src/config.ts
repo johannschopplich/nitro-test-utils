@@ -1,7 +1,7 @@
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { type UserConfig as ViteUserConfig, mergeConfig } from 'vite'
 import defu from 'defu'
-import { type NitroOptions, loadOptions as loadNitroOptions } from 'nitropack'
+import { loadOptions as loadNitroOptions } from 'nitropack'
 
 export interface NitroInlineConfig {
   /**
@@ -22,7 +22,7 @@ declare module 'vite' {
 }
 
 export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<ViteUserConfig> {
-  const { nitro, ..._config } = defu<ViteUserConfig, [ViteUserConfig]>(userConfig, {
+  const { nitro, ..._config } = defu(userConfig, {
     nitro: {
       forceRerunTriggersOnSrcDir: true,
     },
@@ -38,9 +38,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
         },
       },
       forceRerunTriggers: nitro?.forceRerunTriggersOnSrcDir
-        ? [
-        `${(await loadNitroOptions()).srcDir}/**/*.ts`,
-          ]
+        ? [`${(await loadNitroOptions()).srcDir}/**/*.ts`]
         : [],
     },
   }) as ViteUserConfig

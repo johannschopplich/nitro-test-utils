@@ -3,11 +3,9 @@ import { defineConfig } from './dist/config.mjs'
 
 export default defineConfig({
   test: {
-    include: ['test/routes.test.ts', 'test/setup.test.ts', 'test/config.test.ts'],
     forceRerunTriggers: [
       '**/test/fixture/**/*.ts',
       '**/test/fixture2/**/*.ts',
-
       '**/src/**/*.ts',
     ],
   },

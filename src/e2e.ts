@@ -1,7 +1,7 @@
 import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import { build, copyPublicAssets, createDevServer, prepare, prerender } from 'nitropack'
-import { createTestContext, setTestContext, useTestContext } from './context'
+import { createTestContext, provideTestContext, provideTextContext } from './context'
 import type { TestOptions } from './types'
 import { startServer, stopServer } from './server'
 
@@ -14,14 +14,14 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
 ) {
-  const ctx = useTestContext()
+  const ctx = provideTestContext()
 
-  if (!ctx.url) {
-    throw new Error('No server URL is available.')
+  if (!ctx?.server?.url) {
+    throw new Error('Nitro server is not running.')
   }
 
   const localFetch = ofetch.create({
-    baseURL: ctx.url,
+    baseURL: ctx.server.url,
     ignoreResponseError: true,
     redirect: 'manual',
     headers: {
@@ -44,7 +44,7 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
 }
 
 /**
- * Setup options for the test context.
+ * Setup options for the Nitro test context.
  *
  * @example
  * import { setup } from 'nitro-test-utils'
@@ -52,7 +52,6 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
  * await setup({
  *  rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
  * })
- *
  */
 export async function setup(options: Partial<TestOptions> = {}) {
   const ctx = await createTestContext(options)
@@ -61,7 +60,7 @@ export async function setup(options: Partial<TestOptions> = {}) {
 
   vitest.beforeAll(async () => {
     // Build
-    if (!ctx.options.isDev) {
+    if (!ctx.isDev) {
       await prepare(ctx.nitro)
       await copyPublicAssets(ctx.nitro)
       await prerender(ctx.nitro)
@@ -76,6 +75,6 @@ export async function setup(options: Partial<TestOptions> = {}) {
       await stopServer()
     }
 
-    setTestContext(undefined)
+    provideTextContext(undefined)
   })
 }

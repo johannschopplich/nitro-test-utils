@@ -2,15 +2,14 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { $fetch, setup } from '../src/e2e'
 
-describe('setup', async () => {
+describe('production', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('fixture2', import.meta.url)),
-    preset: 'node-server',
+    mode: 'production',
   })
 
-  it('should load fixture2', async () => {
+  it('should respond from production server bundle', async () => {
     const { data } = await $fetch('/')
-
-    expect(data).toBe('Load fixture2')
+    expect(data).toBe('Hello, fixture2!')
   })
 })

@@ -1,8 +1,8 @@
-import type { Nitro, NitroOptions } from 'nitropack'
 import type { Listener } from 'listhen'
+import type { Nitro, NitroOptions } from 'nitropack'
 
 /**
- * Options for the test context.
+ * Options for the Nitro test context.
  */
 export interface TestOptions {
   /**
@@ -13,20 +13,26 @@ export interface TestOptions {
    *
    * @default process.cwd()
    */
-  rootDir: string
-  isDev: boolean
+  rootDir?: string
+
   /**
-   * The preset to use for the Nitro project.
+   * Whether to build the Nitro server in development mode or for production.
+   *
+   * @remarks
+   * The Nitro build preset will be set to `nitro-dev` if this is set to 'development'. Otherwise, it will be set to `node`.
+   *
+   * @default 'development'
    */
-  preset: NitroOptions['preset']
+  mode?: 'development' | 'production'
 }
 
 /**
  * The context created before all tests.
  */
 export interface TestContext {
-  options: TestOptions
+  options: Required<TestOptions>
+  isDev: boolean
+  preset: NitroOptions['preset']
   nitro: Nitro
-  url?: string
   server?: Listener
 }

@@ -26,7 +26,6 @@ describe('config', async () => {
     })
 
     expect(config.test?.forceRerunTriggers?.length).toBe(2)
-
     expect(config.test?.forceRerunTriggers).toContain('test/foo.test.ts')
     expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
   })

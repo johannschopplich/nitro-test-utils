@@ -1,6 +1,7 @@
 import process from 'node:process'
 import { existsSync, readFileSync } from 'node:fs'
 import { createNitro } from 'nitropack'
+import type { NitroOptions } from 'nitropack'
 import { resolve } from 'pathe'
 import * as dotenv from 'dotenv'
 import type { TestContext, TestOptions } from './types'
@@ -8,17 +9,19 @@ import type { TestContext, TestOptions } from './types'
 let currentContext: TestContext | undefined
 
 export async function createTestContext(options: Partial<TestOptions>): Promise<TestContext> {
-  const { preset = 'nitro-dev', rootDir = process.cwd() } = options
+  const { mode = 'development', rootDir = process.cwd() } = options
+  const isDev = mode === 'development'
+  const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node'
 
   setupDotenv({ rootDir })
 
-  const isDev = preset === 'nitro-dev'
   const ctx: TestContext = {
     options: {
-      preset,
       rootDir,
-      isDev,
+      mode,
     },
+    isDev,
+    preset,
     nitro: await createNitro({
       preset,
       dev: isDev,
@@ -31,19 +34,20 @@ export async function createTestContext(options: Partial<TestOptions>): Promise<
     }),
   }
 
-  return setTestContext(ctx)
+  return provideTextContext(ctx)
 }
 
-export function useTestContext(): TestContext {
+export function provideTestContext(): TestContext {
   if (!currentContext) {
-    throw new Error('No context is available. (Forgot calling setup or createContext?)')
+    throw new Error('No Nitro context available. Did you forget to call "setup"?')
   }
+
   return currentContext
 }
 
-export function setTestContext(context: TestContext): TestContext
-export function setTestContext(context?: TestContext): TestContext | undefined
-export function setTestContext(context?: TestContext): TestContext | undefined {
+export function provideTextContext(context: TestContext): TestContext
+export function provideTextContext(context?: TestContext): TestContext | undefined
+export function provideTextContext(context?: TestContext): TestContext | undefined {
   currentContext = context
   return context
 }
