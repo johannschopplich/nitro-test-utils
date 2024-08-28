@@ -1,3 +1,3 @@
 export default defineEventHandler(() => {
-  return 'Hello, fixture2!'
+  return 'Hello, production build!'
 })

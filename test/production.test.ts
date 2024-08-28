@@ -10,6 +10,6 @@ describe('production', async () => {
 
   it('should respond from production server bundle', async () => {
     const { data } = await $fetch('/')
-    expect(data).toBe('Hello, fixture2!')
+    expect(data).toBe('Hello, production build!')
   })
 })

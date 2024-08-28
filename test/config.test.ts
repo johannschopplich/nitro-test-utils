@@ -8,7 +8,7 @@ describe('config', async () => {
     expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
   })
 
-  it('remove the Nitro source directory from force rerun triggers when disabled', async () => {
+  it('should remove the Nitro source directory from force rerun triggers when disabled', async () => {
     const config = await defineConfig({
       nitro: {
         forceRerunTriggersOnSrcDir: false,
@@ -18,7 +18,7 @@ describe('config', async () => {
     expect(config.test?.forceRerunTriggers).not.toContain(`${process.cwd()}/**/*.ts`)
   })
 
-  it('should merge with user config', async () => {
+  it('should merge with user configuration', async () => {
     const config = await defineConfig({
       test: {
         forceRerunTriggers: ['test/foo.test.ts'],
