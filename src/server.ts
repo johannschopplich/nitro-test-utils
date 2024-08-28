@@ -5,7 +5,7 @@ import {
   createDevServer,
   prepare,
 } from 'nitropack'
-import { provideTestContext } from './context'
+import { injectTestContext } from './context'
 
 /**
  * Start the server, either in development mode or production mode.
@@ -13,7 +13,7 @@ import { provideTestContext } from './context'
 export async function startServer() {
   await stopServer()
 
-  const ctx = provideTestContext()
+  const ctx = injectTestContext()
 
   if (ctx.isDev) {
     const server = createDevServer(ctx.nitro)
@@ -39,8 +39,10 @@ export async function startServer() {
  * Stop the running server if any.
  */
 export async function stopServer() {
-  const ctx = provideTestContext()
+  const ctx = injectTestContext()
 
-  ctx.server?.close()
-  ctx.nitro?.close()
+  if (ctx.server)
+    await ctx.server.close()
+  if (ctx.nitro)
+    await ctx.nitro.close()
 }

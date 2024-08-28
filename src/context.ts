@@ -34,10 +34,12 @@ export async function createTestContext(options: Partial<TestOptions>): Promise<
     }),
   }
 
-  return provideTextContext(ctx)
+  provideTestContext(ctx)
+
+  return ctx
 }
 
-export function provideTestContext(): TestContext {
+export function injectTestContext(): TestContext {
   if (!currentContext) {
     throw new Error('No Nitro context available. Did you forget to call "setup"?')
   }
@@ -45,9 +47,9 @@ export function provideTestContext(): TestContext {
   return currentContext
 }
 
-export function provideTextContext(context: TestContext): TestContext
-export function provideTextContext(context?: TestContext): TestContext | undefined
-export function provideTextContext(context?: TestContext): TestContext | undefined {
+export function provideTestContext(context: TestContext): TestContext
+export function provideTestContext(context?: TestContext): TestContext | undefined
+export function provideTestContext(context?: TestContext): TestContext | undefined {
   currentContext = context
   return context
 }

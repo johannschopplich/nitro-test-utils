@@ -1,7 +1,7 @@
 import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import { build, copyPublicAssets, prepare, prerender } from 'nitropack'
-import { createTestContext, provideTestContext, provideTextContext } from './context'
+import { createTestContext, injectTestContext, provideTestContext } from './context'
 import type { TestOptions } from './types'
 import { startServer, stopServer } from './server'
 
@@ -14,7 +14,7 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
 ) {
-  const ctx = provideTestContext()
+  const ctx = injectTestContext()
 
   if (!ctx?.server?.url) {
     throw new Error('Nitro server is not running.')
@@ -75,6 +75,6 @@ export async function setup(options: Partial<TestOptions> = {}) {
       await stopServer()
     }
 
-    provideTextContext(undefined)
+    provideTestContext(undefined)
   })
 }
