@@ -19,7 +19,7 @@ export interface TestOptions {
    * Whether to build the Nitro server in development mode or for production.
    *
    * @remarks
-   * The Nitro build preset will be set to `nitro-dev` if this is set to 'development'. Otherwise, it will be set to `node`.
+   * The Nitro build preset is automatically set based on this option. If this is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro will is built with the `node` preset.
    *
    * @default 'development'
    */
