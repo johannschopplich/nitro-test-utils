@@ -1,6 +1,6 @@
 import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
-import { build, copyPublicAssets, createDevServer, prepare, prerender } from 'nitropack'
+import { build, copyPublicAssets, prepare, prerender } from 'nitropack'
 import { createTestContext, provideTestContext, provideTextContext } from './context'
 import type { TestOptions } from './types'
 import { startServer, stopServer } from './server'
