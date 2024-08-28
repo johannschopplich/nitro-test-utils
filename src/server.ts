@@ -20,7 +20,7 @@ export async function startServer() {
     ctx.server = await server.listen({})
     await prepare(ctx.nitro)
     const ready = new Promise<void>((resolve) => {
-      ctx.nitro!.hooks.hook('dev:reload', () => resolve())
+      ctx.nitro.hooks.hook('dev:reload', () => resolve())
     })
     await build(ctx.nitro)
     await ready
@@ -41,10 +41,6 @@ export async function startServer() {
 export async function stopServer() {
   const ctx = provideTestContext()
 
-  if (ctx.server) {
-    ctx.server.close()
-  }
-  if (ctx.nitro) {
-    await ctx.nitro.close()
-  }
+  ctx.server?.close()
+  ctx.nitro?.close()
 }

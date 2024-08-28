@@ -11,7 +11,7 @@ describe('config', async () => {
   it('should remove the Nitro source directory from force rerun triggers when disabled', async () => {
     const config = await defineConfig({
       nitro: {
-        forceRerunTriggersOnSrcDir: false,
+        rerunOnSourceChanges: false,
       },
     })
 

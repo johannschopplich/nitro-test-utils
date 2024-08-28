@@ -59,7 +59,7 @@ export async function setup(options: Partial<TestOptions> = {}) {
   const vitest = await import('vitest')
 
   vitest.beforeAll(async () => {
-    // Build
+    // Build the server
     if (!ctx.isDev) {
       await prepare(ctx.nitro)
       await copyPublicAssets(ctx.nitro)
