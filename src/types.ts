@@ -33,7 +33,6 @@ export interface TestContext {
   options: Required<TestOptions>
   isGlobal: boolean
   isDev: boolean
-  preset: NitroOptions['preset']
   nitro: Nitro
   server?: Listener
 }

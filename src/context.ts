@@ -23,7 +23,6 @@ export async function createTestContext(options: TestOptions & { isGlobal?: bool
     },
     isGlobal: options.isGlobal ?? false,
     isDev,
-    preset,
     nitro: await createNitro({
       preset,
       dev: isDev,
