@@ -246,6 +246,22 @@ function $fetch<T = any, R extends ResponseType = 'json'>(
 > [!TIP]
 > Fetch options will be merged with sensible default options, like [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
 
+## Migration
+
+### From v0.7 to v0.8
+
+The Nitro test utilities have been rewritten to provide flexible Nitro setups per test suite. The global Nitro setup was previously implicit and is now explicit. To upgrade and keep the same testing behavior, add the `global` option to the Nitro configuration in the `vitest.config.ts` file:
+
+```diff
+import { defineConfig } from 'nitro-test-utils/config'
+
+export default defineConfig({
+  nitro: {
++    global: true
+  }
+})
+```
+
 ## License
 
 [MIT](./LICENSE) License © 2024-PRESENT [Johann Schopplich](https://github.com/johannschopplich)
