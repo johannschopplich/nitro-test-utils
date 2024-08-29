@@ -31,7 +31,7 @@ yarn add -D nitro-test-utils vitest
 There are two ways to set up the Nitro test environment: globally or per test suite. The global setup is useful if you want to test multiple test files against the same Nitro server. The per test suite setup is useful if you want to test different Nitro servers in different test files.
 
 > [!TIP]
-> The global setup is recommended for most use cases, as it keeps the Nitro development server running in the background in Vitest watch mode. This allows you to run tests while developing your Nitro application.
+> The global setup is recommended for most use cases where only one Nitro application is being developed. It is more convenient to use than the per-test-suite setup because it keeps the Nitro development server running in the background ([localhost:3000](http://localhost:3000) by default) in Vitest watch mode. This allows you to develop your Nitro application and write tests at the same time.
 
 ### Global Nitro Build
 

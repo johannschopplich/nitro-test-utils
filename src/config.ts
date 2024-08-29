@@ -48,6 +48,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
   const resolvedGlobalConfig: NitroInlineConfig['global'] = userConfig.nitro?.global === true ? {} : userConfig.nitro?.global || undefined
   const resolvedNitroConfig: NitroInlineConfig = {
     ...userConfig.nitro,
+    rerunOnSourceChanges: userConfig.nitro?.rerunOnSourceChanges ?? true,
     global: resolvedGlobalConfig
       ? {
           rootDir: userConfig.nitro?.rootDir || resolvedGlobalConfig.rootDir || undefined,
@@ -72,7 +73,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
         // Custom triggers
         ...(userConfig.test?.forceRerunTriggers ?? []),
         // Rerun tests when source files change
-        ...((resolvedNitroConfig.rerunOnSourceChanges ?? true)
+        ...(resolvedNitroConfig.rerunOnSourceChanges
           ? resolvedNitroConfig.global
             ? [join(
                 resolvedNitroConfig.global?.rootDir || '',
