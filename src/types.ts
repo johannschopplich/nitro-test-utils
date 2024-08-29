@@ -1,5 +1,5 @@
 import type { Listener } from 'listhen'
-import type { Nitro, NitroOptions } from 'nitropack'
+import type { Nitro } from 'nitropack'
 
 /**
  * Options for the Nitro test context.

@@ -10,23 +10,22 @@ type GlobalSetupContextWithNitro = GlobalSetupContext & {
 // Setup shared Nitro instance
 // See https://vitest.dev/config/#globalsetup
 export default async function ({ config, provide }: GlobalSetupContextWithNitro) {
-  if (config.nitro.global) {
-    const ctx = await createTestContext({
-      rootDir: config.nitro.global?.rootDir || config.root,
-      mode: config.nitro.global?.mode,
-      isGlobal: true,
-    })
+  if (!config.nitro.global)
+    return
 
-    await startServer()
+  const ctx = await createTestContext({
+    rootDir: config.nitro.global.rootDir || config.root,
+    mode: config.nitro.global.mode,
+    isGlobal: true,
+  })
 
-    // Global setup is run in a different global scope, so tests don't have access
-    // to variables defined here. We need to expose the server URL for tests.
-    provide('server', { url: ctx.server!.url })
-  }
+  await startServer()
+
+  // Global setup is run in a different global scope, so tests don't have access
+  // to variables defined here. We need to expose the server URL for tests.
+  provide('server', { url: ctx.server!.url })
 
   return async function () {
-    if (config.nitro.global) {
-      await stopServer()
-    }
+    await stopServer()
   }
 }
