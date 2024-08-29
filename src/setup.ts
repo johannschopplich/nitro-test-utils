@@ -13,13 +13,13 @@ export default async function ({ config, provide }: GlobalSetupContextWithNitro)
   if (!config.nitro.global)
     return
 
-  const ctx = await createTestContext({
+  await createTestContext({
     rootDir: config.nitro.global.rootDir || config.root,
     mode: config.nitro.global.mode,
     isGlobal: true,
   })
 
-  await startServer()
+  const ctx = await startServer()
 
   // Global setup is run in a different global scope, so tests don't have access
   // to variables defined here. We need to expose the server URL for tests.

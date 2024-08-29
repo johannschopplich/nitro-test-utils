@@ -13,12 +13,14 @@ import { injectTestContext } from './context'
  * Start the server, either in development mode or production mode.
  */
 export async function startServer() {
-  await stopServer()
-
   const ctx = injectTestContext()
 
   if (!ctx) {
     throw new Error('Nitro test context is not initialized.')
+  }
+
+  if (!ctx.isGlobal) {
+    await stopServer()
   }
 
   if (ctx.isDev) {
