@@ -1,15 +1,19 @@
 import process from 'node:process'
 import { existsSync, readFileSync } from 'node:fs'
-import { createNitro } from 'nitropack'
-import type { NitroOptions } from 'nitropack'
 import { join, resolve } from 'pathe'
+import { createNitro } from 'nitropack'
 import * as dotenv from 'dotenv'
+import type { NitroOptions } from 'nitropack'
 import type { TestContext, TestOptions } from './types'
 
 let currentContext: TestContext | undefined
 
 export async function createTestContext(options: TestOptions & { isGlobal?: boolean }): Promise<TestContext> {
-  const { mode = 'development', rootDir = process.cwd() } = options
+  const {
+    mode = 'development',
+    rootDir = process.cwd(),
+    isGlobal = false,
+  } = options
   const isDev = mode === 'development'
   const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node'
   const outDir = resolve(rootDir, '.output')
@@ -21,7 +25,7 @@ export async function createTestContext(options: TestOptions & { isGlobal?: bool
       rootDir,
       mode,
     },
-    isGlobal: options.isGlobal ?? false,
+    isGlobal,
     isDev,
     nitro: await createNitro({
       preset,
