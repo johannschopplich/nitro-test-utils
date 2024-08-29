@@ -45,13 +45,13 @@ declare module 'vite' {
 
 export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<ViteUserConfig> {
   const currentDir = fileURLToPath(new URL('.', import.meta.url))
+  const resolvedGlobalConfig: NitroInlineConfig['global'] = userConfig.nitro?.global === true ? {} : userConfig.nitro?.global || undefined
   const resolvedNitroConfig: NitroInlineConfig = {
-    ...userConfig.nitro,
     rerunOnSourceChanges: userConfig.nitro?.rerunOnSourceChanges ?? true,
-    global: userConfig.nitro?.global && typeof userConfig.nitro.global === 'object'
+    global: resolvedGlobalConfig
       ? {
-          rootDir: userConfig.nitro?.rootDir || userConfig.nitro?.global?.rootDir || undefined,
-          mode: userConfig.nitro?.mode || userConfig.nitro?.global?.mode || undefined,
+          rootDir: userConfig.nitro?.rootDir || resolvedGlobalConfig.rootDir || undefined,
+          mode: userConfig.nitro?.mode || resolvedGlobalConfig.mode || undefined,
         }
       : undefined,
   }
