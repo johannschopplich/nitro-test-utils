@@ -24,6 +24,7 @@ export interface NitroInlineConfig {
    * @default 'development'
    */
   mode?: 'development' | 'production'
+
   /**
    * @deprecated Use the `global.rootDir` option instead.
    * @default process.cwd()

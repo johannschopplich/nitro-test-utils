@@ -9,7 +9,7 @@ export interface TestOptions {
    * Path to the directory with a Nitro app to be put under test.
    *
    * @example
-   * fileURLToPath(new URL('fixture', import.meta.url))
+   * fileURLToPath(new URL('backend', import.meta.url))
    *
    * @default process.cwd()
    */
