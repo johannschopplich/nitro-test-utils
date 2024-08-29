@@ -36,7 +36,9 @@ declare module 'vite' {
     /**
      * Options for the Nitro test runner.
      */
-    nitro?: NitroInlineConfig & { global?: boolean }
+    nitro?: Omit<NitroInlineConfig, 'global'> & {
+      global?: boolean | TestOptions
+    }
   }
 }
 
