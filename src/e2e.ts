@@ -21,7 +21,8 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
 ) {
-  let serverUrl = injectTestContext()?.server?.url
+  const ctx = injectTestContext()
+  let serverUrl = ctx?.server?.url
 
   if (!serverUrl) {
     const vitest = await import('vitest')
@@ -65,7 +66,7 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
  *  rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
  * })
  */
-export async function setup(options: Partial<TestOptions> = {}) {
+export async function setup(options: TestOptions = {}) {
   const vitest = await import('vitest')
   const server = vitest.inject('server')
 

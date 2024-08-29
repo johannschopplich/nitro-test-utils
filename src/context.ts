@@ -8,7 +8,7 @@ import type { TestContext, TestOptions } from './types'
 
 let currentContext: TestContext | undefined
 
-export async function createTestContext(options: Partial<TestOptions>): Promise<TestContext> {
+export async function createTestContext(options: TestOptions & { isGlobal?: boolean }): Promise<TestContext> {
   const { mode = 'development', rootDir = process.cwd() } = options
   const isDev = mode === 'development'
   const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node'
@@ -21,6 +21,7 @@ export async function createTestContext(options: Partial<TestOptions>): Promise<
       rootDir,
       mode,
     },
+    isGlobal: options.isGlobal ?? false,
     isDev,
     preset,
     nitro: await createNitro({

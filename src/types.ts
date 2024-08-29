@@ -6,7 +6,7 @@ import type { Nitro, NitroOptions } from 'nitropack'
  */
 export interface TestOptions {
   /**
-   * Path th a directory with a Nitro app to be put under test.
+   * Path to the directory with a Nitro app to be put under test.
    *
    * @example
    * fileURLToPath(new URL('fixture', import.meta.url))
@@ -31,6 +31,7 @@ export interface TestOptions {
  */
 export interface TestContext {
   options: Required<TestOptions>
+  isGlobal: boolean
   isDev: boolean
   preset: NitroOptions['preset']
   nitro: Nitro

@@ -4,6 +4,7 @@ import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { loadOptions as loadNitroOptions } from 'nitropack'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { TestOptions } from './types'
 
 export interface NitroInlineConfig {
   /**
@@ -13,38 +14,44 @@ export interface NitroInlineConfig {
    */
   rerunOnSourceChanges?: boolean
 
-  global?: {
-    /**
-     * Path th a directory with a Nitro app to be put under test.
-     *
-     * @default process.cwd()
-     */
-    rootDir?: string
+  /**
+   * Options for a global Nitro server instance for all tests.
+   */
+  global?: TestOptions
 
-    /**
-     * Whether to build the Nitro server in development mode or for production.
-     *
-     * @remarks
-     * The Nitro build preset is automatically set based on this option. If this is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro will is built with the `node` preset.
-     *
-     * @default 'development'
-     */
-    mode?: 'development' | 'production'
-  }
+  /**
+   * @deprecated Use the `global.rootDir` option instead.
+   * @default 'development'
+   */
+  mode?: 'development' | 'production'
+  /**
+   * @deprecated Use the `global.rootDir` option instead.
+   * @default process.cwd()
+   */
+  rootDir?: string
 }
 
 declare module 'vite' {
   interface UserConfig {
     /**
-     * Options for Nitro
+     * Options for the Nitro test runner.
      */
-    nitro?: NitroInlineConfig
+    nitro?: NitroInlineConfig & { global?: boolean }
   }
 }
 
 export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<ViteUserConfig> {
   const currentDir = fileURLToPath(new URL('.', import.meta.url))
-  const { nitro } = userConfig
+  const resolvedGlobalConfig: NitroInlineConfig['global'] = userConfig.nitro?.global === true ? {} : userConfig.nitro?.global || undefined
+  const resolvedNitroConfig: NitroInlineConfig = {
+    ...userConfig.nitro,
+    global: resolvedGlobalConfig
+      ? {
+          rootDir: userConfig.nitro?.rootDir || resolvedGlobalConfig.rootDir || undefined,
+          mode: userConfig.nitro?.mode || resolvedGlobalConfig.mode || undefined,
+        }
+      : undefined,
+  }
 
   const overrides = defineVitestConfig({
     test: {
@@ -59,26 +66,27 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
         // Vitest defaults
         '**/package.json/**',
         '**/{vitest,vite}.config.*/**',
+        // Custom triggers
         ...(userConfig.test?.forceRerunTriggers ?? []),
-        ...(nitro?.global
-          ? [join(
-              nitro?.global?.rootDir || '',
-              '.output',
-              nitro?.global?.mode === 'production' ? 'server' : '.nitro/dev',
-              'index.mjs',
-            )]
-          : (nitro?.rerunOnSourceChanges ?? true)
-              ? [`${(await loadNitroOptions()).srcDir}/**/*.ts`]
-              : []
-        ),
+        // Rerun tests when source files change
+        ...((resolvedNitroConfig.rerunOnSourceChanges ?? true)
+          ? resolvedNitroConfig.global
+            ? [join(
+                resolvedNitroConfig.global?.rootDir || '',
+                '.output',
+                resolvedNitroConfig.global?.mode === 'production' ? 'server' : '.nitro/dev',
+                'index.mjs',
+              )]
+            : [`${(await loadNitroOptions()).srcDir}/**/*.ts`]
+          : []),
       ],
-      globalSetup: nitro?.global
+      globalSetup: resolvedNitroConfig.global
         ? [
             join(currentDir, 'setup.mjs'),
           ]
         : undefined,
       // @ts-expect-error: Append Nitro for global setup file
-      nitro,
+      nitro: resolvedNitroConfig,
     },
   }) as ViteUserConfig
 

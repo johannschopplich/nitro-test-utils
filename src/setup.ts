@@ -1,20 +1,20 @@
-import process from 'node:process'
 import type { GlobalSetupContext } from 'vitest/node'
 import type { NitroInlineConfig } from './config'
 import { createTestContext } from './context'
 import { startServer, stopServer } from './server'
 
-type NitroSetupContext = GlobalSetupContext & {
-  config: { nitro?: NitroInlineConfig }
+type GlobalSetupContextWithNitro = GlobalSetupContext & {
+  config: { nitro: NitroInlineConfig }
 }
 
 // Setup shared Nitro instance
 // See https://vitest.dev/config/#globalsetup
-export default async function ({ config, provide }: NitroSetupContext) {
-  if (config.nitro?.global) {
+export default async function ({ config, provide }: GlobalSetupContextWithNitro) {
+  if (config.nitro.global) {
     const ctx = await createTestContext({
-      rootDir: config.nitro?.global?.rootDir || config.root || process.cwd(),
-      mode: config.nitro?.global?.mode,
+      rootDir: config.nitro.global?.rootDir || config.root,
+      mode: config.nitro.global?.mode,
+      isGlobal: true,
     })
 
     await startServer()
@@ -25,7 +25,7 @@ export default async function ({ config, provide }: NitroSetupContext) {
   }
 
   return async function () {
-    if (config.nitro?.global) {
+    if (config.nitro.global) {
       await stopServer()
     }
   }
