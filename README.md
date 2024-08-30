@@ -91,7 +91,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { $fetch, setup } from 'nitro-test-utils/e2e'
 
-describe('api', () => {
+describe('api', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
   })
@@ -191,7 +191,7 @@ If your Nitro server is located in a different directory than the working direct
 import { fileURLToPath } from 'node:url'
 import { setup } from 'nitro-test-utils/e2e'
 
-describe('api', () => {
+describe('api', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
   })
@@ -207,7 +207,7 @@ By default, the Nitro server is started in development mode. If you want to test
 import { fileURLToPath } from 'node:url'
 import { setup } from 'nitro-test-utils/e2e'
 
-describe('api', () => {
+describe('api', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
     mode: 'production'
