@@ -1,10 +1,10 @@
+import type { UserConfig as ViteUserConfig } from 'vite'
+import type { TestOptions } from './types'
 import { fileURLToPath } from 'node:url'
+import { loadOptions as loadNitroOptions } from 'nitropack'
 import { join } from 'pathe'
 import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
-import { loadOptions as loadNitroOptions } from 'nitropack'
-import type { UserConfig as ViteUserConfig } from 'vite'
-import type { TestOptions } from './types'
 
 export interface NitroInlineConfig {
   /**

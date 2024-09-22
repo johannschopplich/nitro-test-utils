@@ -1,10 +1,10 @@
-import process from 'node:process'
-import { existsSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'pathe'
-import { createNitro } from 'nitropack'
-import * as dotenv from 'dotenv'
 import type { NitroOptions } from 'nitropack'
 import type { TestContext, TestOptions } from './types'
+import { existsSync, readFileSync } from 'node:fs'
+import process from 'node:process'
+import * as dotenv from 'dotenv'
+import { createNitro } from 'nitropack'
+import { join, resolve } from 'pathe'
 
 let currentContext: TestContext | undefined
 

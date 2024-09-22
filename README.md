@@ -56,8 +56,8 @@ Write your tests in a dedicated location, e.g. a `tests` directory. You can use 
 A simple teste case could look like this:
 
 ```ts
-import { describe, expect, it } from 'vitest'
 import { $fetch } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
 
 describe('api', () => {
   it('responds successfully', async () => {
@@ -88,8 +88,8 @@ Use the `nitro-test-utils/e2e` module to import the `setup` function and the `$f
 
 ```ts
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
 import { $fetch, setup } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
 
 describe('api', async () => {
   await setup({

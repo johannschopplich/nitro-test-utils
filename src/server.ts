@@ -1,4 +1,3 @@
-import { resolve } from 'pathe'
 import { listen } from 'listhen'
 import {
   build,
@@ -7,6 +6,7 @@ import {
   prepare,
   prerender,
 } from 'nitropack'
+import { resolve } from 'pathe'
 import { injectTestContext } from './context'
 
 /**

@@ -1,7 +1,7 @@
-import { ofetch } from 'ofetch'
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
-import { clearTestContext, createTestContext, injectTestContext } from './context'
 import type { TestOptions } from './types'
+import { ofetch } from 'ofetch'
+import { clearTestContext, createTestContext, injectTestContext } from './context'
 import { startServer, stopServer } from './server'
 
 export interface TestFetchResponse<T> extends FetchResponse<T> {
