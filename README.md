@@ -9,7 +9,7 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 - 🥜 Run Nitro per test suite or globally
 - ✅ Seamless integration with Vitest
 - 🪝 Conditional code execution based on test mode (`import.meta.test`)
-- 📡 Familiar [`$fetch`](#fetch) helper like Nuxt test utils
+- 📡 Familiar [`$fetchRaw`](#fetchRaw) helper similar to Nuxt test utils
 
 ## Installation
 
@@ -56,12 +56,12 @@ Write your tests in a dedicated location, e.g. a `tests` directory. You can use 
 A simple teste case could look like this:
 
 ```ts
-import { $fetch } from 'nitro-test-utils/e2e'
+import { $fetchRaw } from 'nitro-test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
 describe('api', () => {
   it('responds successfully', async () => {
-    const { data, status } = await $fetch('/api/health')
+    const { data, status } = await $fetchRaw('/api/health')
 
     expect(status).toBe(200)
     expect(data).toMatchSnapshot()
@@ -84,11 +84,11 @@ export default defineConfig()
 
 Contrary to the global setup, the Nitro server is not started automatically by Vitest. Instead, you need to call the `setup` function in each test suite to start the Nitro server. After each test suite, the Nitro server is shut down.
 
-Use the `nitro-test-utils/e2e` module to import the `setup` function and the `$fetch` helper. The `setup` function accepts an options object with the `rootDir` property, which should point to the directory where the Nitro server is located. For more options, see the [Configuration](#configuration) section.
+Use the `nitro-test-utils/e2e` module to import the `setup` function and the `$fetchRaw` helper. The `setup` function accepts an options object with the `rootDir` property, which should point to the directory where the Nitro server is located. For more options, see the [Configuration](#configuration) section.
 
 ```ts
 import { fileURLToPath } from 'node:url'
-import { $fetch, setup } from 'nitro-test-utils/e2e'
+import { $fetchRaw, setup } from 'nitro-test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
 describe('api', async () => {
@@ -97,7 +97,7 @@ describe('api', async () => {
   })
 
   it('responds successfully', async () => {
-    const { data, status } = await $fetch('/api/health')
+    const { data, status } = await $fetchRaw('/api/health')
 
     expect(status).toBe(200)
     expect(data).toMatchSnapshot()
@@ -217,11 +217,61 @@ describe('api', async () => {
 
 ## Test Utilities
 
-### `$fetch`
+### `injectServerUrl`
 
-The `$fetch` function is a simple wrapper around [`ofetch`](https://github.com/unjs/ofetch) and is used to make requests to your Nitro server during testing. Import the function from the `nitro-test-utils/e2e` module. It will dynamically use the base URL of the active test server.
+To get the URL of the active test server for the current test suite or global test environment, you can use the `injectServerUrl` function.
 
-`$fetch` returns a promise that resolves with the raw response from [`ofetch.raw`](https://github.com/unjs/ofetch?tab=readme-ov-file#-access-to-raw-response). This is useful because it allows you to access the response status code, headers, and body, even if the response failed.
+**Usage:**
+
+```ts
+import { injectServerUrl } from 'nitro-test-utils/e2e'
+
+describe('api', () => {
+  it('should log the Nitro server URL', async () => {
+    const serverUrl = injectServerUrl()
+    console.log(serverUrl) // http://localhost:3000
+  })
+})
+```
+
+**Type Declaration:**
+
+```ts
+function injectServerUrl(): string
+```
+
+### `createFetch`
+
+Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Nitro server URL as the base URL.
+
+> [!TIP]
+> The following additional fetch options have been set as defaults:
+>
+> - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
+> - `redirect: 'manual'` to prevent automatic redirects.
+> - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
+
+**Usage:**
+
+Inside a test case:
+
+```ts
+import { createFetch } from 'nitro-test-utils/e2e'
+
+const $fetch = createFetch()
+```
+
+**Type Declaration:**
+
+```ts
+function createFetch(): $Fetch
+```
+
+### `$fetchRaw`
+
+The `$fetchRaw` function is a simple wrapper around the custom [`ofetch`](https://github.com/unjs/ofetch) `$Fetch` instance created by `createFetch`. It simplifies requesting data from your Nitro server during testing. Import the function from the `nitro-test-utils/e2e` module. It will dynamically use the base URL of the active test server.
+
+`$fetchRaw` returns a promise that resolves with the raw response from [`ofetch.raw`](https://github.com/unjs/ofetch?tab=readme-ov-file#-access-to-raw-response). This is useful because it allows you to access the response status code, headers, and body, even if the response failed.
 
 **Usage:**
 
@@ -229,7 +279,7 @@ Inside a test case:
 
 ```ts
 // Use `data` instead of `body` for the parsed response body
-const { data, status, headers } = await $fetch('/api/hello')
+const { data, status, headers } = await $fetchRaw('/api/hello')
 
 expect(status).toBe(200)
 expect(data).toMatchSnapshot()
@@ -238,16 +288,40 @@ expect(data).toMatchSnapshot()
 **Type Declaration:**
 
 ```ts
-function $fetch<T = any, R extends ResponseType = 'json'>(
+interface TestFetchResponse<T> extends FetchResponse<T> {
+  /** Alias for `response._data` */
+  data?: T
+}
+
+function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>
-): Promise<FetchResponse<MappedResponseType<R, T>>>
+): Promise<TestFetchResponse<MappedResponseType<R, T>>>
 ```
 
 > [!TIP]
-> Fetch options will be merged with sensible default options, like [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
+> All additional options set in [`createFetch`](#createfetch) apply here as well, sucg has [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
 
 ## Migration
+
+### From v0.8 to v0.9
+
+In v0.8 and earlier, `$fetch` returned an object, contrary to what `$fetch` does in Nitro, Nuxt (client and server) and ofetch itself, which returns the response body. Using the same name is a fragmentation that causes the same function to behave differently in test utilities.
+
+As such, the `$fetch` function has been renamed to `$fetchRaw` to better reflect its behavior. To update your tests, simply rename the import and function call:
+
+```diff
+-import { $fetch } from '../src/e2e'
++import { $fetchRaw } from '../src/e2e'
+
+describe('api', async () => {
+  it('should respond data', async () => {
+-    const { status } = await $fetch('/')
++    const { status } = await $fetchRaw('/')
+    expect(status).toBe(200)
+  })
+})
+```
 
 ### From v0.7 to v0.8
 

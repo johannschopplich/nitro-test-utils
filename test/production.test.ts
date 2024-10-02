@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { $fetch, setup } from '../src/e2e'
+import { $fetchRaw, setup } from '../src/e2e'
 
 describe('production', async () => {
   await setup({
@@ -9,7 +9,7 @@ describe('production', async () => {
   })
 
   it('should respond from production server build', async () => {
-    const { data } = await $fetch('/')
+    const { data } = await $fetchRaw('/')
     expect(data).toBe('Hello, production build!')
   })
 })

@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { $fetch, setup } from '../src/e2e'
+import { $fetchRaw, setup } from '../src/e2e'
 
 describe('routes', async () => {
   await setup({
@@ -8,7 +8,7 @@ describe('routes', async () => {
   })
 
   it('should respond with 200 status code', async () => {
-    const { data } = await $fetch('/api/health')
+    const { data } = await $fetchRaw('/api/health')
     expect(data).toMatchInlineSnapshot(`
       {
         "ok": true,
@@ -17,7 +17,7 @@ describe('routes', async () => {
   })
 
   it('should return custom environment variables', async () => {
-    const { data } = await $fetch('/api/env')
+    const { data } = await $fetchRaw('/api/env')
     expect(data).toMatchInlineSnapshot(`
       {
         "isDev": true,
