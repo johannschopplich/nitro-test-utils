@@ -1,6 +1,7 @@
 import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import type { TestOptions } from './types'
 import { ofetch } from 'ofetch'
+import { inject } from 'vitest'
 import { clearTestContext, createTestContext, injectTestContext } from './context'
 import { startServer, stopServer } from './server'
 
@@ -17,22 +18,42 @@ declare module 'vitest' {
   }
 }
 
-export async function $fetch<T = any, R extends ResponseType = 'json'>(
+/**
+ * Creates a custom `ofetch` instance with the Nitro server URL as the base URL.
+ *
+ * @remarks
+ * The following additional fetch options have been set as defaults:
+ * - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
+ * - `redirect: 'manual'` to prevent automatic redirects.
+ * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
+ */
+export function createFetch() {
+  const serverUrl = injectServerUrl()
+
+  return ofetch.create({
+    baseURL: serverUrl,
+    ignoreResponseError: true,
+    redirect: 'manual',
+    headers: {
+      accept: 'application/json',
+    },
+  })
+}
+
+/**
+ * Fetches the raw response from the Nitro server for the given path. `FetchOptions` can be passed to customize the request.
+ *
+ * @remarks
+ * The following additional fetch options have been set as defaults:
+ * - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
+ * - `redirect: 'manual'` to prevent automatic redirects.
+ * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
+ */
+export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
 ) {
-  const ctx = injectTestContext()
-  let serverUrl = ctx?.server?.url
-
-  if (!serverUrl) {
-    const vitest = await import('vitest')
-    serverUrl = vitest.inject('server')?.url
-  }
-
-  if (!serverUrl) {
-    throw new Error('Nitro server is not running.')
-  }
-
+  const serverUrl = injectServerUrl()
   const localFetch = ofetch.create({
     baseURL: serverUrl,
     ignoreResponseError: true,
@@ -54,6 +75,21 @@ export async function $fetch<T = any, R extends ResponseType = 'json'>(
   })
 
   return response as TestFetchResponse<MappedResponseType<R, T>>
+}
+
+export function injectServerUrl() {
+  const ctx = injectTestContext()
+  let serverUrl = ctx?.server?.url
+
+  if (!serverUrl) {
+    serverUrl = inject('server')?.url
+  }
+
+  if (!serverUrl) {
+    throw new Error('Nitro server is not running.')
+  }
+
+  return serverUrl
 }
 
 /**
