@@ -49,7 +49,7 @@
   },
   "peerDependencies": {
     "nitropack": "^2",
-    "vitest": "^2"
+    "vitest": "^2 || ^3"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
