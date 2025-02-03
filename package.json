@@ -59,8 +59,8 @@
     "ufo": "^1.5.4"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.1.0",
-    "@types/node": "^22.12.0",
+    "@antfu/eslint-config": "^4.1.1",
+    "@types/node": "^22.13.0",
     "bumpp": "^10.0.1",
     "eslint": "^9.19.0",
     "nitropack": "^2.10.4",
