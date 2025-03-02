@@ -23,18 +23,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
+      "defautl": "./dist/index.mjs"
     },
     "./config": {
       "types": "./dist/config.d.mts",
-      "import": "./dist/config.mjs"
+      "defautl": "./dist/config.mjs"
     },
     "./e2e": {
       "types": "./dist/e2e.d.mts",
-      "import": "./dist/e2e.mjs"
+      "defautl": "./dist/e2e.mjs"
     }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.mts",
   "files": [
     "dist"
   ],
