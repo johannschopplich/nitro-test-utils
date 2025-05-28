@@ -9,7 +9,7 @@ type GlobalSetupContextWithNitro = GlobalSetupContext & {
 
 // Setup shared Nitro instance
 // See https://vitest.dev/config/#globalsetup
-export default async function ({ config, provide }: GlobalSetupContextWithNitro) {
+async function setup({ config, provide }: GlobalSetupContextWithNitro): Promise<(() => Promise<void>) | undefined> {
   if (!config.nitro.global)
     return
 
@@ -29,3 +29,5 @@ export default async function ({ config, provide }: GlobalSetupContextWithNitro)
     await stopServer()
   }
 }
+
+export default setup

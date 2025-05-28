@@ -1,4 +1,7 @@
+import type { UserConfig } from 'vite'
 // eslint-disable-next-line antfu/no-import-dist
-import { defineConfig } from './dist/config.mjs'
+import { defineConfig } from './dist/config.js'
 
-export default defineConfig()
+const config: UserConfig = await defineConfig()
+
+export default config

@@ -1,4 +1,4 @@
-import type { FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
+import type { $Fetch, FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import type { TestOptions } from './types'
 import { ofetch } from 'ofetch'
 import { inject } from 'vitest'
@@ -27,7 +27,7 @@ declare module 'vitest' {
  * - `redirect: 'manual'` to prevent automatic redirects.
  * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
  */
-export function createFetch() {
+export function createFetch(): $Fetch {
   const serverUrl = injectServerUrl()
 
   return ofetch.create({
@@ -52,7 +52,7 @@ export function createFetch() {
 export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
-) {
+): Promise<TestFetchResponse<MappedResponseType<R, T>>> {
   const serverUrl = injectServerUrl()
   const localFetch = ofetch.create({
     baseURL: serverUrl,
@@ -77,7 +77,7 @@ export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   return response as TestFetchResponse<MappedResponseType<R, T>>
 }
 
-export function injectServerUrl() {
+export function injectServerUrl(): string {
   const ctx = injectTestContext()
   let serverUrl = ctx?.server?.url
 
@@ -102,7 +102,7 @@ export function injectServerUrl() {
  *  rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
  * })
  */
-export async function setup(options: TestOptions = {}) {
+export async function setup(options: TestOptions = {}): Promise<void> {
   const vitest = await import('vitest')
   const server = vitest.inject('server')
 

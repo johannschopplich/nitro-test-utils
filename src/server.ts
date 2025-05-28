@@ -1,3 +1,4 @@
+import type { TestContext } from './types'
 import { listen } from 'listhen'
 import {
   build,
@@ -12,7 +13,7 @@ import { injectTestContext } from './context'
 /**
  * Start the server, either in development mode or production mode.
  */
-export async function startServer() {
+export async function startServer(): Promise<TestContext> {
   const ctx = injectTestContext()
 
   if (!ctx) {
@@ -55,7 +56,7 @@ export async function startServer() {
 /**
  * Stop the running server if any.
  */
-export async function stopServer() {
+export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()
 
   if (ctx?.server)

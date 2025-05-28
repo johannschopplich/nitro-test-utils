@@ -48,15 +48,15 @@ export async function createTestContext(options: TestOptions & { isGlobal?: bool
   return ctx
 }
 
-export function injectTestContext() {
+export function injectTestContext(): TestContext | undefined {
   return currentContext
 }
 
-export function provideTestContext(context: TestContext) {
+export function provideTestContext(context: TestContext): void {
   currentContext = context
 }
 
-export function clearTestContext() {
+export function clearTestContext(): void {
   currentContext = undefined
 }
 
@@ -68,7 +68,7 @@ export function setupDotenv({
   rootDir?: string
   fileName?: string
   override?: boolean
-} = {}) {
+} = {}): Record<string, string> {
   const environment: Record<string, string> = Object.create(null)
   const dotenvFile = resolve(rootDir, fileName)
 
