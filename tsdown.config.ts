@@ -6,6 +6,7 @@ const config: UserConfig | UserConfigFn = defineConfig({
     index: 'src/index.ts',
     config: 'src/config.ts',
     e2e: 'src/e2e.ts',
+    setup: 'src/setup.ts',
   },
   external: [
     'vite',
@@ -13,6 +14,7 @@ const config: UserConfig | UserConfigFn = defineConfig({
     'vitest/config',
   ],
   dts: true,
+  unbundle: true,
 })
 
 export default config
