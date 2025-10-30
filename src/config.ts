@@ -58,11 +58,14 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
 
   const overrides = defineVitestConfig({
     test: {
+      isolate: false,
+      maxWorkers: 1,
+      // @ts-expect-error: Vitest v3 compatibility
       poolOptions: {
         forks: {
           // Disabling isolation improves performance in Node environments
+          maxWorkers: 1,
           isolate: false,
-          singleFork: true,
         },
       },
       forceRerunTriggers: [
@@ -88,7 +91,6 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
             join(currentDir, 'setup.js'),
           ]
         : undefined,
-      // @ts-expect-error: Append Nitro for global setup file
       nitro: resolvedNitroConfig,
     },
   }) as ViteUserConfig

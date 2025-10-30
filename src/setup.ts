@@ -1,21 +1,21 @@
-import type { GlobalSetupContext } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import type { NitroInlineConfig } from './config'
 import { createTestContext } from './context'
 import { startServer, stopServer } from './server'
 
-type GlobalSetupContextWithNitro = GlobalSetupContext & {
+type GlobalSetupContextWithNitro = TestProject & {
   config: { nitro: NitroInlineConfig }
 }
 
 // Setup shared Nitro instance
 // See https://vitest.dev/config/#globalsetup
-async function setup({ config, provide }: GlobalSetupContextWithNitro): Promise<(() => Promise<void>) | undefined> {
-  if (!config.nitro.global)
+async function setup(project: GlobalSetupContextWithNitro): Promise<(() => Promise<void>) | undefined> {
+  if (!project.config.nitro.global)
     return
 
   await createTestContext({
-    rootDir: config.nitro.global.rootDir || config.root,
-    mode: config.nitro.global.mode,
+    rootDir: project.config.nitro.global.rootDir || project.config.root,
+    mode: project.config.nitro.global.mode,
     isGlobal: true,
   })
 
@@ -23,7 +23,7 @@ async function setup({ config, provide }: GlobalSetupContextWithNitro): Promise<
 
   // Global setup is run in a different global scope, so tests don't have access
   // to variables defined here. We need to expose the server URL for tests.
-  provide('server', { url: ctx.server!.url })
+  project.provide('server', { url: ctx.server!.url })
 
   return async function () {
     await stopServer()
