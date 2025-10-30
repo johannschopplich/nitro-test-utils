@@ -2,7 +2,7 @@
   "name": "nitro-test-utils",
   "type": "module",
   "version": "0.9.4",
-  "packageManager": "pnpm@10.17.1",
+  "packageManager": "pnpm@10.20.0",
   "description": "Testing environment and utilities for Nitro",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
   "license": "MIT",
@@ -49,25 +49,25 @@
   },
   "peerDependencies": {
     "nitropack": "^2",
-    "vitest": "^2 || ^3"
+    "vitest": "^2 || ^3 || ^4"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
     "listhen": "^1.9.0",
-    "ofetch": "^1.4.1",
+    "ofetch": "^1.5.0",
     "pathe": "^2.0.3",
     "ufo": "^1.6.1"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^5.4.1",
-    "@types/node": "^24.6.1",
-    "bumpp": "^10.2.3",
-    "eslint": "^9.36.0",
-    "nitropack": "^2.12.6",
-    "tsdown": "^0.15.6",
+    "@antfu/eslint-config": "^6.1.0",
+    "@types/node": "^24.9.2",
+    "bumpp": "^10.3.1",
+    "eslint": "^9.38.0",
+    "nitropack": "^2.12.9",
+    "tsdown": "^0.15.12",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
-    "vite": "^7.1.7",
-    "vitest": "^3.2.4"
+    "vite": "^7.1.12",
+    "vitest": "^4.0.5"
   }
 }
