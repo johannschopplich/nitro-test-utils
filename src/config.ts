@@ -58,14 +58,14 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
 
   const overrides = defineVitestConfig({
     test: {
+      // Disabling isolation improves performance in Node environments
       isolate: false,
       maxWorkers: 1,
       // @ts-expect-error: Vitest v3 compatibility
       poolOptions: {
         forks: {
-          // Disabling isolation improves performance in Node environments
-          maxWorkers: 1,
           isolate: false,
+          singleFork: true,
         },
       },
       forceRerunTriggers: [
