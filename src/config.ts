@@ -84,8 +84,8 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
             join(currentDir, 'setup.js'),
           ]
         : undefined,
-      nitro: resolvedNitroConfig,
     },
+    nitro: resolvedNitroConfig,
   }) as ViteUserConfig
 
   return mergeConfig(userConfig, overrides)
