@@ -26,12 +26,15 @@ npm install -D nitro-test-utils vitest
 yarn add -D nitro-test-utils vitest
 ```
 
+> [!IMPORTANT]
+> This package requires Vitest v4 or later.
+
 ## Basic Usage
 
 There are two ways to set up the Nitro test environment: globally or per test suite. The global setup is useful if you want to test multiple test files against the same Nitro server. The per test suite setup is useful if you want to test different Nitro servers in different test files.
 
 > [!TIP]
-> The global setup is recommended for most use cases where only one Nitro application is being developed. It is more convenient to use than the per-test-suite setup because it keeps the Nitro development server running in the background ([localhost:3000](http://localhost:3000) by default) during Vitest watch mode.
+> The global setup is recommended for most use cases where only one Nitro application is being developed. It is more convenient to use than the per-test-suite setup because it keeps the Nitro development server running in the background during Vitest watch mode.
 > This allows you to develop your Nitro application and write tests at the same time.
 
 ### Global Nitro Build
@@ -51,9 +54,9 @@ export default defineConfig({
 > [!TIP]
 > Under the hood, Vitest will automatically spin up a Nitro server before running your tests and shut it down afterwards.
 
-Write your tests in a dedicated location, e.g. a `tests` directory. You can use the `$fetch` function to make requests to the Nitro server that is started by the test environment.
+Write your tests in a dedicated location, e.g. a `tests` directory. You can use the `$fetchRaw` function to make requests to the Nitro server that is started by the test environment.
 
-A simple teste case could look like this:
+A simple test case could look like this:
 
 ```ts
 import { $fetchRaw } from 'nitro-test-utils/e2e'
@@ -136,7 +139,7 @@ FOO=bar
 Depending of your use case, you can configure the Nitro test environment globally or per test suite.
 
 > [!NOTE]
-> In each case, you can build Nitro in `development` or `production` mode. If the mode is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro will is built with the `node` preset.
+> In each case, you can build Nitro in `development` or `production` mode. If the mode is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro will be built with the `node` preset.
 > You cannot set the Nitro build preset, since only builds for Node.js are supported in Vitest.
 
 ### Global Nitro Configuration
@@ -300,42 +303,7 @@ function $fetchRaw<T = any, R extends ResponseType = 'json'>(
 ```
 
 > [!TIP]
-> All additional options set in [`createFetch`](#createfetch) apply here as well, sucg has [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
-
-## Migration
-
-### From v0.8 to v0.9
-
-In v0.8 and earlier, `$fetch` returned an object, contrary to what `$fetch` does in Nitro, Nuxt (client and server) and ofetch itself, which returns the response body. Using the same name is a fragmentation that causes the same function to behave differently in test utilities.
-
-As such, the `$fetch` function has been renamed to `$fetchRaw` to better reflect its behavior. To update your tests, simply rename the import and function call:
-
-```diff
--import { $fetch } from '../src/e2e'
-+import { $fetchRaw } from '../src/e2e'
-
-describe('api', async () => {
-  it('should respond data', async () => {
--    const { status } = await $fetch('/')
-+    const { status } = await $fetchRaw('/')
-    expect(status).toBe(200)
-  })
-})
-```
-
-### From v0.7 to v0.8
-
-The Nitro test utilities have been rewritten to provide flexible Nitro setups per test suite. The global Nitro setup was previously implicit and is now explicit. To upgrade and keep the same testing behavior, add the `global` option to the Nitro configuration in the `vitest.config.ts` file:
-
-```diff
-import { defineConfig } from 'nitro-test-utils/config'
-
-export default defineConfig({
-  nitro: {
-+    global: true
-  }
-})
-```
+> All additional options set in [`createFetch`](#createfetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
 
 ## License
 
