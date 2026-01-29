@@ -2,7 +2,7 @@
   "name": "nitro-test-utils",
   "type": "module",
   "version": "0.10.1",
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@10.28.2",
   "description": "Testing environment and utilities for Nitro",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
   "license": "MIT",
@@ -22,19 +22,19 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     },
     "./config": {
-      "types": "./dist/config.d.ts",
-      "default": "./dist/config.js"
+      "types": "./dist/config.d.mts",
+      "default": "./dist/config.mjs"
     },
     "./e2e": {
-      "types": "./dist/e2e.d.ts",
-      "default": "./dist/e2e.js"
+      "types": "./dist/e2e.d.mts",
+      "default": "./dist/e2e.mjs"
     }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.mts",
   "files": [
     "dist"
   ],
@@ -49,25 +49,31 @@
   },
   "peerDependencies": {
     "nitropack": "^2",
-    "vitest": "^2 || ^3 || ^4"
+    "vitest": "^4"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
     "listhen": "^1.9.0",
-    "ofetch": "^1.5.0",
+    "ofetch": "^1.5.1",
     "pathe": "^2.0.3",
-    "ufo": "^1.6.1"
+    "ufo": "^1.6.3"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^6.1.0",
-    "@types/node": "^24.9.2",
-    "bumpp": "^10.3.1",
-    "eslint": "^9.38.0",
-    "nitropack": "^2.12.9",
-    "tsdown": "^0.15.12",
+    "@antfu/eslint-config": "^7.2.0",
+    "@types/node": "^24.10.9",
+    "bumpp": "^10.4.0",
+    "eslint": "^9.39.2",
+    "nitropack": "^2.13.1",
+    "tsdown": "^0.20.1",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
-    "vite": "^7.1.12",
-    "vitest": "^4.0.5"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild"
+    ]
   }
 }

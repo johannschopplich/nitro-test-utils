@@ -61,13 +61,6 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
       // Disabling isolation improves performance in Node environments
       isolate: false,
       maxWorkers: 1,
-      // @ts-expect-error: Vitest v3 compatibility
-      poolOptions: {
-        forks: {
-          isolate: false,
-          singleFork: true,
-        },
-      },
       forceRerunTriggers: [
         // Vitest defaults
         '**/package.json/**',
