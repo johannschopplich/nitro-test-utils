@@ -81,7 +81,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
       ],
       globalSetup: resolvedNitroConfig.global
         ? [
-            join(currentDir, 'setup.js'),
+            join(currentDir, 'setup.mjs'),
           ]
         : undefined,
     },

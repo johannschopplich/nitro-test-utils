@@ -32,6 +32,10 @@
     "./e2e": {
       "types": "./dist/e2e.d.mts",
       "default": "./dist/e2e.mjs"
+    },
+    "./setup": {
+      "types": "./dist/setup.d.mts",
+      "default": "./dist/setup.mjs"
     }
   },
   "types": "./dist/index.d.mts",
