@@ -1,10 +1,15 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { InlineConfig as VitestInlineConfig } from 'vitest/node'
 import type { TestOptions } from './types'
 import { fileURLToPath } from 'node:url'
 import { loadOptions as loadNitroOptions } from 'nitropack'
 import { join } from 'pathe'
 import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
+
+export interface NitroTestConfig extends VitestInlineConfig {
+  nitro?: NitroInlineConfig
+}
 
 export interface NitroInlineConfig {
   /**
@@ -56,7 +61,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
       : undefined,
   }
 
-  const overrides = defineVitestConfig({
+  const userConfigOverrides = defineVitestConfig({
     test: {
       // Disabling isolation improves performance in Node environments
       isolate: false,
@@ -84,9 +89,10 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
             join(currentDir, 'setup.mjs'),
           ]
         : undefined,
+      // @ts-expect-error: `nitro` is added via module augmentation on Vite's UserConfig
+      nitro: resolvedNitroConfig,
     },
-    nitro: resolvedNitroConfig,
   }) as ViteUserConfig
 
-  return mergeConfig(userConfig, overrides)
+  return mergeConfig(userConfig, userConfigOverrides)
 }

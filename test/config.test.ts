@@ -1,3 +1,4 @@
+import type { NitroTestConfig } from '../src/config'
 import { describe, expect, it } from 'vitest'
 import { defineConfig } from '../src/config'
 
@@ -27,7 +28,7 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.globalSetup).toHaveLength(1)
-      expect(config.nitro?.global).toEqual({ rootDir: undefined, mode: undefined })
+      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined })
     })
 
     it('should pass through custom options', async () => {
@@ -36,14 +37,14 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.globalSetup).toHaveLength(1)
-      expect(config.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production' })
+      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production' })
     })
 
     it('should not configure globalSetup when not set', async () => {
       const config = await defineConfig({})
 
       expect(config.test?.globalSetup).toBeUndefined()
-      expect(config.nitro?.global).toBeUndefined()
+      expect((config.test as NitroTestConfig)?.nitro?.global).toBeUndefined()
     })
   })
 
@@ -53,8 +54,7 @@ describe('defineConfig', async () => {
         nitro: { rerunOnSourceChanges: false },
       })
 
-      expect(config.nitro).toBeDefined()
-      expect(config.nitro?.rerunOnSourceChanges).toBe(false)
+      expect((config.test as NitroTestConfig)?.nitro?.rerunOnSourceChanges).toBe(false)
     })
 
     it('should merge with user configuration', async () => {
