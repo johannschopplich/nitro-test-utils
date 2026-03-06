@@ -67,6 +67,7 @@
     "@types/node": "^24.10.9",
     "bumpp": "^10.4.0",
     "eslint": "^9.39.2",
+    "eslint-flat-config-utils": "^3.0.1",
     "nitropack": "^2.13.1",
     "tsdown": "^0.20.1",
     "typescript": "^5.9.3",
