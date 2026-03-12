@@ -17,7 +17,8 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "test/fixture",
-    "test/fixture2"
+    "node_modules",
+    "test/basic-app",
+    "test/production-app"
   ]
 }

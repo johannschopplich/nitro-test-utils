@@ -13,21 +13,21 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 
 ## Installation
 
-Add the `nitro-test-utils` as well as `vitest` to your project with your favorite package manager:
+Add the `nitro-test-utils` as well as `nitro` and `vitest` to your project with your favorite package manager:
 
 ```bash
 # pnpm
-pnpm add -D nitro-test-utils vitest
+pnpm add -D nitro-test-utils nitro vitest
 
 # npm
-npm install -D nitro-test-utils vitest
+npm install -D nitro-test-utils nitro vitest
 
 # yarn
-yarn add -D nitro-test-utils vitest
+yarn add -D nitro-test-utils nitro vitest
 ```
 
 > [!IMPORTANT]
-> This package requires Vitest v4 or later.
+> This package requires Nitro v3 and Vitest v4 or later. Both `nitro` and `vitest` must be installed as peer dependencies.
 
 ## Basic Usage
 
@@ -39,7 +39,7 @@ There are two ways to set up the Nitro test environment: globally or per test su
 
 ### Global Nitro Build
 
-Getting started with the global Nitro test environment for Vitest is as simple as creating a new `vitest.config.ts` configuration file in your project root. Set the `global` option to `true`, which expectes the Nitro source files to be located in the working directory. See the [Configuration](#configuration) section for more options.
+Getting started with the global Nitro test environment for Vitest is as simple as creating a new `vitest.config.ts` configuration file in your project root. Set the `global` option to `true`, which expects the Nitro source files to be located in the working directory. See the [Configuration](#configuration) section for more options.
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
@@ -90,13 +90,13 @@ Contrary to the global setup, the Nitro server is not started automatically by V
 Use the `nitro-test-utils/e2e` module to import the `setup` function and the `$fetchRaw` helper. The `setup` function accepts an options object with the `rootDir` property, which should point to the directory where the Nitro server is located. For more options, see the [Configuration](#configuration) section.
 
 ```ts
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { $fetchRaw, setup } from 'nitro-test-utils/e2e'
 import { describe, expect, it } from 'vitest'
 
 describe('api', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
+    rootDir: resolve(import.meta.dirname, 'fixture'),
   })
 
   it('responds successfully', async () => {
@@ -113,7 +113,9 @@ describe('api', async () => {
 You can detect whether your code is running in a Nitro build during tests by checking the `import.meta.test` property. This is useful if you want to conditionally run code only in Nitro tests, but not in production.
 
 ```ts
-export default defineEventHandler(() => {
+import { defineHandler } from 'nitro'
+
+export default defineHandler(async () => {
   // Mock data for tests
   if (import.meta.test) {
     return { foo: 'bar' }
@@ -136,17 +138,17 @@ FOO=bar
 
 ## Configuration
 
-Depending of your use case, you can configure the Nitro test environment globally or per test suite.
+Depending on your use case, you can configure the Nitro test environment globally or per test suite.
 
 > [!NOTE]
-> In each case, you can build Nitro in `development` or `production` mode. If the mode is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro will be built with the `node` preset.
+> In each case, you can build Nitro in `development` or `production` mode. If the mode is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro will be built with the `node-middleware` preset.
 > You cannot set the Nitro build preset, since only builds for Node.js are supported in Vitest.
 
 ### Global Nitro Configuration
 
 #### Global Nitro Root Directory
 
-If your Nitro server is located in a different directory than the working directory, you can specify the `rootDir` option in the Nitro configuration. It should point to the the same path where the `nitro.config.ts` file is located.
+If your Nitro server is located in a different directory than the working directory, you can specify the `rootDir` option in the Nitro configuration. It should point to the same path where the `nitro.config.ts` file is located.
 
 ```ts
 // vitest.config.ts
@@ -187,16 +189,16 @@ export default defineConfig({
 
 #### Test Nitro Root Directory
 
-If your Nitro server is located in a different directory than the working directory, you can specify the `rootDir` option in the `setup` function. It should point to the the same path where the `nitro.config.ts` file is located.
+If your Nitro server is located in a different directory than the working directory, you can specify the `rootDir` option in the `setup` function. It should point to the same path where the `nitro.config.ts` file is located.
 
 ```ts
 // tests/api.test.ts
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { setup } from 'nitro-test-utils/e2e'
 
 describe('api', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
+    rootDir: resolve(import.meta.dirname, 'fixture'),
   })
 })
 ```
@@ -207,16 +209,26 @@ By default, the Nitro server is started in development mode. If you want to test
 
 ```ts
 // tests/api.test.ts
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { setup } from 'nitro-test-utils/e2e'
 
 describe('api', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
+    rootDir: resolve(import.meta.dirname, 'fixture'),
     mode: 'production'
   })
 })
 ```
+
+## Migrating from Nitro v2
+
+If you are upgrading from an earlier version of `nitro-test-utils` that targeted Nitro v2 (`nitropack`), the following breaking changes apply:
+
+- **Peer dependency**: `nitropack` has been replaced by `nitro` (v3).
+- **Renamed types**: `TestOptions` → `NitroTestOptions`, `TestContext` → `NitroTestContext`, `TestServer` → `NitroTestServer`, `TestFetchResponse` → `NitroFetchResponse`.
+- **Removed deprecated config fields**: The top-level `mode` and `rootDir` options in the Vitest `nitro` config have been removed. Use `nitro.global.mode` and `nitro.global.rootDir` instead.
+
+For Nitro v3 API changes (handler definitions, error handling, request body, presets, etc.), see the [official Nitro v3 migration guide](https://nitro.build/guide/migration).
 
 ## Test Utilities
 
@@ -243,7 +255,7 @@ describe('api', () => {
 function injectServerUrl(): string
 ```
 
-### `createFetch`
+### `createNitroFetch`
 
 Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Nitro server URL as the base URL.
 
@@ -259,20 +271,20 @@ Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Ni
 Inside a test case:
 
 ```ts
-import { createFetch } from 'nitro-test-utils/e2e'
+import { createNitroFetch } from 'nitro-test-utils/e2e'
 
-const $fetch = createFetch()
+const $fetch = createNitroFetch()
 ```
 
 **Type Declaration:**
 
 ```ts
-function createFetch(): $Fetch
+function createNitroFetch(): $Fetch
 ```
 
 ### `$fetchRaw`
 
-The `$fetchRaw` function is a simple wrapper around the custom [`ofetch`](https://github.com/unjs/ofetch) `$Fetch` instance created by `createFetch`. It simplifies requesting data from your Nitro server during testing. Import the function from the `nitro-test-utils/e2e` module. It will dynamically use the base URL of the active test server.
+The `$fetchRaw` function is a simple wrapper around the custom [`ofetch`](https://github.com/unjs/ofetch) `$Fetch` instance created by `createNitroFetch`. It simplifies requesting data from your Nitro server during testing. Import the function from the `nitro-test-utils/e2e` module. It will dynamically use the base URL of the active test server.
 
 `$fetchRaw` returns a promise that resolves with the raw response from [`ofetch.raw`](https://github.com/unjs/ofetch?tab=readme-ov-file#-access-to-raw-response). This is useful because it allows you to access the response status code, headers, and body, even if the response failed.
 
@@ -291,7 +303,7 @@ expect(data).toMatchSnapshot()
 **Type Declaration:**
 
 ```ts
-interface TestFetchResponse<T> extends FetchResponse<T> {
+interface NitroFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
   data?: T
 }
@@ -299,11 +311,11 @@ interface TestFetchResponse<T> extends FetchResponse<T> {
 function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>
-): Promise<TestFetchResponse<MappedResponseType<R, T>>>
+): Promise<NitroFetchResponse<MappedResponseType<R, T>>>
 ```
 
 > [!TIP]
-> All additional options set in [`createFetch`](#createfetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
+> All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
 
 ## License
 

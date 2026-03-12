@@ -8,11 +8,14 @@ const config: UserConfig = defineConfig({
     e2e: 'src/e2e.ts',
     setup: 'src/setup.ts',
   },
-  external: [
-    'vite',
-    'vitest',
-    'vitest/config',
-  ],
+  deps: {
+    neverBundle: [
+      'nitro',
+      'vite',
+      'vitest',
+      'vitest/config',
+    ],
+  },
   dts: true,
   unbundle: true,
 })

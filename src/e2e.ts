@@ -1,11 +1,11 @@
 import type { $Fetch, FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
-import type { TestOptions } from './types'
+import type { NitroTestOptions } from './types'
 import { ofetch } from 'ofetch'
 import { inject } from 'vitest'
 import { clearTestContext, createTestContext, injectTestContext } from './context'
 import { startServer, stopServer } from './server'
 
-export interface TestFetchResponse<T> extends FetchResponse<T> {
+export interface NitroFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
   data?: T
 }
@@ -27,7 +27,7 @@ declare module 'vitest' {
  * - `redirect: 'manual'` to prevent automatic redirects.
  * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
  */
-export function createFetch(): $Fetch {
+export function createNitroFetch(): $Fetch {
   const serverUrl = injectServerUrl()
 
   return ofetch.create({
@@ -52,16 +52,8 @@ export function createFetch(): $Fetch {
 export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   path: string,
   options?: FetchOptions<R>,
-): Promise<TestFetchResponse<MappedResponseType<R, T>>> {
-  const serverUrl = injectServerUrl()
-  const localFetch = ofetch.create({
-    baseURL: serverUrl,
-    ignoreResponseError: true,
-    redirect: 'manual',
-    headers: {
-      accept: 'application/json',
-    },
-  })
+): Promise<NitroFetchResponse<MappedResponseType<R, T>>> {
+  const localFetch = createNitroFetch()
 
   const response = await localFetch.raw<T, R>(
     path,
@@ -69,12 +61,13 @@ export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
   )
 
   Object.defineProperty(response, 'data', {
+    enumerable: true,
     get() {
       return response._data
     },
   })
 
-  return response as TestFetchResponse<MappedResponseType<R, T>>
+  return response as NitroFetchResponse<MappedResponseType<R, T>>
 }
 
 export function injectServerUrl(): string {
@@ -96,13 +89,14 @@ export function injectServerUrl(): string {
  * Setup options for the Nitro test context.
  *
  * @example
+ * import { resolve } from 'node:path'
  * import { setup } from 'nitro-test-utils'
  *
  * await setup({
- *  rootDir: fileURLToPath(new URL('fixture', import.meta.url)),
+ *  rootDir: resolve(import.meta.dirname, 'fixture'),
  * })
  */
-export async function setup(options: TestOptions = {}): Promise<void> {
+export async function setup(options: NitroTestOptions = {}): Promise<void> {
   const vitest = await import('vitest')
   const server = vitest.inject('server')
 

@@ -1,6 +1,7 @@
 /* eslint-disable node/prefer-global/process */
+import { defineHandler } from 'nitro'
 
-export default defineEventHandler(() => ({
+export default defineHandler(() => ({
   isDev: import.meta.dev,
   isTest: import.meta.test,
   process: {

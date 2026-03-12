@@ -1,10 +1,10 @@
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { $fetchRaw, setup } from '../src/e2e'
 
 describe('production', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('fixture2', import.meta.url)),
+    rootDir: resolve(import.meta.dirname, 'production-app'),
     mode: 'production',
   })
 

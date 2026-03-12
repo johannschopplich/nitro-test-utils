@@ -2,7 +2,7 @@
   "name": "nitro-test-utils",
   "type": "module",
   "version": "0.11.2",
-  "packageManager": "pnpm@10.30.3",
+  "packageManager": "pnpm@10.32.1",
   "description": "Testing environment and utilities for Nitro",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
   "license": "MIT",
@@ -16,8 +16,9 @@
   },
   "keywords": [
     "nitro",
-    "nitropack",
-    "nuxt"
+    "nuxt",
+    "testing",
+    "vercel"
   ],
   "sideEffects": false,
   "exports": {
@@ -47,38 +48,30 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest",
-    "test:types": "tsc --noEmit",
+    "test:types": "tsc --noEmit && pnpm -r test:types",
     "release": "bumpp",
-    "prepare": "pnpm run build && pnpm -C test/fixture prepare && pnpm -C test/fixture2 prepare"
+    "prepare": "pnpm run build && pnpm -r prepare"
   },
   "peerDependencies": {
-    "nitropack": "^2",
+    "nitro": "^3",
     "vitest": "^4"
   },
   "dependencies": {
-    "dotenv": "^17.3.1",
-    "listhen": "^1.9.0",
-    "ofetch": "^1.5.1",
-    "pathe": "^2.0.3",
-    "ufo": "^1.6.3"
+    "dotenv": "catalog:",
+    "ofetch": "catalog:",
+    "pathe": "catalog:"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^7.6.1",
-    "@types/node": "^24.12.0",
-    "bumpp": "^10.4.1",
-    "eslint": "^10.0.2",
-    "eslint-flat-config-utils": "^3.0.1",
-    "nitropack": "^2.13.1",
-    "tsdown": "^0.21.0",
-    "typescript": "^5.9.3",
-    "unbuild": "^3.6.1",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "esbuild"
-    ]
+    "@antfu/eslint-config": "catalog:",
+    "@types/node": "catalog:",
+    "bumpp": "catalog:",
+    "eslint": "catalog:",
+    "eslint-flat-config-utils": "catalog:",
+    "nitro": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "unbuild": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

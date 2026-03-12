@@ -1,26 +1,26 @@
-import type { NitroOptions } from 'nitropack'
-import type { TestContext, TestOptions } from './types'
-import { existsSync, readFileSync } from 'node:fs'
+import type { NitroOptions } from 'nitro/types'
+import type { NitroTestContext, NitroTestOptions } from './types'
+import * as fs from 'node:fs'
 import process from 'node:process'
 import * as dotenv from 'dotenv'
-import { createNitro } from 'nitropack'
+import { createNitro } from 'nitro/builder'
 import { join, resolve } from 'pathe'
 
-let currentContext: TestContext | undefined
+let currentContext: NitroTestContext | undefined
 
-export async function createTestContext(options: TestOptions & { isGlobal?: boolean }): Promise<TestContext> {
+export async function createTestContext(options: NitroTestOptions & { isGlobal?: boolean }): Promise<NitroTestContext> {
   const {
     mode = 'development',
     rootDir = process.cwd(),
     isGlobal = false,
   } = options
   const isDev = mode === 'development'
-  const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node'
+  const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node-middleware'
   const outDir = resolve(rootDir, '.output')
 
   setupDotenv({ rootDir })
 
-  const ctx: TestContext = {
+  const ctx: NitroTestContext = {
     options: {
       rootDir,
       mode,
@@ -36,7 +36,6 @@ export async function createTestContext(options: TestOptions & { isGlobal?: bool
       output: {
         dir: outDir,
       },
-      timing: true,
       replace: {
         'import.meta.test': JSON.stringify(true),
       },
@@ -48,11 +47,11 @@ export async function createTestContext(options: TestOptions & { isGlobal?: bool
   return ctx
 }
 
-export function injectTestContext(): TestContext | undefined {
+export function injectTestContext(): NitroTestContext | undefined {
   return currentContext
 }
 
-export function provideTestContext(context: TestContext): void {
+export function provideTestContext(context: NitroTestContext): void {
   currentContext = context
 }
 
@@ -72,8 +71,8 @@ export function setupDotenv({
   const environment: Record<string, string> = Object.create(null)
   const dotenvFile = resolve(rootDir, fileName)
 
-  if (existsSync(dotenvFile)) {
-    const parsed = dotenv.parse(readFileSync(dotenvFile, 'utf8'))
+  if (fs.existsSync(dotenvFile)) {
+    const parsed = dotenv.parse(fs.readFileSync(dotenvFile, 'utf8'))
     Object.assign(environment, parsed)
   }
 

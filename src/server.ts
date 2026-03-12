@@ -1,19 +1,20 @@
-import type { TestContext } from './types'
-import { listen } from 'listhen'
+import type { AddressInfo } from 'node:net'
+import type { NitroTestContext } from './types'
+import { createServer } from 'node:http'
 import {
   build,
   copyPublicAssets,
   createDevServer,
   prepare,
   prerender,
-} from 'nitropack'
+} from 'nitro/builder'
 import { resolve } from 'pathe'
 import { injectTestContext } from './context'
 
 /**
  * Start the server, either in development mode or production mode.
  */
-export async function startServer(): Promise<TestContext> {
+export async function startServer(): Promise<NitroTestContext> {
   const ctx = injectTestContext()
 
   if (!ctx) {
@@ -25,8 +26,14 @@ export async function startServer(): Promise<TestContext> {
   }
 
   if (ctx.isDev) {
-    const server = createDevServer(ctx.nitro)
-    ctx.server = await server.listen({})
+    const devServer = createDevServer(ctx.nitro)
+    const server = devServer.listen()
+
+    ctx.server = {
+      url: server.url!,
+      close: () => server.close(),
+    }
+
     await prepare(ctx.nitro)
     const ready = new Promise<void>((resolve) => {
       ctx.nitro.hooks.hook('dev:reload', () => resolve())
@@ -41,8 +48,25 @@ export async function startServer(): Promise<TestContext> {
     await build(ctx.nitro)
 
     const entryPath = resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
-    const { listener } = await import(entryPath)
-    ctx.server = await listen(listener)
+    const { middleware } = await import(entryPath)
+    const httpServer = createServer(middleware)
+
+    // Listen on a random available port
+    await new Promise<void>((resolve, reject) => {
+      httpServer.listen(0, () => resolve())
+        .on('error', error => reject(error))
+    })
+
+    const { port } = httpServer.address() as AddressInfo
+    ctx.server = {
+      url: `http://localhost:${port}`,
+      close: async () => {
+        httpServer.closeAllConnections()
+        await new Promise<void>((resolve, reject) => {
+          httpServer.close(error => error ? reject(error) : resolve())
+        })
+      },
+    }
   }
 
   if (ctx.isGlobal) {
@@ -59,8 +83,11 @@ export async function startServer(): Promise<TestContext> {
 export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()
 
-  if (ctx?.server)
+  if (ctx?.server) {
     await ctx.server.close()
+    ctx.server = undefined
+  }
+
   if (ctx?.nitro)
     await ctx.nitro.close()
 }

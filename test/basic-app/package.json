@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "prepare": "nitro prepare",
+    "test:types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "nitro": "catalog:",
+    "typescript": "catalog:"
+  }
+}
