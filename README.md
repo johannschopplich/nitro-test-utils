@@ -27,7 +27,9 @@ yarn add -D nitro-test-utils nitro vitest
 ```
 
 > [!IMPORTANT]
-> This package requires Nitro v3 and Vitest v4 or later. Both `nitro` and `vitest` must be installed as peer dependencies.
+> This package requires Nitro v3 and Vitest v4 or later.
+>
+> Looking for Nitro v2 support? Use [v0.11](https://github.com/johannschopplich/nitro-test-utils/tree/v0) (`nitro-test-utils@^0.11`).
 
 ## Basic Usage
 
