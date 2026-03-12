@@ -28,11 +28,8 @@ catalogs:
       specifier: ^3.0.260311-beta
       version: 3.0.260311-beta
     ofetch:
-      specifier: ^1.5.1
-      version: 1.5.1
-    pathe:
-      specifier: ^2.0.3
-      version: 2.0.3
+      specifier: ^2.0.0-alpha.3
+      version: 2.0.0-alpha.3
     tsdown:
       specifier: ^0.21.2
       version: 0.21.2
@@ -58,10 +55,7 @@ importers:
         version: 17.3.1
       ofetch:
         specifier: 'catalog:'
-        version: 1.5.1
-      pathe:
-        specifier: 'catalog:'
-        version: 2.0.3
+        version: 2.0.0-alpha.3
     devDependencies:
       '@antfu/eslint-config':
         specifier: 'catalog:'
@@ -2267,9 +2261,6 @@ packages:
 
   ocache@0.1.2:
     resolution: {integrity: sha512-lI34wjM7cahEdrq2I5obbF7MEdE97vULf6vNj6ZCzwEadzyXO1w7QOl2qzzG4IL8cyO7wDtXPj9CqW/aG3mn7g==}
-
-  ofetch@1.5.1:
-    resolution: {integrity: sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA==}
 
   ofetch@2.0.0-alpha.3:
     resolution: {integrity: sha512-zpYTCs2byOuft65vI3z43Dd6iSdFbOZZLb9/d21aCpx2rGastVU9dOCv0lu4ykc1Ur1anAYjDi3SUvR0vq50JA==}
@@ -5267,12 +5258,6 @@ snapshots:
   ocache@0.1.2:
     dependencies:
       ohash: 2.0.11
-
-  ofetch@1.5.1:
-    dependencies:
-      destr: 2.0.5
-      node-fetch-native: 1.6.7
-      ufo: 1.6.3
 
   ofetch@2.0.0-alpha.3: {}
 

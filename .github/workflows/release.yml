@@ -33,12 +33,12 @@ jobs:
 
       - name: Publish to npm (stable)
         if: ${{ !contains(github.ref_name, '-') }}
-        run: npm install -g npm@latest && npm publish --access public
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm (prerelease)
         if: ${{ contains(github.ref_name, '-') }}
-        run: npm install -g npm@latest && npm publish --access public --tag next
+        run: pnpm publish --access public --no-git-checks --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,6 +1,7 @@
 import type { AddressInfo } from 'node:net'
 import type { NitroTestContext } from './types'
 import { createServer } from 'node:http'
+import * as path from 'node:path'
 import {
   build,
   copyPublicAssets,
@@ -8,7 +9,6 @@ import {
   prepare,
   prerender,
 } from 'nitro/builder'
-import { resolve } from 'pathe'
 import { injectTestContext } from './context'
 
 /**
@@ -47,7 +47,7 @@ export async function startServer(): Promise<NitroTestContext> {
     await prerender(ctx.nitro)
     await build(ctx.nitro)
 
-    const entryPath = resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
+    const entryPath = path.resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
     const { middleware } = await import(entryPath)
     const httpServer = createServer(middleware)
 

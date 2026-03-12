@@ -1,10 +1,10 @@
-import { resolve } from 'pathe'
+import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { $fetchRaw, createNitroFetch, injectServerUrl, setup } from '../src/e2e'
 
 describe('routes', async () => {
   await setup({
-    rootDir: resolve(import.meta.dirname, 'basic-app'),
+    rootDir: path.resolve(import.meta.dirname, 'basic-app'),
   })
 
   it('should respond with 200 status code', async () => {

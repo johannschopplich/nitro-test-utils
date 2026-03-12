@@ -1,10 +1,10 @@
 import type { NitroOptions } from 'nitro/types'
 import type { NitroTestContext, NitroTestOptions } from './types'
 import * as fs from 'node:fs'
+import * as path from 'node:path'
 import process from 'node:process'
 import * as dotenv from 'dotenv'
 import { createNitro } from 'nitro/builder'
-import { join, resolve } from 'pathe'
 
 let currentContext: NitroTestContext | undefined
 
@@ -16,7 +16,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
   } = options
   const isDev = mode === 'development'
   const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node-middleware'
-  const outDir = resolve(rootDir, '.output')
+  const outDir = path.resolve(rootDir, '.output')
 
   setupDotenv({ rootDir })
 
@@ -31,7 +31,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       preset,
       dev: isDev,
       rootDir,
-      buildDir: join(outDir, '.nitro'),
+      buildDir: path.join(outDir, '.nitro'),
       serveStatic: !isDev,
       output: {
         dir: outDir,
@@ -69,7 +69,7 @@ export function setupDotenv({
   override?: boolean
 } = {}): Record<string, string> {
   const environment: Record<string, string> = Object.create(null)
-  const dotenvFile = resolve(rootDir, fileName)
+  const dotenvFile = path.resolve(rootDir, fileName)
 
   if (fs.existsSync(dotenvFile)) {
     const parsed = dotenv.parse(fs.readFileSync(dotenvFile, 'utf8'))

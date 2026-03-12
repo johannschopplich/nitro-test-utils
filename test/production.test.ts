@@ -1,10 +1,10 @@
-import { resolve } from 'pathe'
+import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { $fetchRaw, setup } from '../src/e2e'
 
 describe('production', async () => {
   await setup({
-    rootDir: resolve(import.meta.dirname, 'production-app'),
+    rootDir: path.resolve(import.meta.dirname, 'production-app'),
     mode: 'production',
   })
 

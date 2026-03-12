@@ -1,8 +1,8 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { InlineConfig as VitestInlineConfig } from 'vitest/node'
 import type { NitroTestOptions } from './types'
+import * as path from 'node:path'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
-import { join } from 'pathe'
 import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 
@@ -62,9 +62,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
         ...await resolveSourceRerunTriggers(resolvedNitroConfig),
       ],
       globalSetup: resolvedNitroConfig.global
-        ? [
-            join(import.meta.dirname, 'setup.mjs'),
-          ]
+        ? [path.join(import.meta.dirname, 'setup.mjs')]
         : undefined,
       // @ts-expect-error: `nitro` is added via module augmentation on Vite's `UserConfig`
       nitro: resolvedNitroConfig,
@@ -79,7 +77,7 @@ async function resolveSourceRerunTriggers(config: NitroInlineConfig): Promise<st
     return []
 
   if (config.global) {
-    return [join(
+    return [path.join(
       config.global.rootDir || '',
       '.output',
       config.global.mode === 'production' ? 'server' : '.nitro/dev',
@@ -89,5 +87,5 @@ async function resolveSourceRerunTriggers(config: NitroInlineConfig): Promise<st
 
   const options = await loadNitroOptions()
   const dir = typeof options.serverDir === 'string' ? options.serverDir : options.rootDir
-  return [join(dir, '**/*.ts')]
+  return [path.join(dir, '**/*.ts')]
 }

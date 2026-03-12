@@ -58,8 +58,7 @@
   },
   "dependencies": {
     "dotenv": "catalog:",
-    "ofetch": "catalog:",
-    "pathe": "catalog:"
+    "ofetch": "catalog:"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
