@@ -45,3 +45,5 @@ jobs:
           cache: pnpm
       - run: pnpm install
       - run: pnpm run test
+        env:
+          NITRO_BUILDER: rollup
