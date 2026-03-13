@@ -281,8 +281,10 @@ const $fetch = createNitroFetch()
 **Type Declaration:**
 
 ```ts
-function createNitroFetch(): $Fetch
+function createNitroFetch(options?: FetchHooks): $Fetch
 ```
+
+You can pass `ofetch` interceptors (`onRequest`, `onResponse`, `onRequestError`, `onResponseError`) to customize request/response handling while keeping the default base URL and options.
 
 ### `$fetchRaw`
 
@@ -318,6 +320,48 @@ function $fetchRaw<T = any, R extends ResponseType = 'json'>(
 
 > [!TIP]
 > All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
+
+### `createNitroSession`
+
+Creates a session-aware fetch instance that persists cookies across requests. Useful for testing authentication flows.
+
+**Usage:**
+
+```ts
+import { createNitroSession } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
+
+describe('auth', () => {
+  it('persists session cookies', async () => {
+    const session = createNitroSession()
+
+    // Login sets a session cookie
+    await session.$fetch('/api/login', { method: 'POST' })
+
+    // Subsequent requests include the cookie automatically
+    const profile = await session.$fetch('/api/profile')
+    expect(profile).toEqual({ user: 'authenticated' })
+
+    // Inspect cookies directly
+    expect(session.cookies.get('session')).toBeDefined()
+
+    // Clear cookies to simulate logout
+    session.clearCookies()
+  })
+})
+```
+
+**Type Declaration:**
+
+```ts
+interface NitroSession {
+  $fetch: $Fetch
+  cookies: Map<string, string>
+  clearCookies: () => void
+}
+
+function createNitroSession(): NitroSession
+```
 
 ## License
 

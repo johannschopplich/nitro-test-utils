@@ -57,6 +57,7 @@
     "vitest": "^4"
   },
   "dependencies": {
+    "cookie-es": "catalog:",
     "dotenv": "catalog:",
     "ofetch": "catalog:"
   },

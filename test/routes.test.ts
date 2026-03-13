@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, createNitroFetch, injectServerUrl, setup } from '../src/e2e'
+import { $fetchRaw, createNitroFetch, createNitroSession, injectServerUrl, setup } from '../src/e2e'
 
 describe('routes', async () => {
   await setup({
@@ -64,5 +64,28 @@ describe('routes', async () => {
   it('should return server URL from injectServerUrl', () => {
     const url = injectServerUrl()
     expect(url).toMatch(/^https?:\/\/.+/)
+  })
+
+  describe('cookies', () => {
+    it('should persist cookies across requests', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/login', { method: 'POST' })
+      const profile = await session.$fetch('/api/profile')
+      expect(profile).toEqual({ user: 'authenticated' })
+    })
+
+    it('should clear cookies', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/login', { method: 'POST' })
+      session.clearCookies()
+      const response = await session.$fetch.raw('/api/profile')
+      expect(response.status).toBe(401)
+    })
+
+    it('should expose cookies for assertions', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/login', { method: 'POST' })
+      expect(session.cookies.get('session')).toBe('abc123')
+    })
   })
 })

@@ -15,6 +15,9 @@ catalogs:
     bumpp:
       specifier: ^10.4.1
       version: 10.4.1
+    cookie-es:
+      specifier: ^2.0.0
+      version: 2.0.0
     dotenv:
       specifier: ^17.3.1
       version: 17.3.1
@@ -50,6 +53,9 @@ importers:
 
   .:
     dependencies:
+      cookie-es:
+        specifier: 'catalog:'
+        version: 2.0.0
       dotenv:
         specifier: 'catalog:'
         version: 17.3.1
@@ -1287,6 +1293,9 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  cookie-es@2.0.0:
+    resolution: {integrity: sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==}
 
   core-js-compat@3.48.0:
     resolution: {integrity: sha512-OM4cAF3D6VtH/WkLtWvyNC56EZVXsZdU3iqaMG2B4WvYrlqU831pc4UtG5yp0sE9z8Y02wVN7PjW5Zf9Gt0f1Q==}
@@ -3875,6 +3884,8 @@ snapshots:
   consola@3.4.2: {}
 
   convert-source-map@2.0.0: {}
+
+  cookie-es@2.0.0: {}
 
   core-js-compat@3.48.0:
     dependencies:

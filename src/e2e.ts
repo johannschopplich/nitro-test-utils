@@ -1,9 +1,16 @@
-import type { $Fetch, FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
+import type { $Fetch, FetchHooks, FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import type { NitroTestOptions } from './types'
+import { parseSetCookie } from 'cookie-es'
 import { ofetch } from 'ofetch'
 import { inject } from 'vitest'
 import { clearTestContext, createTestContext, injectTestContext } from './context'
 import { startServer, stopServer } from './server'
+
+export interface NitroSession {
+  $fetch: $Fetch
+  cookies: Map<string, string>
+  clearCookies: () => void
+}
 
 export interface NitroFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
@@ -27,7 +34,7 @@ declare module 'vitest' {
  * - `redirect: 'manual'` to prevent automatic redirects.
  * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
  */
-export function createNitroFetch(): $Fetch {
+export function createNitroFetch(options?: FetchHooks): $Fetch {
   const serverUrl = injectServerUrl()
 
   return ofetch.create({
@@ -37,6 +44,7 @@ export function createNitroFetch(): $Fetch {
     headers: {
       accept: 'application/json',
     },
+    ...options,
   })
 }
 
@@ -83,6 +91,43 @@ export function injectServerUrl(): string {
   }
 
   return serverUrl
+}
+
+/**
+ * Creates a session-aware `ofetch` instance that persists cookies across requests.
+ */
+export function createNitroSession(): NitroSession {
+  const cookies = new Map<string, string>()
+
+  const $fetch = createNitroFetch({
+    onRequest({ options }) {
+      if (cookies.size > 0) {
+        const cookieHeader = Array.from(
+          cookies.entries(),
+          ([name, value]) => `${name}=${value}`,
+        ).join('; ')
+
+        const headers = new Headers(options.headers)
+        const existingCookie = headers.get('cookie')
+        headers.set('cookie', existingCookie ? `${existingCookie}; ${cookieHeader}` : cookieHeader)
+        options.headers = headers
+      }
+    },
+    onResponse({ response }) {
+      for (const header of response.headers.getSetCookie()) {
+        const { name, value } = parseSetCookie(header)
+        if (name) {
+          cookies.set(name, value)
+        }
+      }
+    },
+  })
+
+  return {
+    $fetch,
+    cookies,
+    clearCookies: () => cookies.clear(),
+  }
 }
 
 /**
