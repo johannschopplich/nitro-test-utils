@@ -2,10 +2,10 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { InlineConfig as VitestInlineConfig } from 'vitest/node'
 import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
-import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
+import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
 
 export interface NitroTestConfig extends VitestInlineConfig {
   nitro?: NitroInlineConfig
