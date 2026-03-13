@@ -2,6 +2,7 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { InlineConfig as VitestInlineConfig } from 'vitest/node'
 import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
+import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
@@ -77,12 +78,11 @@ async function resolveSourceRerunTriggers(config: NitroInlineConfig): Promise<st
     return []
 
   if (config.global) {
-    return [path.join(
-      config.global.rootDir || '',
-      '.output',
-      config.global.mode === 'production' ? 'server' : '.nitro/dev',
-      'index.mjs',
-    )]
+    const rootDir = config.global.rootDir || ''
+    if (config.global.mode === 'production') {
+      return [path.join(rootDir, NITRO_OUTPUT_DIR, 'server', 'index.mjs')]
+    }
+    return [path.join(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')]
   }
 
   const options = await loadNitroOptions()

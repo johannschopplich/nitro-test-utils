@@ -6,6 +6,9 @@ import process from 'node:process'
 import * as dotenv from 'dotenv'
 import { createNitro } from 'nitro/builder'
 
+export const NITRO_OUTPUT_DIR = '.output'
+export const NITRO_BUILD_DIR = 'node_modules/.nitro'
+
 let currentContext: NitroTestContext | undefined
 
 export async function createTestContext(options: NitroTestOptions & { isGlobal?: boolean }): Promise<NitroTestContext> {
@@ -16,7 +19,6 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
   } = options
   const isDev = mode === 'development'
   const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node-middleware'
-  const outDir = path.resolve(rootDir, '.output')
 
   setupDotenv({ rootDir })
 
@@ -31,10 +33,10 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       preset,
       dev: isDev,
       rootDir,
-      buildDir: path.join(outDir, '.nitro'),
+      buildDir: NITRO_BUILD_DIR,
       serveStatic: !isDev,
       output: {
-        dir: outDir,
+        dir: path.resolve(rootDir, NITRO_OUTPUT_DIR),
       },
       replace: {
         'import.meta.test': JSON.stringify(true),
