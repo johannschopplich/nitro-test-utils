@@ -77,15 +77,19 @@ async function resolveSourceRerunTriggers(config: NitroInlineConfig): Promise<st
   if (!config.rerunOnSourceChanges)
     return []
 
+  let watchPattern: string
+
   if (config.global) {
     const rootDir = config.global.rootDir || ''
-    if (config.global.mode === 'production') {
-      return [path.join(rootDir, NITRO_OUTPUT_DIR, 'server', 'index.mjs')]
-    }
-    return [path.join(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')]
+    watchPattern = config.global.mode === 'production'
+      ? path.join(rootDir, NITRO_OUTPUT_DIR, 'server', 'index.mjs')
+      : path.join(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')
+  }
+  else {
+    const options = await loadNitroOptions()
+    const dir = typeof options.serverDir === 'string' ? options.serverDir : options.rootDir
+    watchPattern = path.join(dir, '**/*.ts')
   }
 
-  const options = await loadNitroOptions()
-  const dir = typeof options.serverDir === 'string' ? options.serverDir : options.rootDir
-  return [path.join(dir, '**/*.ts')]
+  return [watchPattern]
 }
