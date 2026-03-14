@@ -57,8 +57,6 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
         // Vitest defaults
         '**/package.json/**',
         '**/{vitest,vite}.config.*/**',
-        // Custom triggers
-        ...(userConfig.test?.forceRerunTriggers ?? []),
         // Rerun tests when source files change
         ...await resolveSourceRerunTriggers(resolvedNitroConfig),
       ],

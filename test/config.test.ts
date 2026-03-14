@@ -64,9 +64,19 @@ describe('defineConfig', async () => {
         },
       })
 
-      expect(config.test?.forceRerunTriggers?.length).toMatchInlineSnapshot(`5`)
+      expect(config.test?.forceRerunTriggers?.length).toMatchInlineSnapshot(`4`)
       expect(config.test?.forceRerunTriggers).toContain('test/foo.test.ts')
       expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
+    })
+
+    it('should pass through custom vitest config', async () => {
+      const config = await defineConfig({
+        test: {
+          dir: './tests',
+        },
+      })
+
+      expect(config.test?.dir).toBe('./tests')
     })
   })
 })
