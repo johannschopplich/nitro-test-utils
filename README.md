@@ -266,16 +266,25 @@ Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Ni
 >
 > - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
 > - `redirect: 'manual'` to prevent automatic redirects.
+> - `retry: 0` to disable retries, preventing masked failures and slow test suites.
 > - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
 
 **Usage:**
 
-Inside a test case:
+Use `createNitroFetch` to get a `$fetch` instance pre-configured for your Nitro test server – no extra setup needed:
 
 ```ts
 import { createNitroFetch } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
 
-const $fetch = createNitroFetch()
+describe('api', () => {
+  const $fetch = createNitroFetch()
+
+  it('responds with data', async () => {
+    const data = await $fetch('/api/health')
+    expect(data).toEqual({ ok: true })
+  })
+})
 ```
 
 **Type Declaration:**
@@ -319,7 +328,7 @@ function $fetchRaw<T = any, R extends ResponseType = 'json'>(
 ```
 
 > [!TIP]
-> All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299.
+> All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299, and `retry: 0` to disable retries.
 
 ### `createNitroSession`
 

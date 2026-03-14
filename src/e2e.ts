@@ -32,6 +32,7 @@ declare module 'vitest' {
  * The following additional fetch options have been set as defaults:
  * - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
  * - `redirect: 'manual'` to prevent automatic redirects.
+ * - `retry: 0` to disable retries, preventing masked failures and slow test suites.
  * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
  */
 export function createNitroFetch(options?: FetchHooks): $Fetch {
@@ -41,6 +42,7 @@ export function createNitroFetch(options?: FetchHooks): $Fetch {
     baseURL: serverUrl,
     ignoreResponseError: true,
     redirect: 'manual',
+    retry: 0,
     headers: {
       accept: 'application/json',
     },
