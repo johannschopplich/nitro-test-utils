@@ -28,6 +28,11 @@ export interface NitroInlineConfig {
 declare module 'vite' {
   interface UserConfig {
     /**
+     * Options for Vitest.
+     */
+    test?: VitestInlineConfig
+
+    /**
      * Options for the Nitro test runner.
      */
     nitro?: Omit<NitroInlineConfig, 'global'> & {
