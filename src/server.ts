@@ -71,7 +71,7 @@ export async function startServer(): Promise<NitroTestContext> {
 
   if (ctx.isGlobal) {
     // eslint-disable-next-line no-console
-    console.log('> Nitro server running at', ctx.server.url)
+    console.log('[nitro] Server running at', ctx.server.url)
   }
 
   return ctx
