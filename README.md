@@ -1,6 +1,6 @@
 # Nitro Test Utils
 
-The main goal for this package is to provide a simple and easy-to-use testing environment for [Nitro](https://nitro.unjs.io) applications, built on top of [Vitest](https://vitest.dev). Use it to write tests for API routes and event handlers.
+The main goal for this package is to provide a simple and easy-to-use testing environment for [Nitro](https://nitro.build) applications, built on top of [Vitest](https://vitest.dev). Use it to write tests for API routes and event handlers.
 
 ## Features
 
