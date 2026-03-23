@@ -2,6 +2,7 @@ import type { AddressInfo } from 'node:net'
 import type { NitroTestContext } from './types'
 import { createServer } from 'node:http'
 import * as path from 'node:path'
+import { getPort } from 'get-port-please'
 import {
   build,
   copyPublicAssets,
@@ -26,8 +27,10 @@ export async function startServer(): Promise<NitroTestContext> {
   }
 
   if (ctx.isDev) {
+    const port = await getPort({ host: 'localhost' })
     const devServer = createDevServer(ctx.nitro)
-    const server = devServer.listen()
+    const server = devServer.listen({ port, hostname: 'localhost' })
+    await server.ready()
 
     ctx.server = {
       url: server.url!,

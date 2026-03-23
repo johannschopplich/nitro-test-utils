@@ -59,6 +59,7 @@
   "dependencies": {
     "cookie-es": "catalog:",
     "dotenv": "catalog:",
+    "get-port-please": "catalog:",
     "ofetch": "catalog:"
   },
   "devDependencies": {
