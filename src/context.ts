@@ -1,4 +1,3 @@
-import type { NitroOptions } from 'nitro/types'
 import type { NitroTestContext, NitroTestOptions } from './types'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -9,16 +8,34 @@ import { createNitro } from 'nitro/builder'
 export const NITRO_OUTPUT_DIR = '.output'
 export const NITRO_BUILD_DIR = 'node_modules/.nitro'
 
+const NODE_COMPATIBLE_PRESETS = new Set([
+  'nitro-dev',
+  'node',
+  'node-server',
+  'node-middleware',
+  'node-cluster',
+  'bun',
+])
+
 let currentContext: NitroTestContext | undefined
 
 export async function createTestContext(options: NitroTestOptions & { isGlobal?: boolean }): Promise<NitroTestContext> {
   const {
     mode = 'development',
     rootDir = process.cwd(),
+    preset: userPreset,
     isGlobal = false,
   } = options
   const isDev = mode === 'development'
-  const preset: NitroOptions['preset'] = isDev ? 'nitro-dev' : 'node-middleware'
+  const preset = userPreset ?? (isDev ? 'nitro-dev' : 'node-middleware')
+
+  if (!isDev && userPreset && !NODE_COMPATIBLE_PRESETS.has(userPreset)) {
+    throw new Error(
+      `Production mode is not supported for the "${userPreset}" preset. `
+      + 'Only Node.js-compatible presets can be used in production mode. '
+      + 'Use development mode instead, which provides local bindings emulation.',
+    )
+  }
 
   setupDotenv({ rootDir })
 
@@ -26,6 +43,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     options: {
       rootDir,
       mode,
+      preset: userPreset,
     },
     isGlobal,
     isDev,

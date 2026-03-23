@@ -31,13 +31,27 @@ export interface NitroTestOptions {
    * @default 'development'
    */
   mode?: 'development' | 'production'
+
+  /**
+   * Nitro preset to use for the test server.
+   *
+   * In development mode, Nitro automatically resolves deployment presets
+   * (e.g. `cloudflare-module`) to their dev counterpart (e.g. `cloudflare-dev`),
+   * which provides local bindings emulation via `getPlatformProxy()`.
+   *
+   * In production mode, only Node.js-compatible presets are supported.
+   * Attempting to use a non-Node preset in production mode will throw an error.
+   *
+   * @default Determined by `mode`: `'nitro-dev'` for development, `'node-middleware'` for production.
+   */
+  preset?: string
 }
 
 /**
  * The context created before all tests.
  */
 export interface NitroTestContext {
-  options: Required<NitroTestOptions>
+  options: Required<Pick<NitroTestOptions, 'rootDir' | 'mode'>> & Pick<NitroTestOptions, 'preset'>
   isGlobal: boolean
   isDev: boolean
   nitro: Nitro

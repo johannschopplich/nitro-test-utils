@@ -4,23 +4,28 @@ trustPolicy: no-downgrade
 packages:
   - test/basic-app
   - test/production-app
+  - test/cloudflare-app
 
 catalog:
-  '@antfu/eslint-config': ^7.7.2
+  '@antfu/eslint-config': ^7.7.3
+  '@cloudflare/workers-types': ^4.20260317.1
   '@types/node': ^24.12.0
-  bumpp: ^10.4.1
+  bumpp: ^11.0.1
   cookie-es: ^2.0.0
   dotenv: ^17.3.1
-  eslint: ^10.0.3
+  eslint: ^10.1.0
   eslint-flat-config-utils: ^3.0.2
-  nitro: ^3.0.260311-beta
+  nitro: npm:nitro-nightly@latest
   ofetch: ^2.0.0-alpha.3
-  tsdown: ^0.21.2
+  tsdown: ^0.21.4
   typescript: ^5.9.3
   unbuild: ^3.6.1
-  vite: ^7.3.1
+  vite: ^8.0.1
   vitest: ^4.1.0
+  wrangler: ^4.76.0
 
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - esbuild
+  - sharp
+  - workerd

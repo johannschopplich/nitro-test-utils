@@ -16,6 +16,7 @@ async function setup(project: GlobalSetupContextWithNitro): Promise<(() => Promi
   await createTestContext({
     rootDir: project.config.nitro.global.rootDir || project.config.root,
     mode: project.config.nitro.global.mode,
+    preset: project.config.nitro.global.preset,
     isGlobal: true,
   })
 

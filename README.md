@@ -9,6 +9,7 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 - 🥜 Run Nitro per test suite or globally
 - ✅ Seamless integration with Vitest
 - 🪝 Conditional code execution based on test mode (`import.meta.test`)
+- ☁️ Cloudflare Workers support with local bindings emulation (KV, D1, R2, …)
 - 📡 Familiar [`$fetchRaw`](#fetchRaw) helper similar to Nuxt test utils
 
 ## Installation
@@ -36,8 +37,7 @@ yarn add -D nitro-test-utils nitro vitest
 There are two ways to set up the Nitro test environment: globally or per test suite. The global setup is useful if you want to test multiple test files against the same Nitro server. The per test suite setup is useful if you want to test different Nitro servers in different test files.
 
 > [!NOTE]
-> You can build Nitro in `development` or `production` mode. In development mode, the preset `nitro-dev` will be used. Otherwise, Nitro will be built with the `node-middleware` preset.
-> You cannot set the Nitro build preset, since only builds for Node.js are supported in Vitest.
+> By default, Nitro uses the `nitro-dev` preset in development mode and `node-middleware` in production mode. You can override this with the `preset` option to test against other deployment targets, such as Cloudflare Workers. See [Deployment Presets](#deployment-presets) for details.
 
 > [!TIP]
 > The global setup is recommended for most use cases where only one Nitro application is being developed. It is more convenient to use than the per-test-suite setup because it keeps the Nitro development server running in the background during Vitest watch mode.
@@ -61,6 +61,7 @@ You can also pass an object to `global` with additional options:
 
 - **`rootDir`**: Path to the Nitro project root (where `nitro.config.ts` lives). Defaults to the Vitest working directory.
 - **`mode`**: `'development'` (default) or `'production'`. In development mode, Nitro automatically reloads on changes and tests re-run.
+- **`preset`**: Nitro deployment preset. Defaults to `'nitro-dev'` (development) or `'node-middleware'` (production). See [Deployment Presets](#deployment-presets).
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
@@ -115,6 +116,7 @@ The `setup` function accepts an options object:
 
 - **`rootDir`**: Path to the Nitro project root (where `nitro.config.ts` lives).
 - **`mode`**: `'development'` (default) or `'production'`.
+- **`preset`**: Nitro deployment preset. Defaults to `'nitro-dev'` (development) or `'node-middleware'` (production). See [Deployment Presets](#deployment-presets).
 
 ```ts
 import { resolve } from 'node:path'
@@ -162,6 +164,48 @@ You can set custom environment variables for your tests by creating a `.env.test
 ```ini
 # .env.test
 FOO=bar
+```
+
+### Deployment Presets
+
+By default, `nitro-test-utils` uses Node.js-compatible presets (`nitro-dev` for development, `node-middleware` for production). If your application targets a different deployment platform, you can set the `preset` option to match your deployment target.
+
+> [!NOTE]
+> Non-Node presets like `cloudflare-module` only work in development mode, since Vitest runs inside a Node.js process. In production mode, only Node.js-compatible presets are supported.
+
+#### Cloudflare Workers
+
+To test Cloudflare-specific features like KV, D1, or R2 bindings locally, set the preset to `cloudflare-module`. Nitro automatically resolves this to the `cloudflare-dev` preset in development mode, which emulates Cloudflare bindings locally via wrangler's `getPlatformProxy()`.
+
+Make sure `wrangler` is installed as a dev dependency and a `wrangler.json` (or `wrangler.toml`) with your bindings configuration exists in your Nitro project root.
+
+```ts
+import { resolve } from 'node:path'
+import { $fetchRaw, setup } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
+
+describe('cloudflare bindings', async () => {
+  await setup({
+    rootDir: resolve(import.meta.dirname, 'fixture'),
+    preset: 'cloudflare-module'
+  })
+
+  it('reads from KV', async () => {
+    const { data } = await $fetchRaw('/api/kv?key=test')
+    expect(data.value).toBeDefined()
+  })
+})
+```
+
+Inside your Nitro handlers, access Cloudflare bindings through `event.req.runtime.cloudflare.env`:
+
+```ts
+import { defineHandler } from 'nitro'
+
+export default defineHandler((event) => {
+  const { env } = (event.req as any).runtime.cloudflare
+  return env.KV.get('my-key')
+})
 ```
 
 ## API Reference

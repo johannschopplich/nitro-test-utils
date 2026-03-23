@@ -49,6 +49,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
       ? {
           rootDir: resolvedGlobalConfig.rootDir || undefined,
           mode: resolvedGlobalConfig.mode || undefined,
+          preset: resolvedGlobalConfig.preset || undefined,
         }
       : undefined,
   }

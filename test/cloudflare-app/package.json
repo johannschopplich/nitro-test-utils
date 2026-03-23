@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "prepare": "nitro prepare",
+    "test:types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "nitro": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
