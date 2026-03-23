@@ -7,11 +7,11 @@ interface CloudflareEnv {
 }
 
 export function useCloudflare(event: H3Event) {
-  const req = event.req as any
+  const context = event.req as any
 
   return {
-    env: req.runtime.cloudflare.env as CloudflareEnv,
-    ctx: req.runtime.cloudflare.context as ExecutionContext,
-    cf: req.cf as IncomingRequestCfProperties,
+    env: context.runtime.cloudflare.env as CloudflareEnv,
+    ctx: context.runtime.cloudflare.context as ExecutionContext,
+    cf: context.cf as IncomingRequestCfProperties,
   }
 }
