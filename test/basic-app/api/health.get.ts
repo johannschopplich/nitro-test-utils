@@ -1,4 +1,4 @@
-import { defineHandler } from 'nitro'
+import { defineHandler } from 'nitro/h3'
 
 export default defineHandler(() => ({
   ok: true,

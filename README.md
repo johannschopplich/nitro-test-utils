@@ -143,7 +143,7 @@ describe('api', async () => {
 You can detect whether your code is running in a Nitro build during tests by checking the `import.meta.test` property. This is useful if you want to conditionally run code only in Nitro tests, but not in production.
 
 ```ts
-import { defineHandler } from 'nitro'
+import { defineHandler } from 'nitro/h3'
 
 export default defineHandler(async () => {
   // Mock data for tests
@@ -200,7 +200,7 @@ describe('cloudflare bindings', async () => {
 Inside your Nitro handlers, access Cloudflare bindings through `event.req.runtime.cloudflare.env`:
 
 ```ts
-import { defineHandler } from 'nitro'
+import { defineHandler } from 'nitro/h3'
 
 export default defineHandler((event) => {
   const { env } = (event.req as any).runtime.cloudflare

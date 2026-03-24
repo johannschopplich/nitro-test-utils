@@ -1,4 +1,4 @@
-import { defineHandler } from 'nitro'
+import { defineHandler } from 'nitro/h3'
 import { useCloudflare } from '../utils/cloudflare'
 
 export default defineHandler(async (event) => {
