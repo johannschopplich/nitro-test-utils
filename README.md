@@ -142,6 +142,14 @@ describe('api', async () => {
 
 You can detect whether your code is running in a Nitro build during tests by checking the `import.meta.test` property. This is useful if you want to conditionally run code only in Nitro tests, but not in production.
 
+To get proper TypeScript support for `import.meta.test`, add a triple-slash reference in your `env.d.ts` (or any `.d.ts` file included by your `tsconfig.json`):
+
+```ts
+/// <reference types="nitro-test-utils/env" />
+```
+
+Then use it in your Nitro handlers:
+
 ```ts
 import { defineHandler } from 'nitro/h3'
 

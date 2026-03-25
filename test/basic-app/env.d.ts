@@ -1,7 +1,1 @@
-declare global {
-  interface ImportMeta {
-    test?: boolean
-  }
-}
-
-export {}
+/// <reference types="nitro-test-utils/env" />
