@@ -1,6 +1,6 @@
 # Nitro Test Utils
 
-The main goal for this package is to provide a simple and easy-to-use testing environment for [Nitro](https://nitro.build) applications, built on top of [Vitest](https://vitest.dev). Use it to write tests for API routes and event handlers.
+A simple and easy-to-use testing toolkit for [Nitro](https://nitro.build) servers, built on top of [Vitest](https://vitest.dev). Use it to write tests for your API routes and event handlers.
 
 ## Features
 
@@ -10,11 +10,11 @@ The main goal for this package is to provide a simple and easy-to-use testing en
 - ✅ Seamless integration with Vitest
 - 🪝 Conditional code execution based on test mode (`import.meta.test`)
 - ☁️ Cloudflare Workers support with local bindings emulation (KV, D1, R2, …)
-- 📡 Familiar [`$fetchRaw`](#fetchRaw) helper similar to Nuxt test utils
+- 📡 Familiar [`$fetchRaw`](#fetchraw) helper similar to Nuxt test utils
 
 ## Installation
 
-Add the `nitro-test-utils` as well as `nitro` and `vitest` to your project with your favorite package manager:
+Add `nitro-test-utils` as well as `nitro` and `vitest` to your project with your favorite package manager:
 
 ```bash
 # pnpm
@@ -28,62 +28,43 @@ yarn add -D nitro-test-utils nitro vitest
 ```
 
 > [!IMPORTANT]
-> This package requires Nitro v3 and Vitest v4 or later.
+> Requires Nitro v3 and Vitest v4 or later.
 >
 > Looking for Nitro v2 support? Use [v0.11](https://github.com/johannschopplich/nitro-test-utils/tree/v0) (`nitro-test-utils@^0.11`).
 
-## Usage
+## Setup
 
-There are two ways to set up the Nitro test environment: globally or per test suite. The global setup is useful if you want to test multiple test files against the same Nitro server. The per test suite setup is useful if you want to test different Nitro servers in different test files.
-
-If you are using **Nitro as a Vite plugin** (`nitro/vite`), no additional configuration is needed. Since `nitro.config.ts` is required even in Vite projects, `nitro-test-utils` loads it directly and creates a standalone Nitro server for testing.
+There are two ways to set up the test environment: **globally** (one Nitro server for all tests) or **per test suite** (different servers per test file).
 
 > [!NOTE]
-> By default, Nitro uses the `nitro-dev` preset in development mode and `node-middleware` in production mode. You can override this with the `preset` option to test against other deployment targets, such as Cloudflare Workers. See [Deployment Presets](#deployment-presets) for details.
+> If you are using **Nitro as a Vite plugin** (`nitro/vite`), no additional configuration is needed. Since `nitro.config.ts` is required even in Vite projects, `nitro-test-utils` loads it directly and creates a standalone Nitro server for testing.
 
-> [!TIP]
-> The global setup is recommended for most use cases where only one Nitro application is being developed. It is more convenient to use than the per-test-suite setup because it keeps the Nitro development server running in the background during Vitest watch mode.
-> This allows you to develop your Nitro application and write tests at the same time.
+### Global Setup (Recommended)
 
-### Global Setup
-
-Getting started with the global Nitro test environment for Vitest is as simple as creating a new `vitest.config.ts` configuration file in your project root. Set the `global` option to `true`, which expects the Nitro source files to be located in the working directory.
+Getting started with the global setup is as simple as creating a `vitest.config.ts` in your project root. Pass `{ global: true }` as the second argument to enable a shared Nitro server for all tests:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineConfig({
-  nitro: {
-    global: true
-  }
+export default defineConfig({}, {
+  global: true,
 })
 ```
 
-You can also pass an object to `global` with additional options:
-
-- **`rootDir`**: Path to the Nitro project root (where `nitro.config.ts` lives). Defaults to the Vitest working directory.
-- **`mode`**: `'development'` (default) or `'production'`. In development mode, Nitro automatically reloads on changes and tests re-run.
-- **`preset`**: Nitro deployment preset. Defaults to `'nitro-dev'` (development) or `'node-middleware'` (production). See [Deployment Presets](#deployment-presets).
+You can also pass an options object to `global` with additional options like `rootDir`, `mode`, and `preset`:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
 
-export default defineConfig({
-  nitro: {
-    global: {
-      rootDir: 'backend',
-      mode: 'production'
-    }
+export default defineConfig({}, {
+  global: {
+    rootDir: 'backend',
+    mode: 'production',
   },
 })
 ```
 
-> [!TIP]
-> Under the hood, Vitest will automatically spin up a Nitro server before running your tests and shut it down afterwards.
-
-Write your tests in a dedicated location, e.g. a `tests` directory. You can use the `$fetchRaw` function to make requests to the Nitro server that is started by the test environment.
-
-A simple test case could look like this:
+Now, write your tests in a dedicated directory. You can use the `$fetchRaw` function to make requests to the Nitro server that is started by the test environment. A simple test case could look like this:
 
 ```ts
 import { $fetchRaw } from 'nitro-test-utils/e2e'
@@ -99,12 +80,12 @@ describe('api', () => {
 })
 ```
 
-> [!NOTE]
-> Whenever Nitro is rebuilt, the tests will rerun automatically (unless you have set the `mode` option to `production` in the Vitest configuration).
+> [!TIP]
+> The global setup is recommended for most use cases. It keeps the Nitro dev server running in the background during Vitest watch mode, so you can develop and test at the same time. Whenever Nitro rebuilds, tests rerun automatically.
 
 ### Per-Suite Setup
 
-For multiple Nitro servers as part of your project, you can set up the Nitro test environment per test suite. Configure Vitest by creating a new `vitest.config.ts` configuration file in your project root:
+If you have multiple Nitro servers as part of your project, you can set up the test environment per test suite instead. The Vitest config needs no nitro options:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
@@ -112,13 +93,7 @@ import { defineConfig } from 'nitro-test-utils/config'
 export default defineConfig()
 ```
 
-Contrary to the global setup, the Nitro server is not started automatically by Vitest. Instead, you need to call the `setup` function in each test suite to start the Nitro server. After each test suite, the Nitro server is shut down.
-
-The `setup` function accepts an options object:
-
-- **`rootDir`**: Path to the Nitro project root (where `nitro.config.ts` lives).
-- **`mode`**: `'development'` (default) or `'production'`.
-- **`preset`**: Nitro deployment preset. Defaults to `'nitro-dev'` (development) or `'node-middleware'` (production). See [Deployment Presets](#deployment-presets).
+Contrary to the global setup, the Nitro server is not started automatically. Instead, call the `setup` function in each test suite to start a Nitro server. After each test suite, the server is shut down:
 
 ```ts
 import { resolve } from 'node:path'
@@ -128,7 +103,7 @@ import { describe, expect, it } from 'vitest'
 describe('api', async () => {
   await setup({
     rootDir: resolve(import.meta.dirname, 'fixture'),
-    mode: 'production'
+    mode: 'production',
   })
 
   it('responds successfully', async () => {
@@ -140,36 +115,11 @@ describe('api', async () => {
 })
 ```
 
-### Detecting Test Environment
+## Configuration
 
-You can detect whether your code is running in a Nitro build during tests by checking the `import.meta.test` property. This is useful if you want to conditionally run code only in Nitro tests, but not in production.
+### Environment Variables
 
-To get proper TypeScript support for `import.meta.test`, add a triple-slash reference in your `env.d.ts` (or any `.d.ts` file included by your `tsconfig.json`):
-
-```ts
-/// <reference types="nitro-test-utils/env" />
-```
-
-Then use it in your Nitro handlers:
-
-```ts
-import { defineHandler } from 'nitro/h3'
-
-export default defineHandler(async () => {
-  // Mock data for tests
-  if (import.meta.test) {
-    return { foo: 'bar' }
-  }
-
-  // Your production code here
-  const db = await connectToDatabase()
-  return db.query()
-})
-```
-
-### Custom Test Environment Variables
-
-You can set custom environment variables for your tests by creating a `.env.test` file in your Nitro project root. The variables will be loaded automatically when the Nitro server is started.
+You can set custom environment variables for your tests by creating a `.env.test` file in your Nitro project root. The variables will be loaded automatically when the Nitro server starts:
 
 ```ini
 # .env.test
@@ -181,7 +131,7 @@ FOO=bar
 By default, `nitro-test-utils` uses Node.js-compatible presets (`nitro-dev` for development, `node-middleware` for production). If your application targets a different deployment platform, you can set the `preset` option to match your deployment target.
 
 > [!NOTE]
-> Non-Node presets like `cloudflare-module` only work in development mode, since Vitest runs inside a Node.js process. In production mode, only Node.js-compatible presets are supported.
+> Non-Node presets like `cloudflare-module` only work in development mode, since Vitest runs inside a Node.js process.
 
 #### Cloudflare Workers
 
@@ -190,20 +140,9 @@ To test Cloudflare-specific features like KV, D1, or R2 bindings locally, set th
 Make sure `wrangler` is installed as a dev dependency and a `wrangler.json` (or `wrangler.toml`) with your bindings configuration exists in your Nitro project root.
 
 ```ts
-import { resolve } from 'node:path'
-import { $fetchRaw, setup } from 'nitro-test-utils/e2e'
-import { describe, expect, it } from 'vitest'
-
-describe('cloudflare bindings', async () => {
-  await setup({
-    rootDir: resolve(import.meta.dirname, 'fixture'),
-    preset: 'cloudflare-module'
-  })
-
-  it('reads from KV', async () => {
-    const { data } = await $fetchRaw('/api/kv?key=test')
-    expect(data.value).toBeDefined()
-  })
+await setup({
+  rootDir: resolve(import.meta.dirname, 'fixture'),
+  preset: 'cloudflare-module',
 })
 ```
 
@@ -218,25 +157,112 @@ export default defineHandler((event) => {
 })
 ```
 
+### Detecting Test Environment
+
+You can detect whether your code is running in a Nitro build during tests by checking the `import.meta.test` property. This is useful if you want to conditionally run code only in tests, but not in production:
+
+```ts
+import { defineHandler } from 'nitro/h3'
+
+export default defineHandler(async () => {
+  if (import.meta.test) {
+    return { foo: 'bar' }
+  }
+
+  const db = await connectToDatabase()
+  return db.query()
+})
+```
+
+To get proper TypeScript support for `import.meta.test`, add a triple-slash reference in your `env.d.ts` (or any `.d.ts` file included by your `tsconfig.json`):
+
+```ts
+/// <reference types="nitro-test-utils/env" />
+```
+
 ## API Reference
+
+### `defineConfig`
+
+Configures Vitest for Nitro testing. Accepts an optional Vite/Vitest config as the first argument and Nitro test options as the second.
+
+```ts
+import { defineConfig } from 'nitro-test-utils/config'
+
+export default defineConfig(
+  // Vite/Vitest config (optional)
+  { test: { dir: './tests' } },
+  // Nitro test options (optional)
+  { global: true }
+)
+```
+
+**Type Declaration:**
+
+```ts
+function defineConfig(
+  userConfig?: UserConfig,
+  nitroConfig?: NitroInlineConfig
+): Promise<UserConfig>
+
+interface NitroInlineConfig {
+  /** Watch Nitro source files and rerun tests on changes. Default: `true`. */
+  rerunOnSourceChanges?: boolean
+  /** Enable a global Nitro server for all tests. Set to `true` for defaults, or pass options. */
+  global?: boolean | NitroTestOptions
+}
+
+interface NitroTestOptions {
+  /** Path to the Nitro project root. Default: Vitest working directory. */
+  rootDir?: string
+  /** `'development'` (default) or `'production'`. */
+  mode?: 'development' | 'production'
+  /** Nitro deployment preset. */
+  preset?: string
+}
+```
+
+### `setup`
+
+Starts a Nitro server for the current test suite. Used with the per-suite setup. The server is automatically stopped after the suite completes.
+
+```ts
+import { setup } from 'nitro-test-utils/e2e'
+
+await setup({ rootDir: './fixture' })
+```
+
+**Type Declaration:**
+
+```ts
+function setup(options?: NitroTestOptions): Promise<void>
+```
+
+See [`NitroTestOptions`](#defineconfig) for available options.
 
 ### `$fetchRaw`
 
-The `$fetchRaw` function is a simple wrapper around the custom [`ofetch`](https://github.com/unjs/ofetch) `$Fetch` instance created by `createNitroFetch`. It simplifies requesting data from your Nitro server during testing. Import the function from the `nitro-test-utils/e2e` module. It will dynamically use the base URL of the active test server.
+A simple wrapper around the custom [`ofetch`](https://github.com/unjs/ofetch) instance created by `createNitroFetch`. It simplifies requesting data from your Nitro server during testing and will dynamically use the base URL of the active test server.
 
 `$fetchRaw` returns a promise that resolves with the raw response from [`ofetch.raw`](https://github.com/unjs/ofetch?tab=readme-ov-file#-access-to-raw-response). This is useful because it allows you to access the response status code, headers, and body, even if the response failed.
 
-**Usage:**
-
-Inside a test case:
-
 ```ts
-// Use `data` instead of `body` for the parsed response body
-const { data, status, headers } = await $fetchRaw('/api/hello')
+import { $fetchRaw } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
 
-expect(status).toBe(200)
-expect(data).toMatchSnapshot()
+describe('api', () => {
+  it('responds with data', async () => {
+    // Use `data` instead of `body` for the parsed response body
+    const { data, status, headers } = await $fetchRaw('/api/hello')
+
+    expect(status).toBe(200)
+    expect(data).toMatchSnapshot()
+  })
+})
 ```
+
+> [!TIP]
+> All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299, and `retry: 0` to disable retries.
 
 **Type Declaration:**
 
@@ -252,9 +278,6 @@ function $fetchRaw<T = any, R extends ResponseType = 'json'>(
 ): Promise<NitroFetchResponse<MappedResponseType<R, T>>>
 ```
 
-> [!TIP]
-> All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299, and `retry: 0` to disable retries.
-
 ### `createNitroFetch`
 
 Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Nitro server URL as the base URL.
@@ -266,8 +289,6 @@ Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Ni
 > - `redirect: 'manual'` to prevent automatic redirects.
 > - `retry: 0` to disable retries, preventing masked failures and slow test suites.
 > - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
-
-**Usage:**
 
 Use `createNitroFetch` to get a `$fetch` instance pre-configured for your Nitro test server – no extra setup needed:
 
@@ -291,13 +312,11 @@ describe('api', () => {
 function createNitroFetch(options?: FetchHooks): $Fetch
 ```
 
-You can pass `ofetch` interceptors (`onRequest`, `onResponse`, `onRequestError`, `onResponseError`) to customize request/response handling while keeping the default base URL and options.
+You can pass `ofetch` interceptors (`onRequest`, `onResponse`, `onRequestError`, `onResponseError`) to customize request/response handling.
 
 ### `createNitroSession`
 
 Creates a session-aware fetch instance that persists cookies across requests. Useful for testing authentication flows.
-
-**Usage:**
 
 ```ts
 import { createNitroSession } from 'nitro-test-utils/e2e'
@@ -339,13 +358,12 @@ function createNitroSession(): NitroSession
 
 To get the URL of the active test server for the current test suite or global test environment, you can use the `injectServerUrl` function.
 
-**Usage:**
-
 ```ts
 import { injectServerUrl } from 'nitro-test-utils/e2e'
+import { describe, it } from 'vitest'
 
 describe('api', () => {
-  it('logs Nitro server URL', async () => {
+  it('logs Nitro server URL', () => {
     const serverUrl = injectServerUrl()
     console.log(serverUrl) // http://localhost:3000
   })
@@ -358,16 +376,57 @@ describe('api', () => {
 function injectServerUrl(): string
 ```
 
-## Migrating from Nitro v2
+## Migration
+
+### From v1 to v2
+
+The `nitro` key on Vite's `UserConfig` has been replaced with a second argument to `defineConfig`. This resolves a type collision with Nitro's own Vite plugin (`nitro/vite`), which claims the same `nitro` key.
+
+```diff
+ import { defineConfig } from 'nitro-test-utils/config'
+
+-export default defineConfig({
+-  nitro: {
+-    global: true,
+-  },
+-})
++export default defineConfig({}, {
++  global: true,
++})
+```
+
+With custom options:
+
+```diff
+-export default defineConfig({
+-  nitro: {
+-    global: {
+-      rootDir: 'backend',
+-      mode: 'production',
+-    },
+-    rerunOnSourceChanges: false,
+-  },
+-})
++export default defineConfig({}, {
++  global: {
++    rootDir: 'backend',
++    mode: 'production',
++  },
++  rerunOnSourceChanges: false,
++})
+```
+
+The `NitroTestConfig` type has been removed. Use `NitroInlineConfig` for the nitro options type.
+
+### From v0.x (Nitro v2)
 
 If you are upgrading from an earlier version of `nitro-test-utils` that targeted Nitro v2 (`nitropack`), the following breaking changes apply:
 
-- **Peer dependency**: `nitropack` has been replaced by `nitro` (v3).
+- **Peer dependency**: `nitropack` replaced by `nitro` (v3).
 - **Renamed types**: `TestOptions` → `NitroTestOptions`, `TestContext` → `NitroTestContext`, `TestServer` → `NitroTestServer`, `TestFetchResponse` → `NitroFetchResponse`.
-- **Removed deprecated config fields**: The top-level `mode` and `rootDir` options in the Vitest `nitro` config have been removed. Use `nitro.global.mode` and `nitro.global.rootDir` instead.
 
-For Nitro v3 API changes (handler definitions, error handling, request body, presets, etc.), see the [official Nitro v3 migration guide](https://nitro.build/guide/migration).
+For Nitro v3 API changes, see the [official Nitro v3 migration guide](https://nitro.build/guide/migration).
 
 ## License
 
-[MIT](./LICENSE) License © 2024-PRESENT [Johann Schopplich](https://github.com/johannschopplich)
+[MIT](./LICENSE) License (c) 2024-PRESENT [Johann Schopplich](https://github.com/johannschopplich)
