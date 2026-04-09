@@ -6,7 +6,7 @@ import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
 
-export interface NitroInlineConfig {
+export interface NitroTestConfig {
   /**
    * Whether to add the Nitro source directory to rerun tests when source files change.
    *
@@ -21,15 +21,15 @@ export interface NitroInlineConfig {
   global?: boolean | NitroTestOptions
 }
 
-export interface ResolvedNitroInlineConfig {
+export interface ResolvedNitroTestConfig {
   rerunOnSourceChanges: boolean
   global?: NitroTestOptions
 }
 
-export async function defineConfig(userConfig: UserConfig = {}, nitroConfig: NitroInlineConfig = {}): Promise<UserConfig> {
-  const resolvedGlobalConfig = nitroConfig.global === true ? {} : nitroConfig.global || undefined
-  const resolvedNitroConfig: ResolvedNitroInlineConfig = {
-    rerunOnSourceChanges: nitroConfig.rerunOnSourceChanges ?? true,
+export async function defineConfig(userConfig: UserConfig = {}, testConfig: NitroTestConfig = {}): Promise<UserConfig> {
+  const resolvedGlobalConfig = testConfig.global === true ? {} : testConfig.global || undefined
+  const resolvedTestConfig: ResolvedNitroTestConfig = {
+    rerunOnSourceChanges: testConfig.rerunOnSourceChanges ?? true,
     global: resolvedGlobalConfig
       ? {
           rootDir: resolvedGlobalConfig.rootDir || undefined,
@@ -49,20 +49,20 @@ export async function defineConfig(userConfig: UserConfig = {}, nitroConfig: Nit
         '**/package.json/**',
         '**/{vitest,vite}.config.*/**',
         // Rerun tests when source files change
-        ...await resolveSourceRerunTriggers(resolvedNitroConfig),
+        ...await resolveSourceRerunTriggers(resolvedTestConfig),
       ],
-      globalSetup: resolvedNitroConfig.global
+      globalSetup: resolvedTestConfig.global
         ? [path.join(import.meta.dirname, 'setup.mjs')]
         : undefined,
       // @ts-expect-error: `nitro` is a custom property used internally by the setup script
-      nitro: resolvedNitroConfig,
+      nitro: resolvedTestConfig,
     },
   }) as UserConfig
 
   return mergeConfig(userConfig, userConfigOverrides)
 }
 
-async function resolveSourceRerunTriggers(config: ResolvedNitroInlineConfig): Promise<string[]> {
+async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Promise<string[]> {
   if (!config.rerunOnSourceChanges)
     return []
 

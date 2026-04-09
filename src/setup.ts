@@ -1,10 +1,10 @@
 import type { TestProject } from 'vitest/node'
-import type { ResolvedNitroInlineConfig } from './config'
+import type { ResolvedNitroTestConfig } from './config'
 import { createTestContext } from './context'
 import { startServer, stopServer } from './server'
 
 type GlobalSetupContextWithNitro = TestProject & {
-  config: { nitro: ResolvedNitroInlineConfig }
+  config: { nitro: ResolvedNitroTestConfig }
 }
 
 // Setup shared Nitro instance

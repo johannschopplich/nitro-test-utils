@@ -202,10 +202,10 @@ export default defineConfig(
 ```ts
 function defineConfig(
   userConfig?: UserConfig,
-  nitroConfig?: NitroInlineConfig
+  testConfig?: NitroTestConfig
 ): Promise<UserConfig>
 
-interface NitroInlineConfig {
+interface NitroTestConfig {
   /** Watch Nitro source files and rerun tests on changes. Default: `true`. */
   rerunOnSourceChanges?: boolean
   /** Enable a global Nitro server for all tests. Set to `true` for defaults, or pass options. */
@@ -415,8 +415,6 @@ With custom options:
 +  rerunOnSourceChanges: false,
 +})
 ```
-
-The `NitroTestConfig` type has been removed. Use `NitroInlineConfig` for the nitro options type.
 
 ### From v0.x (Nitro v2)
 
