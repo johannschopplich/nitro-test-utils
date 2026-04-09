@@ -51,6 +51,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       preset,
       dev: isDev,
       rootDir,
+      builder: resolveTestBuilder(),
       buildDir: NITRO_BUILD_DIR,
       serveStatic: !isDev,
       output: {
@@ -79,7 +80,7 @@ export function clearTestContext(): void {
   currentContext = undefined
 }
 
-export function setupDotenv({
+function setupDotenv({
   rootDir = process.cwd(),
   fileName = '.env.test',
   override = true,
@@ -103,4 +104,12 @@ export function setupDotenv({
   }
 
   return environment
+}
+
+function resolveTestBuilder(): 'rollup' | 'rolldown' {
+  const builder = process.env.NITRO_BUILDER
+  if (builder === 'rollup' || builder === 'rolldown') {
+    return builder
+  }
+  return 'rolldown'
 }
