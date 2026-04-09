@@ -1,4 +1,4 @@
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { ViteUserConfig as UserConfig } from 'vitest/config'
 import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
@@ -26,7 +26,7 @@ export interface ResolvedNitroInlineConfig {
   global?: NitroTestOptions
 }
 
-export async function defineConfig(userConfig: ViteUserConfig = {}, nitroConfig: NitroInlineConfig = {}): Promise<ViteUserConfig> {
+export async function defineConfig(userConfig: UserConfig = {}, nitroConfig: NitroInlineConfig = {}): Promise<UserConfig> {
   const resolvedGlobalConfig = nitroConfig.global === true ? {} : nitroConfig.global || undefined
   const resolvedNitroConfig: ResolvedNitroInlineConfig = {
     rerunOnSourceChanges: nitroConfig.rerunOnSourceChanges ?? true,
@@ -57,7 +57,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}, nitroConfig:
       // @ts-expect-error: `nitro` is a custom property used internally by the setup script
       nitro: resolvedNitroConfig,
     },
-  }) as ViteUserConfig
+  }) as UserConfig
 
   return mergeConfig(userConfig, userConfigOverrides)
 }
