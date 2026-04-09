@@ -36,6 +36,8 @@ yarn add -D nitro-test-utils nitro vitest
 
 There are two ways to set up the Nitro test environment: globally or per test suite. The global setup is useful if you want to test multiple test files against the same Nitro server. The per test suite setup is useful if you want to test different Nitro servers in different test files.
 
+If you are using **Nitro as a Vite plugin** (`nitro/vite`), no additional configuration is needed. Since `nitro.config.ts` is required even in Vite projects, `nitro-test-utils` loads it directly and creates a standalone Nitro server for testing.
+
 > [!NOTE]
 > By default, Nitro uses the `nitro-dev` preset in development mode and `node-middleware` in production mode. You can override this with the `preset` option to test against other deployment targets, such as Cloudflare Workers. See [Deployment Presets](#deployment-presets) for details.
 
