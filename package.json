@@ -1,9 +1,9 @@
 {
   "name": "nitro-test-utils",
   "type": "module",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "packageManager": "pnpm@10.33.0",
-  "description": "Testing environment and utilities for Nitro",
+  "description": "Testing toolkit for Nitro full-stack servers",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
   "license": "MIT",
   "homepage": "https://github.com/johannschopplich/nitro-test-utils#readme",
