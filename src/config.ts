@@ -1,15 +1,10 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { InlineConfig as VitestInlineConfig } from 'vitest/node'
 import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
 import { defineConfig as defineVitestConfig } from 'vitest/config'
 import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
-
-export interface NitroTestConfig extends VitestInlineConfig {
-  nitro?: NitroInlineConfig
-}
 
 export interface NitroInlineConfig {
   /**
@@ -21,30 +16,20 @@ export interface NitroInlineConfig {
 
   /**
    * Options for a global Nitro server instance for all tests.
+   * Set to `true` to enable with default options.
    */
+  global?: boolean | NitroTestOptions
+}
+
+export interface ResolvedNitroInlineConfig {
+  rerunOnSourceChanges: boolean
   global?: NitroTestOptions
 }
 
-declare module 'vite' {
-  interface UserConfig {
-    /**
-     * Options for Vitest.
-     */
-    test?: VitestInlineConfig
-
-    /**
-     * Options for the Nitro test runner.
-     */
-    nitro?: Omit<NitroInlineConfig, 'global'> & {
-      global?: boolean | NitroTestOptions
-    }
-  }
-}
-
-export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<ViteUserConfig> {
-  const resolvedGlobalConfig: NitroInlineConfig['global'] = userConfig.nitro?.global === true ? {} : userConfig.nitro?.global || undefined
-  const resolvedNitroConfig: NitroInlineConfig = {
-    rerunOnSourceChanges: userConfig.nitro?.rerunOnSourceChanges ?? true,
+export async function defineConfig(userConfig: ViteUserConfig = {}, nitroConfig: NitroInlineConfig = {}): Promise<ViteUserConfig> {
+  const resolvedGlobalConfig = nitroConfig.global === true ? {} : nitroConfig.global || undefined
+  const resolvedNitroConfig: ResolvedNitroInlineConfig = {
+    rerunOnSourceChanges: nitroConfig.rerunOnSourceChanges ?? true,
     global: resolvedGlobalConfig
       ? {
           rootDir: resolvedGlobalConfig.rootDir || undefined,
@@ -69,7 +54,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
       globalSetup: resolvedNitroConfig.global
         ? [path.join(import.meta.dirname, 'setup.mjs')]
         : undefined,
-      // @ts-expect-error: `nitro` is added via module augmentation on Vite's `UserConfig`
+      // @ts-expect-error: `nitro` is a custom property used internally by the setup script
       nitro: resolvedNitroConfig,
     },
   }) as ViteUserConfig
@@ -77,7 +62,7 @@ export async function defineConfig(userConfig: ViteUserConfig = {}): Promise<Vit
   return mergeConfig(userConfig, userConfigOverrides)
 }
 
-async function resolveSourceRerunTriggers(config: NitroInlineConfig): Promise<string[]> {
+async function resolveSourceRerunTriggers(config: ResolvedNitroInlineConfig): Promise<string[]> {
   if (!config.rerunOnSourceChanges)
     return []
 

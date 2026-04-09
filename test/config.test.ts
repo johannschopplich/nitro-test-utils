@@ -1,4 +1,4 @@
-import type { NitroTestConfig } from '../src/config'
+import type { ResolvedNitroInlineConfig } from '../src/config'
 import { describe, expect, it } from 'vitest'
 import { defineConfig } from '../src/config'
 
@@ -11,19 +11,15 @@ describe('defineConfig', async () => {
     })
 
     it('skips source watching when disabled', async () => {
-      const config = await defineConfig({
-        nitro: {
-          rerunOnSourceChanges: false,
-        },
+      const config = await defineConfig({}, {
+        rerunOnSourceChanges: false,
       })
 
       expect(config.test?.forceRerunTriggers).not.toContain(`${process.cwd()}/**/*.ts`)
     })
 
     it('watches dev build output for global dev mode', async () => {
-      const config = await defineConfig({
-        nitro: { global: true },
-      })
+      const config = await defineConfig({}, { global: true })
 
       expect(config.test?.forceRerunTriggers).toEqual(
         expect.arrayContaining([expect.stringContaining('.nitro/dev/index.mjs')]),
@@ -31,8 +27,8 @@ describe('defineConfig', async () => {
     })
 
     it('watches production build output for global production mode', async () => {
-      const config = await defineConfig({
-        nitro: { global: { mode: 'production' } },
+      const config = await defineConfig({}, {
+        global: { mode: 'production' },
       })
 
       expect(config.test?.forceRerunTriggers).toEqual(
@@ -43,38 +39,36 @@ describe('defineConfig', async () => {
 
   describe('global', () => {
     it('configures globalSetup when enabled', async () => {
-      const config = await defineConfig({
-        nitro: { global: true },
-      })
+      const config = await defineConfig({}, { global: true })
 
       expect(config.test?.globalSetup).toHaveLength(1)
-      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined, preset: undefined })
+      expect((config.test as { nitro: ResolvedNitroInlineConfig })?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined, preset: undefined })
     })
 
     it('passes through custom options', async () => {
-      const config = await defineConfig({
-        nitro: { global: { rootDir: '/custom', mode: 'production', preset: 'node-server' } },
+      const config = await defineConfig({}, {
+        global: { rootDir: '/custom', mode: 'production', preset: 'node-server' },
       })
 
       expect(config.test?.globalSetup).toHaveLength(1)
-      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
+      expect((config.test as { nitro: ResolvedNitroInlineConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
     })
 
     it('does not configure globalSetup when not set', async () => {
       const config = await defineConfig({})
 
       expect(config.test?.globalSetup).toBeUndefined()
-      expect((config.test as NitroTestConfig)?.nitro?.global).toBeUndefined()
+      expect((config.test as { nitro: ResolvedNitroInlineConfig })?.nitro?.global).toBeUndefined()
     })
   })
 
   describe('output', () => {
     it('preserves nitro options in resolved config', async () => {
-      const config = await defineConfig({
-        nitro: { rerunOnSourceChanges: false },
+      const config = await defineConfig({}, {
+        rerunOnSourceChanges: false,
       })
 
-      expect((config.test as NitroTestConfig)?.nitro?.rerunOnSourceChanges).toBe(false)
+      expect((config.test as { nitro: ResolvedNitroInlineConfig })?.nitro?.rerunOnSourceChanges).toBe(false)
     })
 
     it('merges with user configuration', async () => {
