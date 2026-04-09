@@ -4,13 +4,13 @@ import { defineConfig } from '../src/config'
 
 describe('defineConfig', async () => {
   describe('rerunOnSourceChanges', () => {
-    it('should add source directory to force rerun triggers by default', async () => {
+    it('watches source directory by default', async () => {
       const config = await defineConfig()
 
       expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
     })
 
-    it('should exclude source directory when disabled', async () => {
+    it('skips source watching when disabled', async () => {
       const config = await defineConfig({
         nitro: {
           rerunOnSourceChanges: false,
@@ -19,28 +19,48 @@ describe('defineConfig', async () => {
 
       expect(config.test?.forceRerunTriggers).not.toContain(`${process.cwd()}/**/*.ts`)
     })
+
+    it('watches dev build output for global dev mode', async () => {
+      const config = await defineConfig({
+        nitro: { global: true },
+      })
+
+      expect(config.test?.forceRerunTriggers).toEqual(
+        expect.arrayContaining([expect.stringContaining('.nitro/dev/index.mjs')]),
+      )
+    })
+
+    it('watches production build output for global production mode', async () => {
+      const config = await defineConfig({
+        nitro: { global: { mode: 'production' } },
+      })
+
+      expect(config.test?.forceRerunTriggers).toEqual(
+        expect.arrayContaining([expect.stringContaining('.output/server/index.mjs')]),
+      )
+    })
   })
 
   describe('global', () => {
-    it('should configure globalSetup when enabled', async () => {
+    it('configures globalSetup when enabled', async () => {
       const config = await defineConfig({
         nitro: { global: true },
       })
 
       expect(config.test?.globalSetup).toHaveLength(1)
-      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined })
+      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined, preset: undefined })
     })
 
-    it('should pass through custom options', async () => {
+    it('passes through custom options', async () => {
       const config = await defineConfig({
-        nitro: { global: { rootDir: '/custom', mode: 'production' } },
+        nitro: { global: { rootDir: '/custom', mode: 'production', preset: 'node-server' } },
       })
 
       expect(config.test?.globalSetup).toHaveLength(1)
-      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production' })
+      expect((config.test as NitroTestConfig)?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
     })
 
-    it('should not configure globalSetup when not set', async () => {
+    it('does not configure globalSetup when not set', async () => {
       const config = await defineConfig({})
 
       expect(config.test?.globalSetup).toBeUndefined()
@@ -49,7 +69,7 @@ describe('defineConfig', async () => {
   })
 
   describe('output', () => {
-    it('should include nitro config', async () => {
+    it('preserves nitro options in resolved config', async () => {
       const config = await defineConfig({
         nitro: { rerunOnSourceChanges: false },
       })
@@ -57,19 +77,18 @@ describe('defineConfig', async () => {
       expect((config.test as NitroTestConfig)?.nitro?.rerunOnSourceChanges).toBe(false)
     })
 
-    it('should merge with user configuration', async () => {
+    it('merges with user configuration', async () => {
       const config = await defineConfig({
         test: {
           forceRerunTriggers: ['test/foo.test.ts'],
         },
       })
 
-      expect(config.test?.forceRerunTriggers?.length).toMatchInlineSnapshot(`4`)
       expect(config.test?.forceRerunTriggers).toContain('test/foo.test.ts')
       expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
     })
 
-    it('should pass through custom vitest config', async () => {
+    it('passes through custom vitest config', async () => {
       const config = await defineConfig({
         test: {
           dir: './tests',

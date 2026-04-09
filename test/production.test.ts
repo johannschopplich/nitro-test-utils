@@ -8,8 +8,13 @@ describe('production', async () => {
     mode: 'production',
   })
 
-  it('should respond from production server build', async () => {
+  it('responds with the index route', async () => {
     const { data } = await $fetchRaw('/')
     expect(data).toBe('Hello, production build!')
+  })
+
+  it('sets import.meta.test to true', async () => {
+    const { data } = await $fetchRaw('/env')
+    expect(data).toEqual({ isTest: true })
   })
 })

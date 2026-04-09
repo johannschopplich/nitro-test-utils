@@ -7,7 +7,7 @@ describe('routes', async () => {
     rootDir: path.resolve(import.meta.dirname, 'basic-app'),
   })
 
-  it('should respond with 200 status code', async () => {
+  it('returns health check response', async () => {
     const { data } = await $fetchRaw('/api/health')
     expect(data).toMatchInlineSnapshot(`
       {
@@ -16,7 +16,7 @@ describe('routes', async () => {
     `)
   })
 
-  it('should return custom environment variables', async () => {
+  it('exposes environment variables and build flags', async () => {
     const { data } = await $fetchRaw('/api/env')
     expect(data).toMatchInlineSnapshot(`
       {
@@ -30,7 +30,7 @@ describe('routes', async () => {
     `)
   })
 
-  it('should return 422 for error route', async () => {
+  it('returns structured error response', async () => {
     const { data, status } = await $fetchRaw('/api/error')
     expect(status).toBe(422)
     expect(data).toMatchObject({
@@ -41,12 +41,12 @@ describe('routes', async () => {
     })
   })
 
-  it('should return 404 for non-existent route', async () => {
+  it('returns 404 for non-existent route', async () => {
     const { status } = await $fetchRaw('/api/non-existent')
     expect(status).toBe(404)
   })
 
-  it('should echo POST body', async () => {
+  it('echoes POST body', async () => {
     const { data, status } = await $fetchRaw('/api/echo', {
       method: 'POST',
       body: { hello: 'world' },
@@ -55,26 +55,26 @@ describe('routes', async () => {
     expect(data).toEqual({ hello: 'world' })
   })
 
-  it('should create a custom fetch instance with createNitroFetch', async () => {
+  it('fetches through a custom ofetch instance', async () => {
     const $fetch = createNitroFetch()
     const data = await $fetch('/api/health')
     expect(data).toEqual({ ok: true })
   })
 
-  it('should return server URL from injectServerUrl', () => {
+  it('provides the running server URL', () => {
     const url = injectServerUrl()
     expect(url).toMatch(/^https?:\/\/.+/)
   })
 
   describe('cookies', () => {
-    it('should persist cookies across requests', async () => {
+    it('persists cookies across requests', async () => {
       const session = createNitroSession()
       await session.$fetch('/api/login', { method: 'POST' })
       const profile = await session.$fetch('/api/profile')
       expect(profile).toEqual({ user: 'authenticated' })
     })
 
-    it('should clear cookies', async () => {
+    it('clears cookies', async () => {
       const session = createNitroSession()
       await session.$fetch('/api/login', { method: 'POST' })
       session.clearCookies()
@@ -82,7 +82,7 @@ describe('routes', async () => {
       expect(response.status).toBe(401)
     })
 
-    it('should expose cookies for assertions', async () => {
+    it('exposes cookies for assertions', async () => {
       const session = createNitroSession()
       await session.$fetch('/api/login', { method: 'POST' })
       expect(session.cookies.get('session')).toBe('abc123')

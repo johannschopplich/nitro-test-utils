@@ -345,7 +345,7 @@ To get the URL of the active test server for the current test suite or global te
 import { injectServerUrl } from 'nitro-test-utils/e2e'
 
 describe('api', () => {
-  it('should log the Nitro server URL', async () => {
+  it('logs Nitro server URL', async () => {
     const serverUrl = injectServerUrl()
     console.log(serverUrl) // http://localhost:3000
   })

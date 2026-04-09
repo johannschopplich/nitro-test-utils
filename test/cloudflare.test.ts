@@ -8,14 +8,14 @@ describe('cloudflare bindings', async () => {
     preset: 'cloudflare-module',
   })
 
-  it('should have cloudflare bindings available', async () => {
+  it('has cloudflare bindings available', async () => {
     const { data } = await $fetchRaw('/api/bindings')
     expect(data.hasEnv).toBe(true)
     expect(data.bindings).toContain('DB')
     expect(data.bindings).toContain('KV')
   })
 
-  it('should read and write to KV', async () => {
+  it('reads and writes to KV', async () => {
     await $fetchRaw('/api/kv', {
       method: 'POST',
       body: { key: 'test-key', value: 'hello' },
@@ -25,7 +25,7 @@ describe('cloudflare bindings', async () => {
     expect(data.value).toBe('hello')
   })
 
-  it('should read and write to D1', async () => {
+  it('reads and writes to D1', async () => {
     const { data: insertResult } = await $fetchRaw('/api/d1-seed', {
       method: 'POST',
       body: { name: 'item-1' },
