@@ -66,15 +66,15 @@ export async function defineConfig(userConfig: UserConfig = {}, testConfig: Nitr
 function resolveGlobalSetup(
   userGlobalSetup: string | string[] | undefined,
   config: ResolvedNitroTestConfig,
-): string[] | undefined {
+): string | string[] | undefined {
+  if (!config.global)
+    return userGlobalSetup
+
   const userSetups = userGlobalSetup
     ? (Array.isArray(userGlobalSetup) ? [...userGlobalSetup] : [userGlobalSetup])
     : []
-  const nitroSetup = config.global
-    ? [path.join(import.meta.dirname, 'setup.mjs')]
-    : []
-  const mergedSetup = [...userSetups, ...nitroSetup]
-  return mergedSetup.length > 0 ? mergedSetup : undefined
+
+  return [...userSetups, path.join(import.meta.dirname, 'setup.mjs')]
 }
 
 async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Promise<string[]> {

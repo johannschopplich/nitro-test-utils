@@ -54,6 +54,36 @@ describe('defineConfig', async () => {
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
     })
 
+    it('runs the user globalSetup before the nitro server starts', async () => {
+      const [nitroSetup] = (await defineConfig({}, { global: true })).test?.globalSetup as string[]
+
+      const config = await defineConfig(
+        { test: { globalSetup: 'test/user-setup.ts' } },
+        { global: true },
+      )
+      const setups = config.test?.globalSetup as string[]
+
+      expect(setups).toContain('test/user-setup.ts')
+      expect(setups).toContain(nitroSetup)
+      expect(setups.indexOf('test/user-setup.ts')).toBeLessThan(setups.indexOf(nitroSetup))
+    })
+
+    it('accepts multiple user globalSetups alongside the nitro one', async () => {
+      const [nitroSetup] = (await defineConfig({}, { global: true })).test?.globalSetup as string[]
+
+      const config = await defineConfig(
+        { test: { globalSetup: ['test/a.ts', 'test/b.ts'] } },
+        { global: true },
+      )
+      const setups = config.test?.globalSetup as string[]
+
+      expect(setups).toContain('test/a.ts')
+      expect(setups).toContain('test/b.ts')
+      expect(setups).toContain(nitroSetup)
+      expect(setups.indexOf('test/a.ts')).toBeLessThan(setups.indexOf(nitroSetup))
+      expect(setups.indexOf('test/b.ts')).toBeLessThan(setups.indexOf(nitroSetup))
+    })
+
     it('does not configure globalSetup when not set', async () => {
       const config = await defineConfig({})
 
@@ -61,37 +91,12 @@ describe('defineConfig', async () => {
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toBeUndefined()
     })
 
-    it('preserves a user globalSetup string and appends nitro setup last', async () => {
-      const config = await defineConfig(
-        { test: { globalSetup: 'test/user-setup.ts' } },
-        { global: true },
-      )
-
-      const setups = config.test?.globalSetup as string[]
-      expect(setups).toHaveLength(2)
-      expect(setups[0]).toBe('test/user-setup.ts')
-      expect(setups[1]).toMatch(/setup\.m?js$/)
-    })
-
-    it('preserves a user globalSetup array and appends nitro setup last', async () => {
-      const config = await defineConfig(
-        { test: { globalSetup: ['test/a.ts', 'test/b.ts'] } },
-        { global: true },
-      )
-
-      const setups = config.test?.globalSetup as string[]
-      expect(setups).toHaveLength(3)
-      expect(setups[0]).toBe('test/a.ts')
-      expect(setups[1]).toBe('test/b.ts')
-      expect(setups[2]).toMatch(/setup\.m?js$/)
-    })
-
-    it('preserves a user globalSetup when global is not set', async () => {
+    it('does not inject the nitro globalSetup when global is not set', async () => {
       const config = await defineConfig({
         test: { globalSetup: 'test/user-setup.ts' },
       })
 
-      expect(config.test?.globalSetup).toEqual(['test/user-setup.ts'])
+      expect(config.test?.globalSetup).toBe('test/user-setup.ts')
     })
   })
 
