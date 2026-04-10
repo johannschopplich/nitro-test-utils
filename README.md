@@ -10,7 +10,8 @@ A simple and easy-to-use testing toolkit for [Nitro](https://nitro.build) server
 - ✅ Seamless integration with Vitest
 - 🪝 Conditional code execution based on test mode (`import.meta.test`)
 - ☁️ Cloudflare Workers support with local bindings emulation (KV, D1, R2, …)
-- 📡 Familiar [`$fetchRaw`](#fetchraw) helper similar to Nuxt test utils
+- 📡 Typed [`$fetchRaw`](#fetchraw) helper with route-level responses inherited from Nitro's `InternalApi`
+- 🗺️ Introspect registered routes with [`listRoutes`](#listroutes)
 
 ## Installation
 
@@ -264,18 +265,53 @@ describe('api', () => {
 > [!TIP]
 > All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299, and `retry: 0` to disable retries.
 
+#### Route-Level Response Types
+
+`$fetchRaw` inherits route-level typing from Nitro's `InternalApi` augmentation. Nitro regenerates these types at `node_modules/.nitro/types/nitro-routes.d.ts` on every build – when your `tsconfig.json` extends `nitro/tsconfig`, response data narrows automatically to the matching handler's return type:
+
+```ts
+// api/users/[id].get.ts returns `{ id: string, name: string }`
+const { data } = await $fetchRaw('/api/users/42')
+// `data` is typed as `{ id: string, name: string } | undefined`
+```
+
+Unknown routes and explicit generic overrides both fall back gracefully:
+
+```ts
+// Falls back to `unknown` for routes not present in `InternalApi`
+const { data } = await $fetchRaw('/api/not-declared')
+
+// Explicit override when you want to pin the response shape yourself
+const { data } = await $fetchRaw<{ custom: string }>('/api/health')
+```
+
 **Type Declaration:**
 
 ```ts
+import type {
+  ExtractedRouteMethod,
+  NitroFetchOptions,
+  NitroFetchRequest,
+  TypedInternalResponse,
+} from 'nitro/types'
+
 interface NitroFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
   data?: T
 }
 
-function $fetchRaw<T = any, R extends ResponseType = 'json'>(
-  path: string,
-  options?: FetchOptions<R>
-): Promise<NitroFetchResponse<MappedResponseType<R, T>>>
+function $fetchRaw<
+  T = unknown,
+  R extends NitroFetchRequest = NitroFetchRequest,
+  O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
+>(
+  request: R,
+  options?: O
+): Promise<
+  NitroFetchResponse<
+    TypedInternalResponse<R, T, NitroFetchOptions<R> extends O ? 'get' : ExtractedRouteMethod<R, O>>
+  >
+>
 ```
 
 ### `createNitroFetch`
@@ -376,7 +412,56 @@ describe('api', () => {
 function injectServerUrl(): string
 ```
 
+### `listRoutes`
+
+Returns every route registered with the active Nitro test server, sourced from Nitro's scanned handlers. Internal routes prefixed with `/_` or `/api/_` are filtered out.
+
+Useful for sanity-checking that expected handlers are loaded, or for driving parameterized tests over every API endpoint. Works in both per-suite and global setup modes, and is safe to call any time after `setup()` has resolved.
+
+```ts
+import { listRoutes } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
+
+describe('api', () => {
+  it('registers the expected routes', () => {
+    const routes = listRoutes()
+
+    expect(routes).toContainEqual({ route: '/api/health', method: 'get' })
+    expect(routes).toContainEqual({ route: '/api/login', method: 'post' })
+  })
+})
+```
+
+**Type Declaration:**
+
+```ts
+interface NitroRouteInfo {
+  /** HTTP pathname pattern (e.g. `/api/users`, `/api/users/:id`). */
+  route: string
+  /** HTTP method, or `undefined` when the handler matches any method. */
+  method?: string
+}
+
+function listRoutes(): NitroRouteInfo[]
+```
+
 ## Migration
+
+### From v2 to v3
+
+`$fetchRaw` now inherits route-level typing from Nitro's `InternalApi` augmentation. Its first generic default changed from `T = any` to `T = unknown`, so call sites that dereference `data` without narrowing will fail to type-check.
+
+The preferred fix is to set up Nitro's type augmentation so `$fetchRaw` picks up handler return types automatically – see [Route-Level Response Types](#route-level-response-types). Where that isn't practical, pass an explicit generic:
+
+```diff
+-const { data } = await $fetchRaw('/api/users')
+-expect(data.id).toBe(1)
++const { data } = await $fetchRaw<{ id: number }>('/api/users')
++expect(data?.id).toBe(1)
+```
+
+> [!NOTE]
+> The second generic on `$fetchRaw` previously accepted ofetch's `ResponseType` (`'json'`, `'text'`, …). It now represents the request route. This only affects code that passed an explicit second generic – a rarely-used call shape.
 
 ### From v1 to v2
 

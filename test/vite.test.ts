@@ -1,3 +1,5 @@
+/// <reference path="./vite-app/node_modules/.nitro/types/nitro.d.ts" />
+
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { $fetchRaw, setup } from '../src/e2e'

@@ -1,3 +1,5 @@
+/// <reference path="./cloudflare-app/node_modules/.nitro/types/nitro.d.ts" />
+
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { $fetchRaw, setup } from '../src/e2e'
@@ -10,9 +12,9 @@ describe('cloudflare bindings', async () => {
 
   it('has cloudflare bindings available', async () => {
     const { data } = await $fetchRaw('/api/bindings')
-    expect(data.hasEnv).toBe(true)
-    expect(data.bindings).toContain('DB')
-    expect(data.bindings).toContain('KV')
+    expect(data?.hasEnv).toBe(true)
+    expect(data?.bindings).toContain('DB')
+    expect(data?.bindings).toContain('KV')
   })
 
   it('reads and writes to KV', async () => {
@@ -22,6 +24,9 @@ describe('cloudflare bindings', async () => {
     })
 
     const { data } = await $fetchRaw('/api/kv?key=test-key')
+    if (!data || 'error' in data) {
+      throw new Error(`Expected success response, got ${JSON.stringify(data)}`)
+    }
     expect(data.value).toBe('hello')
   })
 
@@ -30,10 +35,10 @@ describe('cloudflare bindings', async () => {
       method: 'POST',
       body: { name: 'item-1' },
     })
-    expect(insertResult.ok).toBe(true)
+    expect(insertResult?.ok).toBe(true)
 
     const { data: listResult } = await $fetchRaw('/api/d1-list')
-    expect(listResult.items).toContainEqual(
+    expect(listResult?.items).toContainEqual(
       expect.objectContaining({ name: 'item-1' }),
     )
   })

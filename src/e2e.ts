@@ -1,4 +1,5 @@
-import type { $Fetch, FetchHooks, FetchOptions, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
+import type { $Fetch, ExtractedRouteMethod, Nitro, NitroEventHandler, NitroFetchOptions, NitroFetchRequest, TypedInternalResponse } from 'nitro/types'
+import type { FetchHooks, FetchResponse } from 'ofetch'
 import type { NitroTestOptions } from './types'
 import { parseSetCookie } from 'cookie-es'
 import { ofetch } from 'ofetch'
@@ -17,11 +18,19 @@ export interface NitroFetchResponse<T> extends FetchResponse<T> {
   data?: T
 }
 
+export interface NitroRouteInfo {
+  /** HTTP pathname pattern (e.g. `/api/users`, `/api/users/:id`). */
+  route: string
+  /** HTTP method, or `undefined` when the handler matches any method. */
+  method?: string
+}
+
 declare module 'vitest' {
   export interface ProvidedContext {
     server?: {
       url: string
     }
+    nitroRoutes?: NitroRouteInfo[]
   }
 }
 
@@ -47,28 +56,29 @@ export function createNitroFetch(options?: FetchHooks): $Fetch {
       accept: 'application/json',
     },
     ...options,
-  })
+  }) as $Fetch
 }
 
 /**
- * Fetches the raw response from the Nitro server for the given path. `FetchOptions` can be passed to customize the request.
+ * Fetches the raw response from the Nitro server for the given path.
+ *
+ * Route-level typing is inherited automatically from Nitro's `InternalApi` augmentation
+ * when your tsconfig extends `nitro/tsconfig`. See the README for setup instructions.
  *
  * @remarks
- * The following additional fetch options have been set as defaults:
- * - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
- * - `redirect: 'manual'` to prevent automatic redirects.
- * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
+ * Applies the fetch defaults from {@link createNitroFetch}.
  */
-export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
-  path: string,
-  options?: FetchOptions<R>,
-): Promise<NitroFetchResponse<MappedResponseType<R, T>>> {
+export async function $fetchRaw<
+  T = unknown,
+  R extends NitroFetchRequest = NitroFetchRequest,
+  O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
+>(
+  request: R,
+  options?: O,
+): Promise<NitroFetchResponse<TypedInternalResponse<R, T, NitroFetchOptions<R> extends O ? 'get' : ExtractedRouteMethod<R, O>>>> {
   const localFetch = createNitroFetch()
 
-  const response = await localFetch.raw<T, R>(
-    path,
-    options,
-  )
+  const response = await localFetch.raw<T, R, O>(request, options)
 
   Object.defineProperty(response, 'data', {
     enumerable: true,
@@ -77,9 +87,16 @@ export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
     },
   })
 
-  return response as NitroFetchResponse<MappedResponseType<R, T>>
+  return response as NitroFetchResponse<
+    TypedInternalResponse<R, T, NitroFetchOptions<R> extends O ? 'get' : ExtractedRouteMethod<R, O>>
+  >
 }
 
+/**
+ * Returns the base URL of the active Nitro test server.
+ *
+ * @throws if called before `setup()` has started the server.
+ */
 export function injectServerUrl(): string {
   const ctx = injectTestContext()
   let serverUrl = ctx?.server?.url

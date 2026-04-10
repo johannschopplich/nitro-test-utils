@@ -1,6 +1,7 @@
 import type { TestProject } from 'vitest/node'
 import type { ResolvedNitroTestConfig } from './config'
 import { createTestContext } from './context'
+import { collectRoutes } from './e2e'
 import { startServer, stopServer } from './server'
 
 type GlobalSetupContextWithNitro = TestProject & {
@@ -23,8 +24,10 @@ async function setup(project: GlobalSetupContextWithNitro): Promise<(() => Promi
   const ctx = await startServer()
 
   // Global setup is run in a different global scope, so tests don't have access
-  // to variables defined here. We need to expose the server URL for tests.
+  // to variables defined here. Expose both the server URL and a serializable
+  // snapshot of the registered routes so `listRoutes()` works cross-scope.
   project.provide('server', { url: ctx.server!.url })
+  project.provide('nitroRoutes', collectRoutes(ctx.nitro))
 
   return async function () {
     await stopServer()
