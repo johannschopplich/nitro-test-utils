@@ -51,15 +51,30 @@ export async function defineConfig(userConfig: UserConfig = {}, testConfig: Nitr
         // Rerun tests when source files change
         ...await resolveSourceRerunTriggers(resolvedTestConfig),
       ],
-      globalSetup: resolvedTestConfig.global
-        ? [path.join(import.meta.dirname, 'setup.mjs')]
-        : undefined,
       // @ts-expect-error: `nitro` is a custom property used internally by the setup script
       nitro: resolvedTestConfig,
     },
   }) as UserConfig
 
-  return mergeConfig(userConfig, userConfigOverrides)
+  const mergedConfig: UserConfig = mergeConfig(userConfig, userConfigOverrides)
+  mergedConfig.test ??= {}
+  mergedConfig.test.globalSetup = resolveGlobalSetup(userConfig.test?.globalSetup, resolvedTestConfig)
+
+  return mergedConfig
+}
+
+function resolveGlobalSetup(
+  userGlobalSetup: string | string[] | undefined,
+  config: ResolvedNitroTestConfig,
+): string[] | undefined {
+  const userSetups = userGlobalSetup
+    ? (Array.isArray(userGlobalSetup) ? [...userGlobalSetup] : [userGlobalSetup])
+    : []
+  const nitroSetup = config.global
+    ? [path.join(import.meta.dirname, 'setup.mjs')]
+    : []
+  const mergedSetup = [...userSetups, ...nitroSetup]
+  return mergedSetup.length > 0 ? mergedSetup : undefined
 }
 
 async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Promise<string[]> {

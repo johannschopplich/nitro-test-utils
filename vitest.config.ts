@@ -1,10 +1,12 @@
 import type { UserConfig } from 'vite'
-// eslint-disable-next-line antfu/no-import-dist
-import { defineConfig } from './dist/config.mjs'
+import { defineConfig } from 'vitest/config'
 
-const config: UserConfig = await defineConfig({
+const config: UserConfig = defineConfig({
   test: {
-    dir: './test',
+    projects: [
+      './vitest.config.suite.ts',
+      './vitest.config.global.ts',
+    ],
   },
 })
 

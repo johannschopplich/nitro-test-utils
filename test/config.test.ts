@@ -60,6 +60,39 @@ describe('defineConfig', async () => {
       expect(config.test?.globalSetup).toBeUndefined()
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toBeUndefined()
     })
+
+    it('preserves a user globalSetup string and appends nitro setup last', async () => {
+      const config = await defineConfig(
+        { test: { globalSetup: 'test/user-setup.ts' } },
+        { global: true },
+      )
+
+      const setups = config.test?.globalSetup as string[]
+      expect(setups).toHaveLength(2)
+      expect(setups[0]).toBe('test/user-setup.ts')
+      expect(setups[1]).toMatch(/setup\.m?js$/)
+    })
+
+    it('preserves a user globalSetup array and appends nitro setup last', async () => {
+      const config = await defineConfig(
+        { test: { globalSetup: ['test/a.ts', 'test/b.ts'] } },
+        { global: true },
+      )
+
+      const setups = config.test?.globalSetup as string[]
+      expect(setups).toHaveLength(3)
+      expect(setups[0]).toBe('test/a.ts')
+      expect(setups[1]).toBe('test/b.ts')
+      expect(setups[2]).toMatch(/setup\.m?js$/)
+    })
+
+    it('preserves a user globalSetup when global is not set', async () => {
+      const config = await defineConfig({
+        test: { globalSetup: 'test/user-setup.ts' },
+      })
+
+      expect(config.test?.globalSetup).toEqual(['test/user-setup.ts'])
+    })
   })
 
   describe('output', () => {
