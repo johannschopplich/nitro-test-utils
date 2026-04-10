@@ -17,6 +17,9 @@
   },
   "exclude": [
     "node_modules",
-    "test/*/**"
+    "test/basic-app",
+    "test/cloudflare-app",
+    "test/production-app",
+    "test/vite-app"
   ]
 }

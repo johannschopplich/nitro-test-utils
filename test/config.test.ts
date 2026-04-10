@@ -54,7 +54,7 @@ describe('defineConfig', async () => {
     })
 
     it('runs the user globalSetup before the nitro server starts', async () => {
-      const [nitroSetup] = (await defineConfig({}, { global: true })).test?.globalSetup as string[]
+      const nitroSetup = ((await defineConfig({}, { global: true })).test?.globalSetup as string[])[0]!
 
       const config = await defineConfig(
         { test: { globalSetup: 'test/user-setup.ts' } },
@@ -68,7 +68,7 @@ describe('defineConfig', async () => {
     })
 
     it('accepts multiple user globalSetups alongside the nitro one', async () => {
-      const [nitroSetup] = (await defineConfig({}, { global: true })).test?.globalSetup as string[]
+      const nitroSetup = ((await defineConfig({}, { global: true })).test?.globalSetup as string[])[0]!
 
       const config = await defineConfig(
         { test: { globalSetup: ['test/a.ts', 'test/b.ts'] } },
