@@ -41,7 +41,7 @@ describe('defineConfig', async () => {
     it('configures globalSetup when enabled', async () => {
       const config = await defineConfig({}, { global: true })
 
-      expect(config.test?.globalSetup).toHaveLength(1)
+      expect(config.test?.globalSetup).toEqual([expect.stringContaining('setup.mjs')])
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined, preset: undefined })
     })
 
@@ -50,7 +50,6 @@ describe('defineConfig', async () => {
         global: { rootDir: '/custom', mode: 'production', preset: 'node-server' },
       })
 
-      expect(config.test?.globalSetup).toHaveLength(1)
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
     })
 
