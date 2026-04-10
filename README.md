@@ -265,6 +265,9 @@ describe('api', () => {
 > [!TIP]
 > All additional options set in [`createNitroFetch`](#createnitrofetch) apply here as well, such as [`ignoreResponseError`](https://github.com/unjs/ofetch?tab=readme-ov-file#%EF%B8%8F-handling-errors) set to `true` to prevent the function from throwing an error when the response status code is not in the range of 200-299, and `retry: 0` to disable retries.
 
+> [!NOTE]
+> The name `$fetchRaw` is deliberate – it avoids shadowing ofetch's `$fetch` with different defaults and return shape. See [#10](https://github.com/johannschopplich/nitro-test-utils/issues/10) for the rationale.
+
 #### Route-Level Response Types
 
 `$fetchRaw` inherits route-level typing from Nitro's `InternalApi` augmentation. Nitro regenerates these types at `node_modules/.nitro/types/nitro-routes.d.ts` on every build – when your `tsconfig.json` extends `nitro/tsconfig`, response data narrows automatically to the matching handler's return type:
@@ -288,30 +291,15 @@ const { data } = await $fetchRaw<{ custom: string }>('/api/health')
 **Type Declaration:**
 
 ```ts
-import type {
-  ExtractedRouteMethod,
-  NitroFetchOptions,
-  NitroFetchRequest,
-  TypedInternalResponse,
-} from 'nitro/types'
-
 interface NitroFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data` */
   data?: T
 }
 
-function $fetchRaw<
-  T = unknown,
-  R extends NitroFetchRequest = NitroFetchRequest,
-  O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
->(
-  request: R,
-  options?: O
-): Promise<
-  NitroFetchResponse<
-    TypedInternalResponse<R, T, NitroFetchOptions<R> extends O ? 'get' : ExtractedRouteMethod<R, O>>
-  >
->
+function $fetchRaw(
+  request: string,
+  options?: FetchOptions
+): Promise<NitroFetchResponse<unknown>>
 ```
 
 ### `createNitroFetch`
