@@ -1,6 +1,8 @@
+/// <reference path="./basic-app/node_modules/.nitro/types/nitro.d.ts" />
+
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, createNitroFetch, createNitroSession, injectServerUrl, setup } from '../src/e2e'
+import { $fetchRaw, createNitroFetch, createNitroSession, injectServerUrl, listRoutes, setup } from '../src/e2e'
 
 describe('routes', async () => {
   await setup({
@@ -64,6 +66,33 @@ describe('routes', async () => {
   it('provides the running server URL', () => {
     const url = injectServerUrl()
     expect(url).toMatch(/^https?:\/\/.+/)
+  })
+
+  describe('introspection', () => {
+    it('lists every user-defined route from the scanned handlers', () => {
+      const routes = listRoutes()
+
+      expect(routes).toEqual(
+        expect.arrayContaining([
+          { route: '/api/echo', method: 'post' },
+          { route: '/api/env', method: 'get' },
+          { route: '/api/error', method: 'get' },
+          { route: '/api/health', method: 'get' },
+          { route: '/api/login', method: 'post' },
+          { route: '/api/profile', method: 'get' },
+          { route: '/api/runtime-config', method: 'get' },
+        ]),
+      )
+    })
+
+    it('filters out nitro-internal routes', () => {
+      const routes = listRoutes()
+
+      for (const { route } of routes) {
+        expect(route.startsWith('/_')).toBe(false)
+        expect(route.startsWith('/api/_')).toBe(false)
+      }
+    })
   })
 
   describe('cookies', () => {

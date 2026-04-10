@@ -150,6 +150,56 @@ export function createNitroSession(): NitroSession {
 }
 
 /**
+ * Lists every route registered with the active Nitro test server, excluding
+ * internal routes prefixed with `/_` or `/api/_`.
+ *
+ * @throws if called before `setup()` has started the server.
+ */
+export function listRoutes(): NitroRouteInfo[] {
+  const ctx = injectTestContext()
+
+  if (ctx?.nitro) {
+    return collectRoutes(ctx.nitro)
+  }
+
+  const routes = inject('nitroRoutes')
+  if (routes)
+    return routes
+
+  throw new Error('Nitro server is not running. Did you call `setup()`?')
+}
+
+/**
+ * @internal
+ */
+export function collectRoutes(nitro: Nitro): NitroRouteInfo[] {
+  const sources: NitroEventHandler[] = [
+    ...nitro.scannedHandlers,
+    ...nitro.options.handlers,
+  ]
+
+  const seen = new Set<string>()
+  const routes: NitroRouteInfo[] = []
+
+  for (const { route, method } of sources) {
+    if (!route)
+      continue
+
+    if (route.startsWith('/_') || route.startsWith('/api/_'))
+      continue
+
+    const key = `${method ?? '*'} ${route}`
+    if (seen.has(key))
+      continue
+
+    seen.add(key)
+    routes.push({ route, method: method || undefined })
+  }
+
+  return routes
+}
+
+/**
  * Setup options for the Nitro test context.
  *
  * @example
