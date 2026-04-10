@@ -41,16 +41,34 @@ describe('defineConfig', async () => {
     it('configures globalSetup when enabled', async () => {
       const config = await defineConfig({}, { global: true })
 
-      expect(config.test?.globalSetup).toEqual([expect.stringContaining('setup.mjs')])
+      expect(config.test?.globalSetup).toEqual([expect.stringContaining('global-setup.mjs')])
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined, preset: undefined })
     })
 
     it('passes through custom options', async () => {
       const config = await defineConfig({}, {
-        global: { rootDir: '/custom', mode: 'production', preset: 'node-server' },
+        global: { rootDir: '/custom', mode: 'production', preset: 'node-middleware' },
       })
 
-      expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
+      expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-middleware' })
+    })
+
+    it('configures worker-setup as a setupFile when global is enabled', async () => {
+      const config = await defineConfig({}, { global: true })
+
+      expect(config.test?.setupFiles).toEqual([expect.stringContaining('worker-setup.mjs')])
+    })
+
+    it('preserves user setupFiles alongside the worker one', async () => {
+      const config = await defineConfig(
+        { test: { setupFiles: ['test/a.ts', 'test/b.ts'] } },
+        { global: true },
+      )
+      const setupFiles = config.test?.setupFiles as string[]
+
+      expect(setupFiles).toContain('test/a.ts')
+      expect(setupFiles).toContain('test/b.ts')
+      expect(setupFiles).toEqual(expect.arrayContaining([expect.stringContaining('worker-setup.mjs')]))
     })
 
     it('runs the user globalSetup before the nitro server starts', async () => {

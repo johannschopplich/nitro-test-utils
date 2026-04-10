@@ -3,7 +3,6 @@ import type { FetchHooks, FetchResponse } from 'ofetch'
 import type { NitroTestOptions } from './types'
 import { parseSetCookie } from 'cookie-es'
 import { ofetch } from 'ofetch'
-import { inject } from 'vitest'
 import { clearTestContext, createTestContext, injectTestContext } from './context'
 import { startServer, stopServer } from './server'
 
@@ -25,38 +24,41 @@ export interface NitroRouteInfo {
   method?: string
 }
 
-declare module 'vitest' {
-  export interface ProvidedContext {
-    server?: {
-      url: string
-    }
-    nitroRoutes?: NitroRouteInfo[]
-  }
-}
+const SYNTHETIC_BASE_URL = 'http://nitro.test'
 
 /**
- * Creates a custom `ofetch` instance with the Nitro server URL as the base URL.
+ * Creates a custom `ofetch` instance that dispatches requests in-process against the
+ * active Nitro test app. Each call builds a Web `Request` and hands it to
+ * `injectNitroFetch()`, so no HTTP listener is involved.
  *
  * @remarks
- * The following additional fetch options have been set as defaults:
- * - `ignoreResponseError: true` to prevent throwing errors on non-2xx responses.
+ * The following fetch defaults differ from `ofetch`:
+ * - `ignoreResponseError: true` to prevent throwing on non-2xx responses.
  * - `redirect: 'manual'` to prevent automatic redirects.
  * - `retry: 0` to disable retries, preventing masked failures and slow test suites.
- * - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
+ * - `headers: { accept: 'application/json' }` to force a JSON error body when Nitro errors.
  */
 export function createNitroFetch(options?: FetchHooks): $Fetch {
-  const serverUrl = injectServerUrl()
+  const nitroFetch = injectNitroFetch()
 
-  return ofetch.create({
-    baseURL: serverUrl,
-    ignoreResponseError: true,
-    redirect: 'manual',
-    retry: 0,
-    headers: {
-      accept: 'application/json',
+  return ofetch.create(
+    {
+      baseURL: SYNTHETIC_BASE_URL,
+      ignoreResponseError: true,
+      redirect: 'manual',
+      retry: 0,
+      headers: {
+        accept: 'application/json',
+      },
+      ...options,
     },
-    ...options,
-  }) as $Fetch
+    {
+      fetch: (input, init) => {
+        const request = input instanceof Request ? input : new Request(input, init)
+        return Promise.resolve(nitroFetch(request))
+      },
+    },
+  ) as $Fetch
 }
 
 /**
@@ -93,23 +95,24 @@ export async function $fetchRaw<
 }
 
 /**
- * Returns the base URL of the active Nitro test server.
+ * Returns the raw in-process request dispatcher for the active Nitro test app.
  *
- * @throws if called before `setup()` has started the server.
+ * This is the low-level primitive that `createNitroFetch` builds on. Reach for it when
+ * you want to construct a `Request` yourself, or when you need to hand the dispatcher to
+ * a different layer (for example `srvx.serve({ fetch: injectNitroFetch() })` to stand up
+ * a real HTTP listener on top of the test app).
+ *
+ * @throws if called before `setup()` has started the app.
  */
-export function injectServerUrl(): string {
+export function injectNitroFetch(): (request: Request) => Response | Promise<Response> {
   const ctx = injectTestContext()
-  let serverUrl = ctx?.server?.url
+  const fetch = ctx?.fetch
 
-  if (!serverUrl) {
-    serverUrl = inject('server')?.url
+  if (!fetch) {
+    throw new Error('Nitro test app is not running. Did you call `setup()`?')
   }
 
-  if (!serverUrl) {
-    throw new Error('Nitro server is not running.')
-  }
-
-  return serverUrl
+  return fetch
 }
 
 /**
@@ -150,23 +153,19 @@ export function createNitroSession(): NitroSession {
 }
 
 /**
- * Lists every route registered with the active Nitro test server, excluding
- * internal routes prefixed with `/_` or `/api/_`.
+ * Lists every route registered with the active Nitro test app,
+ * excluding internal routes prefixed with `/_` or `/api/_`.
  *
- * @throws if called before `setup()` has started the server.
+ * @throws if called before `setup()` has started the app.
  */
 export function listRoutes(): NitroRouteInfo[] {
   const ctx = injectTestContext()
 
-  if (ctx?.nitro) {
-    return collectRoutes(ctx.nitro)
+  if (!ctx?.nitro) {
+    throw new Error('Nitro test app is not running. Did you call `setup()`?')
   }
 
-  const routes = inject('nitroRoutes')
-  if (routes)
-    return routes
-
-  throw new Error('Nitro server is not running. Did you call `setup()`?')
+  return collectRoutes(ctx.nitro)
 }
 
 /**
@@ -212,10 +211,9 @@ export function collectRoutes(nitro: Nitro): NitroRouteInfo[] {
  */
 export async function setup(options: NitroTestOptions = {}): Promise<void> {
   const vitest = await import('vitest')
-  const server = vitest.inject('server')
 
-  if (server) {
-    throw new Error('Nitro server is already running in global setup.')
+  if (injectTestContext()?.isGlobal) {
+    throw new Error('Nitro app is already running in global setup.')
   }
 
   await createTestContext(options)

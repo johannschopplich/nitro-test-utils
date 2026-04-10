@@ -36,10 +36,6 @@
     },
     "./env": {
       "types": "./env.d.ts"
-    },
-    "./setup": {
-      "types": "./dist/setup.d.mts",
-      "default": "./dist/setup.mjs"
     }
   },
   "types": "./dist/index.d.mts",
@@ -63,7 +59,6 @@
   "dependencies": {
     "cookie-es": "catalog:",
     "dotenv": "catalog:",
-    "get-port-please": "catalog:",
     "ofetch": "catalog:"
   },
   "devDependencies": {

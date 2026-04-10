@@ -30,9 +30,6 @@ catalogs:
     eslint-flat-config-utils:
       specifier: ^3.1.0
       version: 3.1.0
-    get-port-please:
-      specifier: ^3.2.0
-      version: 3.2.0
     nitro:
       specifier: npm:nitro-nightly@latest
       version: 3.0.1-20260402-182549-a5a3389c
@@ -68,9 +65,6 @@ importers:
       dotenv:
         specifier: 'catalog:'
         version: 17.4.1
-      get-port-please:
-        specifier: 'catalog:'
-        version: 3.2.0
       ofetch:
         specifier: 'catalog:'
         version: 2.0.0-alpha.3
@@ -2145,9 +2139,6 @@ packages:
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
-
-  get-port-please@3.2.0:
-    resolution: {integrity: sha512-I9QVvBw5U/hw3RmWpYKRumUeaDgxTPd401x364rLmWBJcOQ753eov1eTgzDqRG9bqFIfDc7gfzcQEWrUri3o1A==}
 
   get-tsconfig@4.13.7:
     resolution: {integrity: sha512-7tN6rFgBlMgpBML5j8typ92BKFi2sFQvIdpAqLA2beia5avZDrMs0FLZiM5etShWq5irVyGcGMEA1jcDaK7A/Q==}
@@ -5181,8 +5172,6 @@ snapshots:
     optional: true
 
   function-bind@1.1.2: {}
-
-  get-port-please@3.2.0: {}
 
   get-tsconfig@4.13.7:
     dependencies:

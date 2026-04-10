@@ -2,7 +2,7 @@
 
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, createNitroFetch, createNitroSession, injectServerUrl, listRoutes, setup } from '../src/e2e'
+import { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src/e2e'
 
 describe('routes', async () => {
   await setup({
@@ -63,9 +63,14 @@ describe('routes', async () => {
     expect(data).toEqual({ ok: true })
   })
 
-  it('provides the running server URL', () => {
-    const url = injectServerUrl()
-    expect(url).toMatch(/^https?:\/\/.+/)
+  describe('in-process dispatch', () => {
+    it('returns a raw Request-to-Response dispatcher', async () => {
+      const nitroFetch = injectNitroFetch()
+      const response = await nitroFetch(new Request('http://nitro.test/api/health'))
+
+      expect(response.status).toBe(200)
+      await expect(response.json()).resolves.toEqual({ ok: true })
+    })
   })
 
   describe('introspection', () => {

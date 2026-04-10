@@ -8,16 +8,22 @@ import { createNitro } from 'nitro/builder'
 export const NITRO_OUTPUT_DIR = '.output'
 export const NITRO_BUILD_DIR = 'node_modules/.nitro'
 
+// Only presets that dispatch via `useNitroApp()` at module init
+// (without starting their own HTTP listener)
 const NODE_COMPATIBLE_PRESETS = new Set([
   'nitro-dev',
   'node',
-  'node-server',
   'node-middleware',
-  'node-cluster',
   'bun',
 ])
 
-let currentContext: NitroTestContext | undefined
+// Store the active context on `globalThis` so it survives across multiple module copies.
+// When this project's own tests import from source while Vitest loads the built worker
+// setup from `dist/`, both copies would otherwise have independent module-level state.
+declare global {
+  // eslint-disable-next-line vars-on-top
+  var __nitroTestContext__: NitroTestContext | undefined
+}
 
 export async function createTestContext(options: NitroTestOptions & { isGlobal?: boolean }): Promise<NitroTestContext> {
   const {
@@ -69,15 +75,15 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
 }
 
 export function injectTestContext(): NitroTestContext | undefined {
-  return currentContext
+  return globalThis.__nitroTestContext__
 }
 
 export function provideTestContext(context: NitroTestContext): void {
-  currentContext = context
+  globalThis.__nitroTestContext__ = context
 }
 
 export function clearTestContext(): void {
-  currentContext = undefined
+  globalThis.__nitroTestContext__ = undefined
 }
 
 function setupDotenv({

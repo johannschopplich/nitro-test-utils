@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, injectServerUrl } from '../../src/e2e'
+import { $fetchRaw, injectNitroFetch } from '../../src/e2e'
 
 describe('global setup: shared server', () => {
-  it('exposes the server URL via vitest.inject', () => {
-    expect(injectServerUrl()).toMatch(/^https?:\/\/.+/)
+  it('exposes an in-process request dispatcher', async () => {
+    const nitroFetch = injectNitroFetch()
+    const response = await nitroFetch(new Request('http://nitro.test/api/health'))
+
+    expect(response.status).toBe(200)
   })
 
   it('reuses the same nitro server across test files', async () => {

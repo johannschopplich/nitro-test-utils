@@ -5,6 +5,7 @@ A simple and easy-to-use testing toolkit for [Nitro](https://nitro.build) server
 ## Features
 
 - 🚀 Automatic Nitro build (development or production mode)
+- ⚡ In-process request dispatch (no HTTP listener)
 - ↪️ Reruns tests whenever Nitro source files change
 - 🥜 Run Nitro per test suite or globally
 - ✅ Seamless integration with Vitest
@@ -82,7 +83,7 @@ describe('api', () => {
 ```
 
 > [!TIP]
-> The global setup is recommended for most use cases. It keeps the Nitro dev server running in the background during Vitest watch mode, so you can develop and test at the same time. Whenever Nitro rebuilds, tests rerun automatically.
+> The global setup is recommended for most use cases. The Nitro app is built once and reused across every test file during Vitest watch mode, so you can develop and test at the same time. Whenever Nitro rebuilds, tests rerun automatically.
 
 ### Per-Suite Setup
 
@@ -304,7 +305,10 @@ function $fetchRaw(
 
 ### `createNitroFetch`
 
-Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Nitro server URL as the base URL.
+Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance wired to dispatch requests in-process against the active Nitro test app. No HTTP listener is involved – each call builds a Web `Request` and hands it to [`injectNitroFetch`](#injectnitrofetch).
+
+> [!NOTE]
+> Requests use `http://nitro.test` as a synthetic base URL. The `.test` TLD is reserved and never resolves in DNS, so if you see it in an error message or stack trace it's the in-process sentinel, not a real endpoint.
 
 > [!TIP]
 > The following additional fetch options have been set as defaults:
@@ -314,7 +318,7 @@ Creates a custom [`ofetch`](https://github.com/unjs/ofetch) instance with the Ni
 > - `retry: 0` to disable retries, preventing masked failures and slow test suites.
 > - `headers: { accept: 'application/json' }` to force a JSON error response when Nitro returns an error.
 
-Use `createNitroFetch` to get a `$fetch` instance pre-configured for your Nitro test server – no extra setup needed:
+Use `createNitroFetch` to get a `$fetch` instance pre-configured for your Nitro test app – no extra setup needed:
 
 ```ts
 import { createNitroFetch } from 'nitro-test-utils/e2e'
@@ -378,26 +382,45 @@ interface NitroSession {
 function createNitroSession(): NitroSession
 ```
 
-### `injectServerUrl`
+### `injectNitroFetch`
 
-To get the URL of the active test server for the current test suite or global test environment, you can use the `injectServerUrl` function.
+Returns the raw in-process request dispatcher for the active Nitro test app – a function that takes a Web `Request` and returns the app's `Response` without going through a real HTTP listener.
+
+This is the low-level primitive that [`createNitroFetch`](#createnitrofetch) builds on. Reach for it when you want to construct a `Request` yourself, or when you need to hand the dispatcher to a different layer.
 
 ```ts
-import { injectServerUrl } from 'nitro-test-utils/e2e'
-import { describe, it } from 'vitest'
+import { injectNitroFetch } from 'nitro-test-utils/e2e'
+import { describe, expect, it } from 'vitest'
 
 describe('api', () => {
-  it('logs Nitro server URL', () => {
-    const serverUrl = injectServerUrl()
-    console.log(serverUrl) // http://localhost:3000
+  it('dispatches a raw Request', async () => {
+    const nitroFetch = injectNitroFetch()
+    const response = await nitroFetch(new Request('http://nitro.test/api/health'))
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({ ok: true })
   })
 })
 ```
 
+#### Running a Real HTTP Listener
+
+If you need a real HTTP server on top of the test app – for driving a browser, a shell script, or any other process that speaks TCP – stand one up with [srvx](https://github.com/h3js/srvx) and point it at `injectNitroFetch()`:
+
+```ts
+import { injectNitroFetch } from 'nitro-test-utils/e2e'
+import { serve } from 'srvx/node'
+
+const server = serve({ fetch: injectNitroFetch() })
+console.log(`Test app listening at ${server.url}`)
+```
+
+Each incoming HTTP request is dispatched in-process against the same Nitro app your tests use.
+
 **Type Declaration:**
 
 ```ts
-function injectServerUrl(): string
+function injectNitroFetch(): (request: Request) => Response | Promise<Response>
 ```
 
 ### `listRoutes`
@@ -436,6 +459,22 @@ function listRoutes(): NitroRouteInfo[]
 ## Migration
 
 ### From v2 to v3
+
+#### In-process request dispatch
+
+v3 stops starting a real HTTP listener for your tests. Instead, the Nitro app is dispatched in-process – each request is handed directly to the app's Web `Request` handler, the same code path every cloud preset invokes at runtime. No ports, no sockets, no localhost round-trip.
+
+This removes `injectServerUrl`. Replace it with [`injectNitroFetch`](#injectnitrofetch), which returns the raw request dispatcher:
+
+```diff
+-import { injectServerUrl } from 'nitro-test-utils/e2e'
+-const url = injectServerUrl()
++import { injectNitroFetch } from 'nitro-test-utils/e2e'
++const nitroFetch = injectNitroFetch()
++const response = await nitroFetch(new Request('http://nitro.test/api/health'))
+```
+
+#### Typed `$fetchRaw` responses
 
 `$fetchRaw` now inherits route-level typing from Nitro's `InternalApi` augmentation. Its first generic default changed from `T = any` to `T = unknown`, so call sites that dereference `data` without narrowing will fail to type-check.
 
@@ -489,12 +528,12 @@ With custom options:
 +})
 ```
 
-### From v0.x (Nitro v2)
+### From v0.x (Nitro v2 support) to v1.x (Nitro v3 support)
 
 If you are upgrading from an earlier version of `nitro-test-utils` that targeted Nitro v2 (`nitropack`), the following breaking changes apply:
 
 - **Peer dependency**: `nitropack` replaced by `nitro` (v3).
-- **Renamed types**: `TestOptions` → `NitroTestOptions`, `TestContext` → `NitroTestContext`, `TestServer` → `NitroTestServer`, `TestFetchResponse` → `NitroFetchResponse`.
+- **Renamed types**: `TestOptions` → `NitroTestOptions`, `TestContext` → `NitroTestContext`, `TestFetchResponse` → `NitroFetchResponse`.
 
 For Nitro v3 API changes, see the [official Nitro v3 migration guide](https://nitro.build/guide/migration).
 

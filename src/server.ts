@@ -1,8 +1,5 @@
-import type { AddressInfo } from 'node:net'
 import type { NitroTestContext } from './types'
-import { createServer } from 'node:http'
 import * as path from 'node:path'
-import { getPort } from 'get-port-please'
 import {
   build,
   copyPublicAssets,
@@ -12,8 +9,15 @@ import {
 } from 'nitro/builder'
 import { injectTestContext } from './context'
 
+declare global {
+  // eslint-disable-next-line vars-on-top
+  var __nitro__: Record<string, { fetch: (request: Request) => Response | Promise<Response> } | undefined> | undefined
+}
+
 /**
- * Start the server, either in development mode or production mode.
+ * Starts the Nitro app in-process and exposes its request dispatcher on `ctx.fetch`.
+ *
+ * No HTTP listener is created. Tests invoke the app directly via its Web `Request` handler.
  */
 export async function startServer(): Promise<NitroTestContext> {
   const ctx = injectTestContext()
@@ -27,15 +31,9 @@ export async function startServer(): Promise<NitroTestContext> {
   }
 
   if (ctx.isDev) {
-    const port = await getPort({ host: 'localhost' })
-    const devServer = createDevServer(ctx.nitro)
-    const server = devServer.listen({ port, hostname: 'localhost' })
-    await server.ready()
-
-    ctx.server = {
-      url: server.url!,
-      close: () => server.close(),
-    }
+    // Side-effect: wires `ctx.nitro.fetch` + the worker runner. The instance is
+    // closed automatically via the `nitro.close()` hook registered in its constructor.
+    createDevServer(ctx.nitro)
 
     await prepare(ctx.nitro)
     const ready = new Promise<void>((resolve) => {
@@ -43,6 +41,8 @@ export async function startServer(): Promise<NitroTestContext> {
     })
     await build(ctx.nitro)
     await ready
+
+    ctx.fetch = ctx.nitro.fetch.bind(ctx.nitro)
   }
   else {
     await prepare(ctx.nitro)
@@ -50,45 +50,43 @@ export async function startServer(): Promise<NitroTestContext> {
     await prerender(ctx.nitro)
     await build(ctx.nitro)
 
+    // Cache-bust the dynamic import so each `startServer()` call re-runs the entry's
+    // top-level `useNitroApp()`. Without this, Node's ESM cache returns a stale module
+    // and `globalThis.__nitro__.default` still points at the previously imported app.
     const entryPath = path.resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
-    const { middleware } = await import(entryPath)
-    const httpServer = createServer(middleware)
+    await import(`${entryPath}?t=${Date.now()}`)
 
-    // Listen on a random available port
-    await new Promise<void>((resolve, reject) => {
-      httpServer.listen(0, () => resolve())
-        .on('error', error => reject(error))
-    })
-
-    const { port } = httpServer.address() as AddressInfo
-    ctx.server = {
-      url: `http://localhost:${port}`,
-      close: async () => {
-        httpServer.closeAllConnections()
-        await new Promise<void>((resolve, reject) => {
-          httpServer.close(error => error ? reject(error) : resolve())
-        })
-      },
+    const runtimeApp = globalThis.__nitro__?.default
+    if (!runtimeApp?.fetch) {
+      throw new Error(
+        'Nitro app was not registered on `globalThis.__nitro__` after importing the build entry. '
+        + 'Only presets that call `useNitroApp()` at module init are supported in production mode.',
+      )
     }
+
+    ctx.fetch = runtimeApp.fetch.bind(runtimeApp)
   }
 
   if (ctx.isGlobal) {
     // eslint-disable-next-line no-console
-    console.log('[nitro] Server running at', ctx.server.url)
+    console.log('[nitro] Test app ready (in-process dispatch)')
   }
 
   return ctx
 }
 
 /**
- * Stop the running server if any.
+ * Releases the in-process Nitro app.
+ *
+ * @remarks
+ * Dev mode cascades through `nitro.close()` to the worker manager and file watchers.
+ * Production has no close path and leaks until the test process exits.
  */
 export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()
 
-  if (ctx?.server) {
-    await ctx.server.close()
-    ctx.server = undefined
+  if (ctx) {
+    ctx.fetch = undefined
   }
 
   if (ctx?.nitro)
