@@ -16,4 +16,10 @@ describe('vite + nitro', async () => {
     const { status } = await $fetchRaw('/non-existent')
     expect(status).toBe(404)
   })
+
+  it('resolves the declared runtime config through the builder virtual module', async () => {
+    const { data } = await $fetchRaw<Record<string, any>>('/runtime-config')
+    expect(data?.app).toHaveProperty('baseURL')
+    expect(data).toHaveProperty('dynamicValue')
+  })
 })
