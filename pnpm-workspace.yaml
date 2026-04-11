@@ -16,7 +16,7 @@ catalog:
   dotenv: ^17.4.1
   eslint: ^10.2.0
   eslint-flat-config-utils: ^3.1.0
-  nitro: npm:nitro-nightly@latest
+  nitro: npm:nitro-nightly@3.0.1-20260402-182549-a5a3389c
   ofetch: ^2.0.0-alpha.3
   tsdown: ^0.21.7
   typescript: ^6.0.2
