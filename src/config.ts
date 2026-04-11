@@ -3,7 +3,7 @@ import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
-import { defineConfig as defineVitestConfig } from 'vitest/config'
+import { configDefaults, defineConfig as defineVitestConfig } from 'vitest/config'
 import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
 
 export interface NitroTestConfig {
@@ -47,9 +47,7 @@ export async function defineConfig(userConfig: UserConfig = {}, testConfig: Nitr
       isolate: false,
       maxWorkers: 1,
       forceRerunTriggers: [
-        // Vitest defaults
-        '**/package.json/**',
-        '**/{vitest,vite}.config.*/**',
+        ...configDefaults.forceRerunTriggers,
         // Rerun tests when source files change
         ...await resolveSourceRerunTriggers(resolvedTestConfig),
       ],
