@@ -182,6 +182,33 @@ To get proper TypeScript support for `import.meta.test`, add a triple-slash refe
 /// <reference types="nitro-test-utils/env" />
 ```
 
+### Testing Runtime Primitives
+
+Nitro runtime primitives like `useRuntimeConfig()` and `useStorage()` only hydrate inside the built server bundle. Calling them directly from a test file returns an empty stub.
+
+Expose them through a dev-only route and read the values via [`$fetchRaw`](#fetchraw). Nitro's `.dev` env suffix keeps the handler out of production builds at routing init:
+
+```ts
+// routes/_test/config.get.dev.ts
+import { defineHandler } from 'nitro/h3'
+import { useRuntimeConfig } from 'nitro/runtime-config'
+
+export default defineHandler(() => useRuntimeConfig())
+```
+
+```ts
+import { $fetchRaw } from 'nitro-test-utils/e2e'
+import { expect, it } from 'vitest'
+
+it('exposes runtime config', async () => {
+  const { data } = await $fetchRaw('/_test/config')
+  expect(data.databaseUrl).toBe('postgres://localhost:5432/app')
+})
+```
+
+> [!NOTE]
+> Production-mode test runs (`setup({ mode: 'production' })`) also filter out `.dev` handlers. Fall back to [`import.meta.test`](#detecting-test-environment) gating if you need the route in both modes.
+
 ## API Reference
 
 ### `defineConfig`
