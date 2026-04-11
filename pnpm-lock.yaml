@@ -32,7 +32,7 @@ catalogs:
       version: 3.1.0
     nitro:
       specifier: npm:nitro-nightly@latest
-      version: 3.0.1-20260402-182549-a5a3389c
+      version: 3.0.1-20260410-164248-8ab58a4b
     ofetch:
       specifier: ^2.0.0-alpha.3
       version: 2.0.0-alpha.3
@@ -141,6 +141,18 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
+
+  test/vite-app:
+    devDependencies:
+      nitro:
+        specifier: 'catalog:'
+        version: nitro-nightly@3.0.1-20260410-164248-8ab58a4b(dotenv@17.4.1)(jiti@2.6.1)(miniflare@4.20260405.0)(rollup@4.60.1)(vite@8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(yaml@2.8.3))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(yaml@2.8.3)
 
 packages:
 
@@ -2598,6 +2610,34 @@ packages:
       vite: ^7 || ^8
       xml2js: ^0.6.2
       zephyr-agent: ^0.1.15
+    peerDependenciesMeta:
+      dotenv:
+        optional: true
+      giget:
+        optional: true
+      jiti:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      xml2js:
+        optional: true
+      zephyr-agent:
+        optional: true
+
+  nitro-nightly@3.0.1-20260410-164248-8ab58a4b:
+    resolution: {integrity: sha512-daEsMDKukI/kYgnzDo8xX5aAt0QXjfgJmjEgjRz7mU2ggHQxPFTI5uayacX0bMWOi+ni+6JkdKbYgH3vAsGPOA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    hasBin: true
+    peerDependencies:
+      dotenv: '*'
+      giget: '*'
+      jiti: ^2.6.1
+      rollup: ^4.60.1
+      vite: ^7 || ^8
+      xml2js: ^0.6.2
+      zephyr-agent: ^0.2.0
     peerDependenciesMeta:
       dotenv:
         optional: true
@@ -5752,6 +5792,58 @@ snapshots:
   nf3@0.3.16: {}
 
   nitro-nightly@3.0.1-20260402-182549-a5a3389c(dotenv@17.4.1)(jiti@2.6.1)(miniflare@4.20260405.0)(rollup@4.60.1)(vite@8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(yaml@2.8.3)):
+    dependencies:
+      consola: 3.4.2
+      crossws: 0.4.4(srvx@0.11.15)
+      db0: 0.3.4
+      env-runner: 0.1.7(miniflare@4.20260405.0)
+      h3: 2.0.1-rc.20(crossws@0.4.4(srvx@0.11.15))
+      hookable: 6.1.0
+      nf3: 0.3.16
+      ocache: 0.1.4
+      ofetch: 2.0.0-alpha.3
+      ohash: 2.0.11
+      rolldown: 1.0.0-rc.15
+      srvx: 0.11.15
+      unenv: 2.0.0-rc.24
+      unstorage: 2.0.0-alpha.7(db0@0.3.4)(ofetch@2.0.0-alpha.3)
+    optionalDependencies:
+      dotenv: 17.4.1
+      jiti: 2.6.1
+      rollup: 4.60.1
+      vite: 8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(yaml@2.8.3)
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@netlify/blobs'
+      - '@netlify/runtime'
+      - '@planetscale/database'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - better-sqlite3
+      - chokidar
+      - drizzle-orm
+      - idb-keyval
+      - ioredis
+      - lru-cache
+      - miniflare
+      - mongodb
+      - mysql2
+      - sqlite3
+      - uploadthing
+
+  nitro-nightly@3.0.1-20260410-164248-8ab58a4b(dotenv@17.4.1)(jiti@2.6.1)(miniflare@4.20260405.0)(rollup@4.60.1)(vite@8.0.8(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(yaml@2.8.3)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.4(srvx@0.11.15)

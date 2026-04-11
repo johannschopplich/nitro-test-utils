@@ -5,6 +5,7 @@ packages:
   - test/basic-app
   - test/production-app
   - test/cloudflare-app
+  - test/vite-app
 
 catalog:
   '@antfu/eslint-config': ^8.1.1
