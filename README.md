@@ -119,6 +119,19 @@ describe('api', async () => {
 
 ## Configuration
 
+### Path Aliases
+
+If you scaffolded your project with `create-nitro-app`, the generated `vite.config.ts` enables `resolve.tsconfigPaths`. The test config doesn't share it – mirror the option in `defineConfig`'s first argument so `~/...` imports resolve in tests:
+
+```ts
+import { defineConfig } from 'nitro-test-utils/config'
+
+export default defineConfig(
+  { resolve: { tsconfigPaths: true } },
+  { global: true, }
+)
+```
+
 ### Environment Variables
 
 You can set custom environment variables for your tests by creating a `.env.test` file in your Nitro project root. The variables will be loaded automatically when the Nitro server starts:
