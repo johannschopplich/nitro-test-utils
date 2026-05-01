@@ -141,6 +141,28 @@ You can set custom environment variables for your tests by creating a `.env.test
 FOO=bar
 ```
 
+### Test-Specific Nitro Config
+
+You can override Nitro options for tests by adding a `$test` block to your `nitro.config.ts`. Its contents are merged on top of the base config when the Nitro test server starts – useful for swapping a storage driver or runtime config without affecting `nitro dev` or `nitro build`:
+
+```ts
+// nitro.config.ts
+import { defineNitroConfig } from 'nitro/config'
+
+export default defineNitroConfig({
+  storage: {
+    db: { driver: 'fs', base: './data' },
+  },
+  $test: {
+    storage: {
+      db: { driver: 'memory' },
+    },
+  },
+})
+```
+
+This uses [C12's environment-specific configuration](https://github.com/unjs/c12#environment-specific-configuration), the same mechanism Nitro applies for `$development` and `$production` blocks.
+
 ### Deployment Presets
 
 By default, `nitro-test-utils` uses Node.js-compatible presets (`nitro-dev` for development, `node-middleware` for production). If your application targets a different deployment platform, you can set the `preset` option to match your deployment target.

@@ -53,20 +53,23 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     },
     isGlobal,
     isDev,
-    nitro: await createNitro({
-      preset,
-      dev: isDev,
-      rootDir,
-      builder: resolveTestBuilder(),
-      buildDir: NITRO_BUILD_DIR,
-      serveStatic: !isDev,
-      output: {
-        dir: path.resolve(rootDir, NITRO_OUTPUT_DIR),
+    nitro: await createNitro(
+      {
+        preset,
+        dev: isDev,
+        rootDir,
+        builder: resolveTestBuilder(),
+        buildDir: NITRO_BUILD_DIR,
+        serveStatic: !isDev,
+        output: {
+          dir: path.resolve(rootDir, NITRO_OUTPUT_DIR),
+        },
+        replace: {
+          'import.meta.test': JSON.stringify(true),
+        },
       },
-      replace: {
-        'import.meta.test': JSON.stringify(true),
-      },
-    }),
+      { c12: { envName: 'test' } },
+    ),
   }
 
   provideTestContext(ctx)

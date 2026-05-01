@@ -6,6 +6,7 @@ describe('global setup: dynamic env vars', () => {
     const { data } = await $fetchRaw<Record<string, any>>('/api/runtime-config')
 
     expect(data?.dynamicValue).toBe('injected-at-runtime')
+    expect(data?.fromTestConfig).toBe('applied')
     expect(data?.app).toHaveProperty('baseURL')
   })
 })
