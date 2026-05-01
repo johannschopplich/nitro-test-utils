@@ -137,7 +137,7 @@ export function createNitroSession(): NitroSession {
     },
     onResponse({ response }) {
       for (const header of response.headers.getSetCookie()) {
-        const { name, value } = parseSetCookie(header)
+        const { name, value } = parseSetCookie(header)!
         if (name) {
           cookies.set(name, value)
         }

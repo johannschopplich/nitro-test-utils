@@ -8,22 +8,22 @@ packages:
   - test/vite-app
 
 catalog:
-  '@antfu/eslint-config': ^8.1.1
-  '@cloudflare/workers-types': ^4.20260409.1
+  '@antfu/eslint-config': ^8.2.0
+  '@cloudflare/workers-types': ^4.20260501.1
   '@types/node': ^24.12.2
   bumpp: ^11.0.1
-  cookie-es: ^2.0.1
-  dotenv: ^17.4.1
-  eslint: ^10.2.0
-  eslint-flat-config-utils: ^3.1.0
-  nitro: npm:nitro-nightly@3.0.1-20260402-182549-a5a3389c
+  cookie-es: ^3.1.1
+  dotenv: ^17.4.2
+  eslint: ^10.2.1
+  eslint-flat-config-utils: ^3.2.0
+  nitro: ^3.0.260429-beta
   ofetch: ^2.0.0-alpha.3
-  tsdown: ^0.21.7
-  typescript: ^6.0.2
+  tsdown: ^0.21.10
+  typescript: ^6.0.3
   unbuild: ^3.6.1
-  vite: ^8.0.8
-  vitest: ^4.1.4
-  wrangler: ^4.81.0
+  vite: ^8.0.10
+  vitest: ^4.1.5
+  wrangler: ^4.87.0
 
 onlyBuiltDependencies:
   - '@parcel/watcher'
