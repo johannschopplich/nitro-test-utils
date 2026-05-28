@@ -1,4 +1,5 @@
 import type { ResolvedNitroTestConfig } from '../src/config'
+import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { defineConfig } from '../src/config'
 
@@ -21,8 +22,8 @@ describe('defineConfig', async () => {
     it('watches dev build output for global dev mode', async () => {
       const config = await defineConfig({}, { global: true })
 
-      expect(config.test?.forceRerunTriggers).toEqual(
-        expect.arrayContaining([expect.stringContaining('.nitro/dev/index.mjs')]),
+      expect(config.test?.forceRerunTriggers).toContain(
+        path.resolve(process.cwd(), 'node_modules/.nitro/dev/index.mjs'),
       )
     })
 
@@ -31,8 +32,18 @@ describe('defineConfig', async () => {
         global: { mode: 'production' },
       })
 
-      expect(config.test?.forceRerunTriggers).toEqual(
-        expect.arrayContaining([expect.stringContaining('.output/server/index.mjs')]),
+      expect(config.test?.forceRerunTriggers).toContain(
+        path.resolve(process.cwd(), '.output/server/index.mjs'),
+      )
+    })
+
+    it('watches dev build output for a custom rootDir', async () => {
+      const config = await defineConfig({}, {
+        global: { rootDir: '/custom' },
+      })
+
+      expect(config.test?.forceRerunTriggers).toContain(
+        path.resolve('/custom', 'node_modules/.nitro/dev/index.mjs'),
       )
     })
   })

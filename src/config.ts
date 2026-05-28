@@ -1,6 +1,7 @@
 import type { ViteUserConfig as UserConfig } from 'vitest/config'
 import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
+import process from 'node:process'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
 import { configDefaults, defineConfig as defineVitestConfig } from 'vitest/config'
@@ -99,10 +100,12 @@ async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Prom
   let watchPattern: string
 
   if (config.global) {
-    const rootDir = config.global.rootDir || ''
+    // Vitest matches `forceRerunTriggers` against absolute paths;
+    // a relative pattern never matches.
+    const rootDir = config.global.rootDir || process.cwd()
     watchPattern = config.global.mode === 'production'
-      ? path.join(rootDir, NITRO_OUTPUT_DIR, 'server', 'index.mjs')
-      : path.join(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')
+      ? path.resolve(rootDir, NITRO_OUTPUT_DIR, 'server', 'index.mjs')
+      : path.resolve(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')
   }
   else {
     const options = await loadNitroOptions()
