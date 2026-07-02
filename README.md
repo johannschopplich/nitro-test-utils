@@ -601,4 +601,4 @@ For Nitro v3 API changes, see the [official Nitro v3 migration guide](https://ni
 
 ## License
 
-[MIT](./LICENSE) License (c) 2024-PRESENT [Johann Schopplich](https://github.com/johannschopplich)
+[MIT](./LICENSE) License © 2024-PRESENT [Johann Schopplich](https://github.com/johannschopplich)
