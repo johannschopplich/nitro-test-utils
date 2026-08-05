@@ -49,10 +49,9 @@ export async function defineConfig(userConfig: UserConfig = {}, testConfig: Nitr
       maxWorkers: 1,
       forceRerunTriggers: [
         ...configDefaults.forceRerunTriggers,
-        // Rerun tests when source files change
         ...await resolveSourceRerunTriggers(resolvedTestConfig),
       ],
-      // @ts-expect-error: `nitro` is a custom property used internally by the setup script
+      // @ts-expect-error: `nitro` is a custom property used internally by the setup script.
       nitro: resolvedTestConfig,
     },
   }) as UserConfig

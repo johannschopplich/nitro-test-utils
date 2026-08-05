@@ -13,7 +13,7 @@ export interface NitroSession {
 }
 
 export interface NitroFetchResponse<T> extends FetchResponse<T> {
-  /** Alias for `response._data` */
+  /** Alias for `response._data`. */
   data?: T
 }
 
@@ -199,8 +199,6 @@ export function collectRoutes(nitro: Nitro): NitroRouteInfo[] {
 }
 
 /**
- * Setup options for the Nitro test context.
- *
  * @example
  * import { resolve } from 'node:path'
  * import { setup } from 'nitro-test-utils'

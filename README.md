@@ -355,7 +355,7 @@ const { data } = await $fetchRaw<{ custom: string }>('/api/health')
 
 ```ts
 interface NitroFetchResponse<T> extends FetchResponse<T> {
-  /** Alias for `response._data` */
+  /** Alias for `response._data`. */
   data?: T
 }
 

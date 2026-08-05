@@ -9,7 +9,7 @@ export const NITRO_OUTPUT_DIR = '.output'
 export const NITRO_BUILD_DIR = 'node_modules/.nitro'
 
 // Only presets that dispatch via `useNitroApp()` at module init
-// (without starting their own HTTP listener)
+// (without starting their own HTTP listener).
 const NODE_COMPATIBLE_PRESETS = new Set([
   'nitro-dev',
   'node',
@@ -106,7 +106,6 @@ function setupDotenv({
     Object.assign(environment, parsed)
   }
 
-  // Fill environment variables
   for (const key in environment) {
     if (override || process.env[key] === undefined)
       process.env[key] = environment[key]

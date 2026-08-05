@@ -1,8 +1,5 @@
 import type { Nitro } from 'nitro/types'
 
-/**
- * Options for the Nitro test context.
- */
 export interface NitroTestOptions {
   /**
    * Path to the directory with a Nitro app to be put under test.
