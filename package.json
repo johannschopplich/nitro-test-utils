@@ -50,7 +50,7 @@
     "test": "vitest",
     "test:types": "tsc --noEmit && pnpm -r test:types",
     "release": "bumpp",
-    "prepare": "pnpm run build && pnpm -r prepare"
+    "prepare": "pnpm run build"
   },
   "peerDependencies": {
     "nitro": "^3",

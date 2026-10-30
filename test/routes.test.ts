@@ -1,5 +1,3 @@
-/// <reference path="./basic-app/node_modules/.nitro/types/nitro.d.ts" />
-
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src/e2e'

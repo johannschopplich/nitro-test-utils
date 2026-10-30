@@ -15,7 +15,4 @@ export default defineNitroConfig({
       fromTestConfig: 'applied',
     },
   },
-  typescript: {
-    generateTsConfig: true,
-  },
 })
