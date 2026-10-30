@@ -1,5 +1,5 @@
-import type { $Fetch, ExtractedRouteMethod, Nitro, NitroEventHandler, NitroFetchOptions, NitroFetchRequest, TypedInternalResponse } from 'nitro/types'
-import type { FetchHooks, FetchResponse } from 'ofetch'
+import type { Nitro, NitroEventHandler } from 'nitro/types'
+import type { $Fetch, FetchHooks, FetchOptions, FetchRequest, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import type { NitroTestOptions } from './types'
 import { parseSetCookie } from 'cookie-es'
 import { ofetch } from 'ofetch'
@@ -58,29 +58,22 @@ export function createNitroFetch(options?: FetchHooks): $Fetch {
         return Promise.resolve(nitroFetch(request))
       },
     },
-  ) as $Fetch
+  )
 }
 
 /**
  * Fetches the raw response from the Nitro server for the given path.
  *
- * Route-level typing is inherited automatically from Nitro's `InternalApi` augmentation
- * when your tsconfig extends `nitro/tsconfig`. See the README for setup instructions.
- *
  * @remarks
  * Applies the fetch defaults from {@link createNitroFetch}.
  */
-export async function $fetchRaw<
-  T = unknown,
-  R extends NitroFetchRequest = NitroFetchRequest,
-  O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
->(
-  request: R,
-  options?: O,
-): Promise<NitroFetchResponse<TypedInternalResponse<R, T, NitroFetchOptions<R> extends O ? 'get' : ExtractedRouteMethod<R, O>>>> {
+export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
+  request: FetchRequest,
+  options?: FetchOptions<R>,
+): Promise<NitroFetchResponse<MappedResponseType<R, T>>> {
   const localFetch = createNitroFetch()
 
-  const response = await localFetch.raw<T, R, O>(request, options)
+  const response = await localFetch.raw<T, R>(request, options)
 
   Object.defineProperty(response, 'data', {
     enumerable: true,
@@ -89,9 +82,7 @@ export async function $fetchRaw<
     },
   })
 
-  return response as NitroFetchResponse<
-    TypedInternalResponse<R, T, NitroFetchOptions<R> extends O ? 'get' : ExtractedRouteMethod<R, O>>
-  >
+  return response as NitroFetchResponse<MappedResponseType<R, T>>
 }
 
 /**
