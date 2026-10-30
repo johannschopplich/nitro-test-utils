@@ -127,7 +127,9 @@ If you scaffolded your project with `create-nitro-app`, the generated `vite.conf
 import { defineConfig } from 'nitro-test-utils/config'
 
 export default defineConfig(
-  { resolve: { tsconfigPaths: true } },
+  {
+    resolve: { tsconfigPaths: true }
+  },
   { global: true, }
 )
 ```
@@ -255,7 +257,9 @@ import { defineConfig } from 'nitro-test-utils/config'
 
 export default defineConfig(
   // Vite/Vitest config (optional)
-  { test: { dir: './tests' } },
+  {
+    test: { dir: './tests' }
+  },
   // Nitro test options (optional)
   { global: true }
 )
@@ -461,7 +465,9 @@ If you need a real HTTP server on top of the test app – for driving a browser,
 import { injectNitroFetch } from 'nitro-test-utils/e2e'
 import { serve } from 'srvx/node'
 
-const server = serve({ fetch: injectNitroFetch() })
+const server = serve({
+  fetch: injectNitroFetch()
+})
 console.log(`Test app listening at ${server.url}`)
 ```
 

@@ -68,7 +68,9 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
           'import.meta.test': JSON.stringify(true),
         },
       },
-      { c12: { envName: 'test' } },
+      {
+        c12: { envName: 'test' },
+      },
     ),
   }
 

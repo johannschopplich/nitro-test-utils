@@ -52,7 +52,9 @@ describe('defineConfig', async () => {
     it('configures globalSetup when enabled', async () => {
       const config = await defineConfig({}, { global: true })
 
-      expect(config.test?.globalSetup).toEqual([expect.stringContaining('global-setup.mjs')])
+      expect(config.test?.globalSetup).toEqual([
+        expect.stringContaining('global-setup.mjs'),
+      ])
       expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: undefined, mode: undefined, preset: undefined })
     })
 
@@ -67,26 +69,36 @@ describe('defineConfig', async () => {
     it('configures worker-setup as a setupFile when global is enabled', async () => {
       const config = await defineConfig({}, { global: true })
 
-      expect(config.test?.setupFiles).toEqual([expect.stringContaining('worker-setup.mjs')])
+      expect(config.test?.setupFiles).toEqual([
+        expect.stringContaining('worker-setup.mjs'),
+      ])
     })
 
     it('preserves user setupFiles alongside the worker one', async () => {
       const config = await defineConfig(
-        { test: { setupFiles: ['test/a.ts', 'test/b.ts'] } },
+        {
+          test: {
+            setupFiles: ['test/a.ts', 'test/b.ts'],
+          },
+        },
         { global: true },
       )
       const setupFiles = config.test?.setupFiles as string[]
 
       expect(setupFiles).toContain('test/a.ts')
       expect(setupFiles).toContain('test/b.ts')
-      expect(setupFiles).toEqual(expect.arrayContaining([expect.stringContaining('worker-setup.mjs')]))
+      expect(setupFiles).toEqual(expect.arrayContaining([
+        expect.stringContaining('worker-setup.mjs'),
+      ]))
     })
 
     it('runs the user globalSetup before the nitro server starts', async () => {
       const nitroSetup = ((await defineConfig({}, { global: true })).test?.globalSetup as string[])[0]!
 
       const config = await defineConfig(
-        { test: { globalSetup: 'test/user-setup.ts' } },
+        {
+          test: { globalSetup: 'test/user-setup.ts' },
+        },
         { global: true },
       )
       const setups = config.test?.globalSetup as string[]
@@ -100,7 +112,11 @@ describe('defineConfig', async () => {
       const nitroSetup = ((await defineConfig({}, { global: true })).test?.globalSetup as string[])[0]!
 
       const config = await defineConfig(
-        { test: { globalSetup: ['test/a.ts', 'test/b.ts'] } },
+        {
+          test: {
+            globalSetup: ['test/a.ts', 'test/b.ts'],
+          },
+        },
         { global: true },
       )
       const setups = config.test?.globalSetup as string[]

@@ -54,7 +54,9 @@ export function createNitroFetch(options?: FetchHooks): $Fetch {
     },
     {
       fetch: (input, init) => {
-        const request = input instanceof Request ? input : new Request(input, init)
+        const request = input instanceof Request
+          ? input
+          : new Request(input, init)
         return Promise.resolve(nitroFetch(request))
       },
     },
@@ -122,7 +124,9 @@ export function createNitroSession(): NitroSession {
 
         const headers = new Headers(options.headers)
         const existingCookie = headers.get('cookie')
-        headers.set('cookie', existingCookie ? `${existingCookie}; ${cookieHeader}` : cookieHeader)
+        headers.set('cookie', existingCookie
+          ? `${existingCookie}; ${cookieHeader}`
+          : cookieHeader)
         options.headers = headers
       }
     },

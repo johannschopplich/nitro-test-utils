@@ -28,7 +28,9 @@ export interface ResolvedNitroTestConfig {
 }
 
 export async function defineConfig(userConfig: UserConfig = {}, testConfig: NitroTestConfig = {}): Promise<UserConfig> {
-  const resolvedGlobalConfig = testConfig.global === true ? {} : testConfig.global || undefined
+  const resolvedGlobalConfig = testConfig.global === true
+    ? {}
+    : testConfig.global || undefined
   const resolvedTestConfig: ResolvedNitroTestConfig = {
     rerunOnSourceChanges: testConfig.rerunOnSourceChanges ?? true,
     global: resolvedGlobalConfig
@@ -72,10 +74,15 @@ function resolveGlobalSetup(
     return userGlobalSetup
 
   const userSetups = userGlobalSetup
-    ? (Array.isArray(userGlobalSetup) ? [...userGlobalSetup] : [userGlobalSetup])
+    ? (Array.isArray(userGlobalSetup)
+        ? [...userGlobalSetup]
+        : [userGlobalSetup])
     : []
 
-  return [...userSetups, path.join(import.meta.dirname, 'global-setup.mjs')]
+  return [
+    ...userSetups,
+    path.join(import.meta.dirname, 'global-setup.mjs'),
+  ]
 }
 
 function resolveSetupFiles(
@@ -86,10 +93,15 @@ function resolveSetupFiles(
     return userSetupFiles
 
   const userSetups = userSetupFiles
-    ? (Array.isArray(userSetupFiles) ? [...userSetupFiles] : [userSetupFiles])
+    ? (Array.isArray(userSetupFiles)
+        ? [...userSetupFiles]
+        : [userSetupFiles])
     : []
 
-  return [...userSetups, path.join(import.meta.dirname, 'worker-setup.mjs')]
+  return [
+    ...userSetups,
+    path.join(import.meta.dirname, 'worker-setup.mjs'),
+  ]
 }
 
 async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Promise<string[]> {
@@ -108,7 +120,9 @@ async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Prom
   }
   else {
     const options = await loadNitroOptions()
-    const dir = typeof options.serverDir === 'string' ? options.serverDir : options.rootDir
+    const dir = typeof options.serverDir === 'string'
+      ? options.serverDir
+      : options.rootDir
     watchPattern = path.join(dir, '**/*.ts')
   }
 
