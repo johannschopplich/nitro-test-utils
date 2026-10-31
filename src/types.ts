@@ -27,7 +27,7 @@ export interface NitroTestOptions {
    * in-process. `cloudflare-module` runs in `wrangler dev`, which must be installed, and only per
    * test suite, not in global mode. Other presets are rejected.
    *
-   * @default Determined by `mode`: `'nitro-dev'` for development, `'standard'` for production.
+   * @default The preset from the Nitro config or `NITRO_PRESET` in development mode, `'standard'` in production mode
    */
   preset?: string
 }

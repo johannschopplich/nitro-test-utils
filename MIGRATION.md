@@ -77,6 +77,10 @@ Nitro types `import.meta.envName` itself, so remove the `nitro-test-utils/env` r
 -/// <reference types="nitro-test-utils/env" />
 ```
 
+### Development Mode Uses Your Nitro Config's Preset
+
+Without a `preset` option, development mode now runs the app with the preset from your Nitro config or `NITRO_PRESET`, as in `nitro dev`, instead of always `nitro-dev`. A `cloudflare-module` project, for example, gets its bindings without repeating the preset in `setup()`. Pass `preset: 'nitro-dev'` to keep the old behavior.
+
 ### Production Mode Runs Your Preset's Build
 
 Production mode now builds with your preset and tests the build output:

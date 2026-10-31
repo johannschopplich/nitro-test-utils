@@ -45,20 +45,24 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     isGlobal = false,
   } = options
   const isDev = mode === 'development'
-  const preset = resolvePreset(mode, userPreset)
+  const productionPreset = isDev
+    ? undefined
+    : resolveProductionPreset(userPreset)
 
   setupDotenv({ rootDir })
 
   const nitro = await createNitro(
     {
-      preset,
+      // Without a preset, development mode emulates the one from the Nitro config or `NITRO_PRESET`,
+      // like `nitro dev`.
+      preset: productionPreset ?? userPreset,
       dev: isDev,
       rootDir,
       builder: resolveTestBuilder(),
       buildDir: NITRO_BUILD_DIR,
-      ...(!isDev && {
+      ...(productionPreset && {
         output: {
-          dir: resolveOutputDir(rootDir, preset, nextBuildIndex()),
+          dir: resolveOutputDir(rootDir, productionPreset, nextBuildIndex()),
         },
       }),
     },
@@ -67,7 +71,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
         envName: 'test',
         // Nitro's own asset handler respects `baseURL`; the preview's fallback for `standard` doesn't.
         // A default, so the app's own `serveStatic` still wins.
-        ...(!isDev && !isCloudflarePreset(preset) && {
+        ...(productionPreset && !isCloudflarePreset(productionPreset) && {
           defaultConfig: { serveStatic: true },
         }),
       },
@@ -106,10 +110,8 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
   return ctx
 }
 
-export function resolvePreset(mode: NitroTestOptions['mode'], preset?: string): string {
-  return preset ?? (mode === 'production'
-    ? 'standard'
-    : 'nitro-dev')
+export function resolveProductionPreset(preset?: string): string {
+  return preset ?? 'standard'
 }
 
 /**

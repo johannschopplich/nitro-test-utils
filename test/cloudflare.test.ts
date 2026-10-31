@@ -6,10 +6,9 @@ import { $serverFetch, setup } from '../src'
 describe('cloudflare bindings', async () => {
   await setup({
     rootDir: path.resolve(import.meta.dirname, 'cloudflare-app'),
-    preset: 'cloudflare-module',
   })
 
-  it('has cloudflare bindings available', async () => {
+  it('provides bindings through the preset from the Nitro config', async () => {
     const { data } = await $serverFetch('/api/bindings')
     expect(data?.hasEnv).toBe(true)
     expect(data?.bindings).toContain('DB')
