@@ -43,8 +43,10 @@ export async function startServer(): Promise<NitroTestContext> {
     createDevServer(ctx.nitro)
 
     await prepare(ctx.nitro)
-    const ready = new Promise<void>((resolve) => {
-      ctx.nitro.hooks.hook('dev:reload', () => resolve())
+    // A failed build fires `dev:error` instead of `dev:reload`.
+    const ready = new Promise<void>((resolve, reject) => {
+      ctx.nitro.hooks.hookOnce('dev:reload', () => resolve())
+      ctx.nitro.hooks.hookOnce('dev:error', error => reject(error))
     })
     await build(ctx.nitro)
     await ready

@@ -1,4 +1,5 @@
 import * as fs from 'node:fs'
+import * as os from 'node:os'
 import * as path from 'node:path'
 import { serverFetch } from 'nitro'
 import { afterEach, describe, expect, it, onTestFinished } from 'vitest'
@@ -25,6 +26,18 @@ describe('server lifecycle', () => {
     await stopServer()
 
     await expect(serverFetch('/')).rejects.toThrow('Nitro instance is not available.')
+  })
+
+  it('rejects when the dev build fails', async () => {
+    const brokenRootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nitro-test-utils-'))
+    onTestFinished(() => fs.rmSync(brokenRootDir, { recursive: true, force: true }))
+    fs.writeFileSync(path.join(brokenRootDir, 'nitro.config.ts'), 'export default { serverDir: \'.\' }')
+    fs.mkdirSync(path.join(brokenRootDir, 'routes'))
+    fs.writeFileSync(path.join(brokenRootDir, 'routes/index.ts'), 'export default (')
+
+    await createTestContext({ rootDir: brokenRootDir })
+
+    await expect(startServer()).rejects.toThrow()
   })
 
   it('serves node-server again on a second start in the same worker', async () => {
