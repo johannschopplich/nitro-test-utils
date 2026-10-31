@@ -20,8 +20,8 @@ describe('routes', async () => {
     const { data } = await $fetchRaw('/api/env')
     expect(data).toMatchInlineSnapshot(`
       {
+        "envName": "test",
         "isDev": true,
-        "isTest": true,
         "process": {
           "NODE_ENV": "test",
           "TEST_FOO": "bar",

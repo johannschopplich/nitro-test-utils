@@ -13,8 +13,8 @@ describe('production', async () => {
     expect(data).toBe('Hello, production build!')
   })
 
-  it('sets import.meta.test to true', async () => {
+  it('sets import.meta.envName to test', async () => {
     const { data } = await $fetchRaw('/env')
-    expect(data).toEqual({ isTest: true })
+    expect(data).toEqual({ envName: 'test' })
   })
 })

@@ -64,9 +64,6 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
         output: {
           dir: path.resolve(rootDir, NITRO_OUTPUT_DIR),
         },
-        replace: {
-          'import.meta.test': JSON.stringify(true),
-        },
       },
       {
         c12: { envName: 'test' },

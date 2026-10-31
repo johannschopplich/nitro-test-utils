@@ -33,15 +33,11 @@
     "./e2e": {
       "types": "./dist/e2e.d.mts",
       "default": "./dist/e2e.mjs"
-    },
-    "./env": {
-      "types": "./env.d.ts"
     }
   },
   "types": "./dist/index.d.mts",
   "files": [
-    "dist",
-    "env.d.ts"
+    "dist"
   ],
   "scripts": {
     "build": "tsdown",
