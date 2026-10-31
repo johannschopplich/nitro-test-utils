@@ -394,7 +394,7 @@ function listRoutes(): { route: string, method?: string }[]
 
 The global setup builds the app in a Vitest setup file, once per worker. Nitro Test Utils registers the app for `serverFetch` from `nitro`. Development mode dispatches requests through the preset's dev runner. Production mode builds the app, loads `standard` and `node-server` builds in-process through Nitro's `startPreview`, and proxies requests to `wrangler dev` for Cloudflare builds.
 
-Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` inside the Nitro project. Node caches imported modules by path, so a second build into the same directory would serve the first build's code. Nitro's last-build pointer and Wrangler's deploy redirect are restored right after the build, and `wrangler dev` gets the test build's config through `--config`. Production test builds ignore `.env.production` and `.env.preview`.
+Test builds go to `node_modules/.nitro/test` inside the Nitro project, apart from the build of a running `nitro dev`. Each production build gets its own directory under `node_modules/.nitro/test/output/<preset>`. Node caches imported modules by path, so a second build into the same directory would serve the first build's code. Nitro's last-build pointer and Wrangler's deploy redirect are restored right after the build, and `wrangler dev` gets the test build's config through `--config`. Production test builds ignore `.env.production` and `.env.preview`.
 
 ## License
 

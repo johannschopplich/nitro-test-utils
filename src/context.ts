@@ -18,7 +18,10 @@ export interface NitroTestContext {
 }
 
 // Nitro's well-known directory, where it writes `last-build.json` whatever the `buildDir`.
-export const NITRO_BUILD_DIR = 'node_modules/.nitro'
+export const NITRO_WELLKNOWN_DIR = 'node_modules/.nitro'
+// Apart from Nitro's default `buildDir`, so a running `nitro dev` and the tests don't overwrite
+// each other's build.
+export const TEST_BUILD_DIR: string = `${NITRO_WELLKNOWN_DIR}/test`
 
 // Nitro's preview finds a fetch handler in these entries.
 const IN_PROCESS_PRODUCTION_PRESETS = new Set(['standard', 'node-server'])
@@ -55,7 +58,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       preset: productionPreset ?? userPreset,
       dev: isDev,
       rootDir,
-      buildDir: NITRO_BUILD_DIR,
+      buildDir: TEST_BUILD_DIR,
       ...(productionPreset && {
         output: {
           dir: resolveOutputDir(rootDir, productionPreset, nextBuildIndex()),
@@ -122,7 +125,7 @@ export function resolveProductionPreset(preset?: string): string {
  * earlier build already loaded from would serve that build's modules and app state.
  */
 export function resolveOutputDir(rootDir: string, preset: string, buildIndex: number): string {
-  return path.resolve(rootDir, NITRO_BUILD_DIR, 'output', preset, String(buildIndex))
+  return path.resolve(rootDir, TEST_BUILD_DIR, 'output', preset, String(buildIndex))
 }
 
 export function injectTestContext(): NitroTestContext | undefined {

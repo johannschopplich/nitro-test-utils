@@ -41,7 +41,7 @@ describe('defineConfig', async () => {
       const config = await defineConfig({}, { global: true })
 
       expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), 'node_modules/.nitro/dev/index.mjs'),
+        path.resolve(process.cwd(), 'node_modules/.nitro/test/dev/index.mjs'),
       )
     })
 
@@ -51,7 +51,7 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), 'node_modules/.nitro/output/standard/0/server/index.mjs'),
+        path.resolve(process.cwd(), 'node_modules/.nitro/test/output/standard/0/server/index.mjs'),
       )
     })
 
@@ -61,7 +61,7 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), 'node_modules/.nitro/output/node-server/0/server/index.mjs'),
+        path.resolve(process.cwd(), 'node_modules/.nitro/test/output/node-server/0/server/index.mjs'),
       )
     })
 
@@ -71,7 +71,7 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve('/custom', 'node_modules/.nitro/dev/index.mjs'),
+        path.resolve('/custom', 'node_modules/.nitro/test/dev/index.mjs'),
       )
     })
   })

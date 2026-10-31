@@ -88,7 +88,7 @@ Production mode now builds with your preset and tests the build output:
 - The default production preset is `standard` instead of `node-middleware`.
 - `cloudflare-module` works in per-suite production mode and needs `wrangler` installed. Global production mode rejects it.
 - Production mode accepts only `standard`, `node-server`, and `cloudflare-module`. Others, such as `node-middleware` or `cloudflare-pages`, are rejected.
-- Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` instead of `.output`.
+- Each production build goes to its own directory under `node_modules/.nitro/test/output/<preset>` instead of `.output`.
 
 ### Shell Variables Beat `.env.test`
 

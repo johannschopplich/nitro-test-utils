@@ -10,7 +10,7 @@ import {
   prerender,
   startPreview,
 } from 'nitro/builder'
-import { injectTestContext, NITRO_BUILD_DIR } from './context'
+import { injectTestContext, NITRO_WELLKNOWN_DIR } from './context'
 
 type NitroFetch = (request: Request) => Response | Promise<Response>
 
@@ -61,7 +61,7 @@ export async function startServer(): Promise<NitroTestContext> {
 
     // A production build repoints Nitro's last-build pointer and, for Cloudflare, Wrangler's
     // deploy redirect at the test build; `nitro preview` or `wrangler deploy` would pick it up.
-    const restoreLastBuild = snapshotFile(path.join(rootDir, NITRO_BUILD_DIR, 'last-build.json'))
+    const restoreLastBuild = snapshotFile(path.join(rootDir, NITRO_WELLKNOWN_DIR, 'last-build.json'))
     const restoreWranglerRedirect = wranglerBin
       ? snapshotFile(path.join(rootDir, '.wrangler/deploy/config.json'))
       : undefined

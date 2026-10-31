@@ -5,7 +5,7 @@ import process from 'node:process'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
 import { configDefaults, defineConfig as defineVitestConfig } from 'vitest/config'
-import { NITRO_BUILD_DIR, resolveOutputDir, resolveProductionPreset } from './context'
+import { resolveOutputDir, resolveProductionPreset, TEST_BUILD_DIR } from './context'
 
 export interface NitroTestConfig {
   /**
@@ -117,7 +117,7 @@ async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Prom
     // The global app is the worker's first production build.
     watchPattern = config.global.mode === 'production'
       ? path.join(resolveOutputDir(rootDir, resolveProductionPreset(config.global.preset), 0), 'server', 'index.mjs')
-      : path.resolve(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')
+      : path.resolve(rootDir, TEST_BUILD_DIR, 'dev', 'index.mjs')
   }
   else {
     // Vitest workers inherit this process's environment, where a variable loaded here from `.env`

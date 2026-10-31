@@ -60,6 +60,23 @@ describe('server lifecycle', () => {
     expect(data).toEqual({ source: 'shell' })
   })
 
+  it('leaves the dev build of a running nitro dev untouched', async () => {
+    // Inside the repository, so the build resolves `nitro` from its `node_modules`.
+    const appRootDir = fs.mkdtempSync(path.join(import.meta.dirname, '.tmp-'))
+    onTestFinished(() => fs.rmSync(appRootDir, { recursive: true, force: true }))
+    fs.writeFileSync(path.join(appRootDir, 'nitro.config.ts'), 'export default { serverDir: \'.\' }')
+    fs.mkdirSync(path.join(appRootDir, 'routes'))
+    fs.writeFileSync(path.join(appRootDir, 'routes/index.ts'), 'export default () => \'ok\'')
+    const nitroDevEntry = path.join(appRootDir, 'node_modules/.nitro/dev/index.mjs')
+    fs.mkdirSync(path.dirname(nitroDevEntry), { recursive: true })
+    fs.writeFileSync(nitroDevEntry, '// nitro dev')
+
+    await createTestContext({ rootDir: appRootDir })
+    await startServer()
+
+    expect(fs.readFileSync(nitroDevEntry, 'utf8')).toBe('// nitro dev')
+  })
+
   it('serves node-server again on a second start in the same worker', async () => {
     for (let index = 0; index < 2; index++) {
       await createTestContext({ rootDir, mode: 'production', preset: 'node-server' })
