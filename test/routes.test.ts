@@ -1,6 +1,7 @@
 import * as path from 'node:path'
+import { serverFetch } from 'nitro'
 import { describe, expect, it } from 'vitest'
-import { $serverFetch, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src'
+import { $serverFetch, createNitroSession, listRoutes, setup } from '../src'
 
 describe('routes', async () => {
   await setup({
@@ -55,20 +56,11 @@ describe('routes', async () => {
     expect(data).toEqual({ hello: 'world' })
   })
 
-  it('fetches through a custom ofetch instance', async () => {
-    const $fetch = createNitroFetch()
-    const data = await $fetch('/api/health')
-    expect(data).toEqual({ ok: true })
-  })
+  it('answers serverFetch from nitro', async () => {
+    const response = await serverFetch('/api/health')
 
-  describe('in-process dispatch', () => {
-    it('returns a raw Request-to-Response dispatcher', async () => {
-      const nitroFetch = injectNitroFetch()
-      const response = await nitroFetch(new Request('http://nitro.test/api/health'))
-
-      expect(response.status).toBe(200)
-      await expect(response.json()).resolves.toEqual({ ok: true })
-    })
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({ ok: true })
   })
 
   describe('introspection', () => {

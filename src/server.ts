@@ -9,15 +9,14 @@ import {
 } from 'nitro/builder'
 import { injectTestContext } from './context'
 
-declare global {
-  // eslint-disable-next-line vars-on-top
-  var __nitro__: Record<string, { fetch: (request: Request) => Response | Promise<Response> } | undefined> | undefined
+type NitroFetch = (request: Request) => Response | Promise<Response>
+
+const nitroGlobal = globalThis as typeof globalThis & {
+  __nitro__?: Record<string, { fetch: NitroFetch } | undefined>
 }
 
 /**
- * Starts the Nitro app in-process and exposes its request dispatcher on `ctx.fetch`.
- *
- * No HTTP listener is created. Tests invoke the app directly via its Web `Request` handler.
+ * Starts the Nitro app in-process and registers its request dispatcher for `serverFetch` from `nitro`.
  */
 export async function startServer(): Promise<NitroTestContext> {
   const ctx = injectTestContext()
@@ -29,6 +28,8 @@ export async function startServer(): Promise<NitroTestContext> {
   if (!ctx.isGlobal) {
     await stopServer()
   }
+
+  let fetch: NitroFetch
 
   if (ctx.isDev) {
     // Side-effect: wires `ctx.nitro.fetch` + the worker runner. The instance is
@@ -42,7 +43,7 @@ export async function startServer(): Promise<NitroTestContext> {
     await build(ctx.nitro)
     await ready
 
-    ctx.fetch = ctx.nitro.fetch.bind(ctx.nitro)
+    fetch = ctx.nitro.fetch.bind(ctx.nitro)
   }
   else {
     await prepare(ctx.nitro)
@@ -56,7 +57,7 @@ export async function startServer(): Promise<NitroTestContext> {
     const entryPath = path.resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
     await import(`${entryPath}?t=${Date.now()}`)
 
-    const runtimeApp = globalThis.__nitro__?.default
+    const runtimeApp = nitroGlobal.__nitro__?.default
     if (!runtimeApp?.fetch) {
       throw new Error(
         'Nitro app was not registered on `globalThis.__nitro__` after importing the build entry. '
@@ -64,7 +65,12 @@ export async function startServer(): Promise<NitroTestContext> {
       )
     }
 
-    ctx.fetch = runtimeApp.fetch.bind(runtimeApp)
+    fetch = runtimeApp.fetch.bind(runtimeApp)
+  }
+
+  nitroGlobal.__nitro__ = {
+    ...nitroGlobal.__nitro__,
+    default: { fetch },
   }
 
   if (ctx.isGlobal) {
@@ -76,7 +82,7 @@ export async function startServer(): Promise<NitroTestContext> {
 }
 
 /**
- * Releases the in-process Nitro app.
+ * Releases the in-process Nitro app and unregisters its `serverFetch` dispatcher.
  *
  * @remarks
  * Dev mode cascades through `nitro.close()` to the worker manager and file watchers.
@@ -85,9 +91,8 @@ export async function startServer(): Promise<NitroTestContext> {
 export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()
 
-  if (ctx) {
-    ctx.fetch = undefined
-  }
+  if (nitroGlobal.__nitro__)
+    delete nitroGlobal.__nitro__.default
 
   if (ctx?.nitro)
     await ctx.nitro.close()

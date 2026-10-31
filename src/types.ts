@@ -44,9 +44,4 @@ export interface NitroTestContext {
   isGlobal: boolean
   isDev: boolean
   nitro: Nitro
-  /**
-   * In-process request dispatcher. Takes a Web `Request` and returns the Nitro app's response
-   * without going through a real HTTP listener.
-   */
-  fetch?: (request: Request) => Response | Promise<Response>
 }

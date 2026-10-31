@@ -1,7 +1,7 @@
 import type { $Fetch, FetchHooks, FetchOptions, FetchRequest, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import { parseSetCookie } from 'cookie-es'
+import { serverFetch } from 'nitro'
 import { ofetch } from 'ofetch'
-import { injectTestContext } from './context'
 
 export interface NitroSession {
   $fetch: $Fetch
@@ -17,55 +17,19 @@ export interface NitroFetchResponse<T> extends FetchResponse<T> {
 const SYNTHETIC_BASE_URL = 'http://nitro.test'
 
 /**
- * Creates a custom `ofetch` instance that dispatches requests in-process against the
- * active Nitro test app. Each call builds a Web `Request` and hands it to
- * `injectNitroFetch()`, so no HTTP listener is involved.
+ * Fetches the raw response from the Nitro app for the given path, with the body parsed.
  *
  * @remarks
- * The following fetch defaults differ from `ofetch`:
+ * Dispatches through `serverFetch` from `nitro`. The following fetch defaults differ from `ofetch`:
  * - `ignoreResponseError: true` to prevent throwing on non-2xx responses.
- * - `redirect: 'manual'` to prevent automatic redirects.
  * - `retry: 0` to disable retries, preventing masked failures and slow test suites.
  * - `headers: { accept: 'application/json' }` to force a JSON error body when Nitro errors.
- */
-export function createNitroFetch(options?: FetchHooks): $Fetch {
-  const nitroFetch = injectNitroFetch()
-
-  return ofetch.create(
-    {
-      baseURL: SYNTHETIC_BASE_URL,
-      ignoreResponseError: true,
-      redirect: 'manual',
-      retry: 0,
-      headers: {
-        accept: 'application/json',
-      },
-      ...options,
-    },
-    {
-      fetch: (input, init) => {
-        const request = input instanceof Request
-          ? input
-          : new Request(input, init)
-        return Promise.resolve(nitroFetch(request))
-      },
-    },
-  )
-}
-
-/**
- * Fetches the raw response from the Nitro server for the given path.
- *
- * @remarks
- * Applies the fetch defaults from {@link createNitroFetch}.
  */
 export async function $serverFetch<T = any, R extends ResponseType = 'json'>(
   request: FetchRequest,
   options?: FetchOptions<R>,
 ): Promise<NitroFetchResponse<MappedResponseType<R, T>>> {
-  const localFetch = createNitroFetch()
-
-  const response = await localFetch.raw<T, R>(request, options)
+  const response = await createServerFetch().raw<T, R>(request, options)
 
   Object.defineProperty(response, 'data', {
     enumerable: true,
@@ -78,33 +42,15 @@ export async function $serverFetch<T = any, R extends ResponseType = 'json'>(
 }
 
 /**
- * Returns the raw in-process request dispatcher for the active Nitro test app.
- *
- * This is the low-level primitive that `createNitroFetch` builds on. Reach for it when
- * you want to construct a `Request` yourself, or when you need to hand the dispatcher to
- * a different layer (for example `srvx.serve({ fetch: injectNitroFetch() })` to stand up
- * a real HTTP listener on top of the test app).
- *
- * @throws if called before `setup()` has started the app.
- */
-export function injectNitroFetch(): (request: Request) => Response | Promise<Response> {
-  const ctx = injectTestContext()
-  const fetch = ctx?.fetch
-
-  if (!fetch) {
-    throw new Error('Nitro test app is not running. Did you call `setup()`?')
-  }
-
-  return fetch
-}
-
-/**
  * Creates a session-aware `ofetch` instance that persists cookies across requests.
+ *
+ * @remarks
+ * Applies the fetch defaults from {@link $serverFetch}.
  */
 export function createNitroSession(): NitroSession {
   const cookies = new Map<string, string>()
 
-  const $fetch = createNitroFetch({
+  const $fetch = createServerFetch({
     onRequest({ options }) {
       if (cookies.size > 0) {
         const cookieHeader = Array.from(
@@ -135,4 +81,21 @@ export function createNitroSession(): NitroSession {
     cookies,
     clearCookies: () => cookies.clear(),
   }
+}
+
+function createServerFetch(hooks?: FetchHooks): $Fetch {
+  return ofetch.create(
+    {
+      baseURL: SYNTHETIC_BASE_URL,
+      ignoreResponseError: true,
+      retry: 0,
+      headers: {
+        accept: 'application/json',
+      },
+      ...hooks,
+    },
+    {
+      fetch: (input, init) => serverFetch(input, init),
+    },
+  )
 }
