@@ -9,7 +9,8 @@ import {
   prerender,
   startPreview,
 } from 'nitro/builder'
-import { injectTestContext, isCloudflarePreset, NITRO_BUILD_DIR } from './context'
+import { injectTestContext, NITRO_BUILD_DIR } from './context'
+import { startWrangler } from './wrangler'
 
 type NitroFetch = (request: Request) => Response | Promise<Response>
 
@@ -21,9 +22,8 @@ const nitroGlobal = globalThis as typeof globalThis & {
  * Starts the Nitro app and registers its request dispatcher for `serverFetch` from `nitro`.
  *
  * @remarks
- * Development mode dispatches through the preset's dev runner. Production mode builds the app
- * and serves the output through Nitro's `startPreview`: `standard` and `node-server` load the
- * server entry in-process, Cloudflare presets spawn `wrangler` and proxy to it.
+ * Development mode dispatches through the preset's dev runner. Production mode builds the app,
+ * then loads `standard` and `node-server` builds in-process and runs Cloudflare builds in `wrangler dev`.
  */
 export async function startServer(): Promise<NitroTestContext> {
   const ctx = injectTestContext()
@@ -54,14 +54,14 @@ export async function startServer(): Promise<NitroTestContext> {
   }
   else {
     const { rootDir } = ctx.options
+    const { wranglerBin } = ctx
     const outputDir = ctx.nitro.options.output.dir
-    const isCloudflare = isCloudflarePreset(ctx.nitro.options.preset)
 
     // A production build repoints Nitro's last-build pointer and, for Cloudflare, Wrangler's
     // deploy redirect at the test build; `nitro preview` or `wrangler deploy` would pick it up.
     // `wrangler` reads the redirect while it runs, so it's restored on stop.
     const restoreLastBuild = snapshotFile(path.join(rootDir, NITRO_BUILD_DIR, 'last-build.json'))
-    if (isCloudflare)
+    if (wranglerBin)
       ctx.restoreWranglerRedirect = snapshotFile(path.join(rootDir, '.wrangler/deploy/config.json'))
 
     try {
@@ -74,12 +74,11 @@ export async function startServer(): Promise<NitroTestContext> {
       restoreLastBuild()
     }
 
-    ctx.preview = await startPreview({
-      // The preview loads `.env.preview`, `.env.production`, and `.env` from this directory.
-      // In-process presets get the output directory, which has none of them; `wrangler` needs the root.
-      rootDir: isCloudflare ? rootDir : outputDir,
-      outputDir,
-    })
+    ctx.preview = wranglerBin
+      ? await startWrangler(rootDir, wranglerBin)
+      // `startPreview` loads `.env.preview`, `.env.production`, and `.env` from `rootDir`;
+      // the output directory has none of them.
+      : await startPreview({ rootDir: outputDir, outputDir })
     fetch = ctx.preview.fetch
   }
 
@@ -101,8 +100,8 @@ export async function startServer(): Promise<NitroTestContext> {
  *
  * @remarks
  * Development mode cascades through `nitro.close()` to the worker runner and file watchers.
- * Production mode stops a spawned preview process; an in-process entry stays loaded
- * until the test process exits.
+ * Production mode stops a Cloudflare build's `wrangler` and waits for it to exit; an in-process
+ * entry stays loaded until the test process exits.
  */
 export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()

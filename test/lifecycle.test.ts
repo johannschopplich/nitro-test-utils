@@ -3,7 +3,7 @@ import * as path from 'node:path'
 import { serverFetch } from 'nitro'
 import { afterEach, describe, expect, it, onTestFinished } from 'vitest'
 import { $serverFetch } from '../src'
-import { clearTestContext, createTestContext } from '../src/context'
+import { clearTestContext, createTestContext, injectTestContext } from '../src/context'
 import { startServer, stopServer } from '../src/server'
 
 const rootDir = path.resolve(import.meta.dirname, 'production-app')
@@ -69,6 +69,19 @@ describe('server lifecycle', () => {
       expect(fs.readFileSync(lastBuildPath, 'utf8')).toBe(content)
   })
 
+  it('stops wrangler before stopServer resolves', async () => {
+    await createTestContext({ rootDir: cloudflareRootDir, mode: 'production', preset: 'cloudflare-module' })
+    await startServer()
+    const previewFetch = injectTestContext()!.preview!.fetch
+
+    const response = await previewFetch(new Request('http://nitro.test/api/bindings'))
+    expect(response.status).toBe(200)
+
+    await stopServer()
+
+    await expect(previewFetch(new Request('http://nitro.test/api/bindings'))).rejects.toThrow('ECONNREFUSED')
+  })
+
   it('restores the wrangler deploy redirect on stop', async () => {
     const redirectPath = path.join(cloudflareRootDir, '.wrangler/deploy/config.json')
     onTestFinished(() => fs.rmSync(redirectPath, { force: true }))
@@ -85,10 +98,21 @@ describe('server lifecycle', () => {
 })
 
 describe('createTestContext', () => {
-  it.each(['node-middleware', 'nodeMiddleware', 'aws-lambda'])('rejects the %s preset in production mode', async (preset) => {
+  it.each([
+    'node-middleware',
+    'nodeMiddleware',
+    'aws-lambda',
+    'cloudflare-pages',
+  ])('rejects the %s preset in production mode', async (preset) => {
     await expect(createTestContext({ rootDir, mode: 'production', preset }))
       .rejects
-      .toThrow('Production mode supports the "standard" and "node-server" presets and Cloudflare presets')
+      .toThrow('Production mode supports the "standard", "node-server", "cloudflare-module", and "cloudflare-durable" presets')
+  })
+
+  it('rejects a Cloudflare production build without wrangler installed', async () => {
+    await expect(createTestContext({ rootDir, mode: 'production', preset: 'cloudflare-module' }))
+      .rejects
+      .toThrow('needs `wrangler` installed')
   })
 
   it('rejects Cloudflare presets in global production mode', async () => {

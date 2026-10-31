@@ -5,6 +5,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
 import * as dotenv from 'dotenv'
+import { resolveModulePath } from 'exsolve'
 import { createNitro } from 'nitro/builder'
 
 export interface NitroTestContext {
@@ -13,6 +14,8 @@ export interface NitroTestContext {
   isDev: boolean
   nitro: Nitro
   preview?: PreviewInstance
+  /** `wrangler`'s bin script, set for production builds that run in `wrangler dev`. */
+  wranglerBin?: string
   /** Restores the Wrangler deploy redirect that a Cloudflare production build rewrote. */
   restoreWranglerRedirect?: () => void
 }
@@ -20,8 +23,10 @@ export interface NitroTestContext {
 // Nitro's well-known directory, where it writes `last-build.json` whatever the `buildDir`.
 export const NITRO_BUILD_DIR = 'node_modules/.nitro'
 
-// Nitro's preview finds a fetch handler in these entries; Cloudflare presets run in `wrangler` instead.
+// Nitro's preview finds a fetch handler in these entries.
 const IN_PROCESS_PRODUCTION_PRESETS = new Set(['standard', 'node-server'])
+// Nitro previews these with `wrangler dev`; the Pages presets need `wrangler pages dev`.
+const WRANGLER_PRODUCTION_PRESETS = new Set(['cloudflare-module', 'cloudflare-durable'])
 
 // Store the active context on `globalThis` so it survives across multiple module copies.
 // When this project's own tests import from source while Vitest loads the built worker
@@ -70,9 +75,14 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     },
   )
 
+  let wranglerBin: string | undefined
+
   if (!isDev) {
     try {
       assertProductionPreset(nitro.options.preset, isGlobal)
+      // Resolved before the build, so a missing `wrangler` fails fast.
+      if (WRANGLER_PRODUCTION_PRESETS.has(nitro.options.preset))
+        wranglerBin = resolveWranglerBin(rootDir)
     }
     catch (error) {
       await nitro.close()
@@ -89,6 +99,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     isGlobal,
     isDev,
     nitro,
+    wranglerBin,
   }
 
   provideTestContext(ctx)
@@ -113,16 +124,6 @@ export function resolveOutputDir(rootDir: string, preset: string, buildIndex: nu
   return path.resolve(rootDir, NITRO_BUILD_DIR, 'output', preset, String(buildIndex))
 }
 
-/**
- * Mirrors the check Nitro's `startPreview` uses to run a build in `wrangler`.
- *
- * @remarks
- * Case-insensitive, since a raw preset name may be camel case before Nitro resolves it.
- */
-export function isCloudflarePreset(preset: string): boolean {
-  return preset.toLowerCase().includes('cloudflare')
-}
-
 export function injectTestContext(): NitroTestContext | undefined {
   return globalThis.__nitroTestContext__
 }
@@ -141,8 +142,13 @@ function nextBuildIndex(): number {
   return buildIndex
 }
 
+// Case-insensitive, since the raw preset name may be camel case before Nitro resolves it.
+function isCloudflarePreset(preset: string): boolean {
+  return preset.toLowerCase().includes('cloudflare')
+}
+
 function assertProductionPreset(preset: string, isGlobal: boolean): void {
-  if (isCloudflarePreset(preset)) {
+  if (WRANGLER_PRODUCTION_PRESETS.has(preset)) {
     if (isGlobal) {
       throw new Error(
         'Global production mode does not support Cloudflare presets, since nothing stops the '
@@ -154,9 +160,22 @@ function assertProductionPreset(preset: string, isGlobal: boolean): void {
 
   if (!IN_PROCESS_PRODUCTION_PRESETS.has(preset)) {
     throw new Error(
-      `Production mode supports the "standard" and "node-server" presets and Cloudflare presets, not "${preset}".`,
+      `Production mode supports the "standard", "node-server", "cloudflare-module", and "cloudflare-durable" presets, not "${preset}".`,
     )
   }
+}
+
+function resolveWranglerBin(rootDir: string): string {
+  const packageJsonPath = resolveModulePath('wrangler/package.json', {
+    from: path.join(rootDir, 'package.json'),
+    try: true,
+  })
+
+  if (!packageJsonPath)
+    throw new Error('Testing a Cloudflare production build needs `wrangler` installed in the Nitro project.')
+
+  const { bin } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { bin: Record<string, string> }
+  return path.resolve(path.dirname(packageJsonPath), bin.wrangler!)
 }
 
 function setupDotenv({

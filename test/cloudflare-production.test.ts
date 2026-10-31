@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import * as path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { $serverFetch, setup } from '../src'
+import { injectTestContext } from '../src/context'
 
 describe('cloudflare production', async () => {
   await setup({
@@ -26,5 +27,27 @@ describe('cloudflare production', async () => {
 
     const { data } = await $serverFetch('/api/kv?key=production-key')
     expect(data?.value).toBe(value)
+  })
+
+  it('reaches wrangler while global fetch is stubbed', async () => {
+    vi.stubGlobal('fetch', () => {
+      throw new Error('Stubbed fetch')
+    })
+    onTestFinished(() => {
+      vi.unstubAllGlobals()
+    })
+
+    const { data } = await $serverFetch('/api/bindings')
+    expect(data?.hasEnv).toBe(true)
+  })
+
+  it('forwards a path that starts with // to wrangler', async () => {
+    const previewFetch = injectTestContext()!.preview!.fetch
+    const response = await previewFetch(new Request('http://nitro.test//api/bindings'))
+
+    expect(response.status).toBe(404)
+    await expect(response.json()).resolves.toMatchObject({
+      message: expect.stringContaining('//api/bindings'),
+    })
   })
 })
