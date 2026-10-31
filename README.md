@@ -104,7 +104,7 @@ export default defineConfig({}, {
 Production mode supports these presets:
 
 - **`standard`** (default) and **`node-server`** load the server entry in-process.
-- **`cloudflare-module`** and **`cloudflare-durable`** run the built worker in `wrangler dev`. Since nothing stops `wrangler` when Vitest ends its worker, they work with [`setup()` per test suite](#run-several-nitro-apps) only.
+- **`cloudflare-module`** runs the built worker in `wrangler dev`. Since nothing stops `wrangler` when Vitest ends its worker, it works with [`setup()` per test suite](#run-several-nitro-apps) only.
 
 Production mode rejects every other preset, e.g. `node-middleware` or `cloudflare-pages`. In development mode, any preset works: Nitro resolves it to its dev counterpart, e.g. `cloudflare-module` to `cloudflare-dev`, and dispatches requests through that preset's dev runner.
 

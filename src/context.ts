@@ -25,8 +25,9 @@ export const NITRO_BUILD_DIR = 'node_modules/.nitro'
 
 // Nitro's preview finds a fetch handler in these entries.
 const IN_PROCESS_PRODUCTION_PRESETS = new Set(['standard', 'node-server'])
-// Nitro previews these with `wrangler dev`; the Pages presets need `wrangler pages dev`.
-const WRANGLER_PRODUCTION_PRESETS = new Set(['cloudflare-module', 'cloudflare-durable'])
+// Nitro previews these with `wrangler dev`. The Pages presets need `wrangler pages dev`, and Nitro
+// deprecates `cloudflare-durable` in favor of `cloudflare-module`.
+const WRANGLER_PRODUCTION_PRESETS = new Set(['cloudflare-module'])
 
 // Store the active context on `globalThis` so it survives across multiple module copies.
 // When this project's own tests import from source while Vitest loads the built worker
@@ -160,7 +161,7 @@ function assertProductionPreset(preset: string, isGlobal: boolean): void {
 
   if (!IN_PROCESS_PRODUCTION_PRESETS.has(preset)) {
     throw new Error(
-      `Production mode supports the "standard", "node-server", "cloudflare-module", and "cloudflare-durable" presets, not "${preset}".`,
+      `Production mode supports the "standard", "node-server", and "cloudflare-module" presets, not "${preset}".`,
     )
   }
 }

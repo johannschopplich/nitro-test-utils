@@ -116,10 +116,11 @@ describe('createTestContext', () => {
     'nodeMiddleware',
     'aws-lambda',
     'cloudflare-pages',
+    'cloudflare-durable',
   ])('rejects the %s preset in production mode', async (preset) => {
     await expect(createTestContext({ rootDir, mode: 'production', preset }))
       .rejects
-      .toThrow('Production mode supports the "standard", "node-server", "cloudflare-module", and "cloudflare-durable" presets')
+      .toThrow('Production mode supports the "standard", "node-server", and "cloudflare-module" presets')
   })
 
   it('rejects a Cloudflare production build without wrangler installed', async () => {

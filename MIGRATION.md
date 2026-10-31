@@ -82,8 +82,8 @@ Nitro types `import.meta.envName` itself, so remove the `nitro-test-utils/env` r
 Production mode now builds with your preset and tests the build output:
 
 - The default production preset is `standard` instead of `node-middleware`.
-- `cloudflare-module` and `cloudflare-durable` work in per-suite production mode and need `wrangler` installed. Global production mode rejects them.
-- Production mode accepts only `standard`, `node-server`, `cloudflare-module`, and `cloudflare-durable`. Others, such as `node-middleware` or `cloudflare-pages`, are rejected.
+- `cloudflare-module` works in per-suite production mode and needs `wrangler` installed. Global production mode rejects it.
+- Production mode accepts only `standard`, `node-server`, and `cloudflare-module`. Others, such as `node-middleware` or `cloudflare-pages`, are rejected.
 - Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` instead of `.output`.
 
 ### Drop `NitroTestContext` Imports
