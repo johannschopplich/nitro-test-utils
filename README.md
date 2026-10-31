@@ -108,6 +108,8 @@ Production mode supports these presets:
 
 Production mode rejects every other preset, e.g. `node-middleware` or `cloudflare-pages`. In development mode, any preset works, and without one the app runs with the preset from your Nitro config or `NITRO_PRESET`, as in `nitro dev`. Nitro resolves it to its dev counterpart, e.g. `cloudflare-module` to `cloudflare-dev`, and dispatches requests through that preset's dev runner.
 
+In-process test builds serve the files in `public/` at their paths without `baseURL`, like `nitro preview`, and Nitro's static handler also serves them under `baseURL` unless your Nitro config turns `serveStatic` off. A deployed `standard` build leaves static files to the platform instead, so a test that fetches one passes where production may not.
+
 Test builds never overwrite your real build output, and `nitro preview` and `wrangler deploy` keep using your last `nitro build`.
 
 ### Test Cloudflare Bindings

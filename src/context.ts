@@ -72,7 +72,8 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       },
       c12: {
         envName: 'test',
-        // Nitro's own asset handler respects `baseURL`; the preview's fallback for `standard` doesn't.
+        // Nitro's own asset handler respects `baseURL`; the static middleware `startPreview` puts in
+        // front of the entry doesn't.
         // A default, so the app's own `serveStatic` still wins.
         ...(productionPreset && !isCloudflarePreset(productionPreset) && {
           defaultConfig: { serveStatic: true },
