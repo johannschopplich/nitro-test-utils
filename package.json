@@ -1,7 +1,7 @@
 {
   "name": "nitro-test-utils",
   "type": "module",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "packageManager": "pnpm@12.16.1",
   "description": "Testing toolkit for Nitro full-stack servers",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
