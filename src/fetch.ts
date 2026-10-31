@@ -59,7 +59,7 @@ export function createNitroFetch(options?: FetchHooks): $Fetch {
  * @remarks
  * Applies the fetch defaults from {@link createNitroFetch}.
  */
-export async function $fetchRaw<T = any, R extends ResponseType = 'json'>(
+export async function $serverFetch<T = any, R extends ResponseType = 'json'>(
   request: FetchRequest,
   options?: FetchOptions<R>,
 ): Promise<NitroFetchResponse<MappedResponseType<R, T>>> {

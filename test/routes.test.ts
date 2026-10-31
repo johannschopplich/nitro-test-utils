@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src'
+import { $serverFetch, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src'
 
 describe('routes', async () => {
   await setup({
@@ -8,7 +8,7 @@ describe('routes', async () => {
   })
 
   it('returns health check response', async () => {
-    const { data } = await $fetchRaw('/api/health')
+    const { data } = await $serverFetch('/api/health')
     expect(data).toMatchInlineSnapshot(`
       {
         "ok": true,
@@ -17,7 +17,7 @@ describe('routes', async () => {
   })
 
   it('exposes environment variables and build flags', async () => {
-    const { data } = await $fetchRaw('/api/env')
+    const { data } = await $serverFetch('/api/env')
     expect(data).toMatchInlineSnapshot(`
       {
         "envName": "test",
@@ -31,7 +31,7 @@ describe('routes', async () => {
   })
 
   it('returns structured error response', async () => {
-    const { data, status } = await $fetchRaw('/api/error')
+    const { data, status } = await $serverFetch('/api/error')
     expect(status).toBe(422)
     expect(data).toMatchObject({
       error: true,
@@ -42,12 +42,12 @@ describe('routes', async () => {
   })
 
   it('returns 404 for non-existent route', async () => {
-    const { status } = await $fetchRaw('/api/non-existent')
+    const { status } = await $serverFetch('/api/non-existent')
     expect(status).toBe(404)
   })
 
   it('echoes POST body', async () => {
-    const { data, status } = await $fetchRaw('/api/echo', {
+    const { data, status } = await $serverFetch('/api/echo', {
       method: 'POST',
       body: { hello: 'world' },
     })

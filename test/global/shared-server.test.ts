@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, injectNitroFetch } from '../../src'
+import { $serverFetch, injectNitroFetch } from '../../src'
 
 describe('global setup: shared server', () => {
   it('exposes an in-process request dispatcher', async () => {
@@ -10,7 +10,7 @@ describe('global setup: shared server', () => {
   })
 
   it('reuses the same nitro server across test files', async () => {
-    const { data } = await $fetchRaw('/api/health')
+    const { data } = await $serverFetch('/api/health')
     expect(data).toEqual({ ok: true })
   })
 })

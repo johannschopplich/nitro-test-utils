@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, setup } from '../src'
+import { $serverFetch, setup } from '../src'
 
 describe('cloudflare bindings', async () => {
   await setup({
@@ -9,19 +9,19 @@ describe('cloudflare bindings', async () => {
   })
 
   it('has cloudflare bindings available', async () => {
-    const { data } = await $fetchRaw('/api/bindings')
+    const { data } = await $serverFetch('/api/bindings')
     expect(data?.hasEnv).toBe(true)
     expect(data?.bindings).toContain('DB')
     expect(data?.bindings).toContain('KV')
   })
 
   it('reads and writes to KV', async () => {
-    await $fetchRaw('/api/kv', {
+    await $serverFetch('/api/kv', {
       method: 'POST',
       body: { key: 'test-key', value: 'hello' },
     })
 
-    const { data } = await $fetchRaw('/api/kv?key=test-key')
+    const { data } = await $serverFetch('/api/kv?key=test-key')
     if (!data || 'error' in data) {
       throw new Error(`Expected success response, got ${JSON.stringify(data)}`)
     }
@@ -29,13 +29,13 @@ describe('cloudflare bindings', async () => {
   })
 
   it('reads and writes to D1', async () => {
-    const { data: insertResult } = await $fetchRaw('/api/d1-seed', {
+    const { data: insertResult } = await $serverFetch('/api/d1-seed', {
       method: 'POST',
       body: { name: 'item-1' },
     })
     expect(insertResult?.ok).toBe(true)
 
-    const { data: listResult } = await $fetchRaw('/api/d1-list')
+    const { data: listResult } = await $serverFetch('/api/d1-list')
     expect(listResult?.items).toContainEqual(
       expect.objectContaining({ name: 'item-1' }),
     )

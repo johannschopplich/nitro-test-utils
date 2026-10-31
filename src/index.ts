@@ -1,4 +1,4 @@
-export { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch } from './fetch'
+export { $serverFetch, createNitroFetch, createNitroSession, injectNitroFetch } from './fetch'
 export type { NitroFetchResponse, NitroSession } from './fetch'
 export { listRoutes } from './routes'
 export type { NitroRouteInfo } from './routes'
