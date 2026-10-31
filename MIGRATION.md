@@ -90,6 +90,12 @@ Production mode now builds with your preset and tests the build output:
 - Production mode accepts only `standard`, `node-server`, and `cloudflare-module`. Others, such as `node-middleware` or `cloudflare-pages`, are rejected.
 - Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` instead of `.output`.
 
+### Shell Variables Beat `.env.test`
+
+Nitro now loads `.env.test` after `.env` and `.env.local`, and a variable already set in the shell wins over all three files. Before, `.env.test` overrode the shell. To force a value from `.env.test`, unset the shell variable.
+
+Nitro's loader also expands `${VAR}` references and skips variables whose name starts with `_`.
+
 ### Expect Encoded Values in `createNitroSession` Cookies
 
 `session.cookies` now holds each value as the server encoded it, e.g. `a%3Db` instead of `a=b`, and the session sends it back unchanged, like a browser. Decode a value with `decodeURIComponent` before asserting on it.

@@ -1,6 +1,7 @@
 import type { NitroTestContext } from './context'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import process from 'node:process'
 import {
   build,
   copyPublicAssets,
@@ -68,7 +69,11 @@ export async function startServer(): Promise<NitroTestContext> {
     try {
       await prepare(ctx.nitro)
       await copyPublicAssets(ctx.nitro)
-      await prerender(ctx.nitro)
+      // Nitro's prerenderer loads `.env` and `.env.local` again, over the values from `.env.test`.
+      // Restored before it renders, and again in case it never initializes.
+      const restoreEnv = snapshotEnv()
+      ctx.nitro.hooks.hookOnce('prerender:init', restoreEnv)
+      await prerender(ctx.nitro).finally(restoreEnv)
       await build(ctx.nitro)
     }
     finally {
@@ -140,5 +145,17 @@ function snapshotFile(filePath: string): () => void {
       fs.rmSync(filePath, { force: true })
     else
       fs.writeFileSync(filePath, content)
+  }
+}
+
+function snapshotEnv(): () => void {
+  const env = { ...process.env }
+
+  return () => {
+    for (const key of Object.keys(process.env)) {
+      if (!(key in env))
+        delete process.env[key]
+    }
+    Object.assign(process.env, env)
   }
 }

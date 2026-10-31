@@ -1,7 +1,9 @@
 import type { ResolvedNitroTestConfig } from '../src/config'
 import * as path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import process from 'node:process'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { defineConfig } from '../src/config'
+import { createTempDir } from './utils'
 
 describe('defineConfig', async () => {
   describe('rerunOnSourceChanges', () => {
@@ -9,6 +11,22 @@ describe('defineConfig', async () => {
       const config = await defineConfig()
 
       expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
+    })
+
+    it('leaves .env out of the Vitest process', async () => {
+      const cwd = createTempDir({ '.env': 'NITRO_TEST_UTILS_LEAKED=true' })
+      const originalCwd = process.cwd()
+      process.chdir(cwd)
+      // Unstubbing removes the value in case `defineConfig` loads it.
+      vi.stubEnv('NITRO_TEST_UTILS_LEAKED', undefined)
+      onTestFinished(() => {
+        process.chdir(originalCwd)
+        vi.unstubAllEnvs()
+      })
+
+      await defineConfig()
+
+      expect(process.env.NITRO_TEST_UTILS_LEAKED).toBeUndefined()
     })
 
     it('skips source watching when disabled', async () => {

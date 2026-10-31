@@ -200,14 +200,14 @@ export default defineNitroConfig({
 
 This is [c12's environment-specific config](https://github.com/unjs/c12#environment-specific-configuration), the mechanism behind `$development` and `$production` blocks. The env name stays `test` in production mode, so `$production` blocks don't apply to test builds.
 
-For environment variables, add a `.env.test` file to the Nitro project root. Its variables are loaded into the test process before the app starts, in both modes:
+For environment variables, add a `.env.test` file to the Nitro project root. Nitro loads it after `.env` and `.env.local` into the test process before the app starts, in both modes. A variable already set in the shell wins over all three files:
 
 ```ini
 # .env.test
 NITRO_DATABASE_URL=postgres://localhost:5432/test
 ```
 
-Variables that a Vitest `globalSetup` file sets on `process.env` reach the app as well, e.g. the URL of a database container started for the test run.
+Variables that a Vitest `globalSetup` file sets on `process.env` reach the app as well, e.g. the URL of a database container started for the test run. Like shell variables, they win over the `.env` files.
 
 ### Detect the Test Environment
 

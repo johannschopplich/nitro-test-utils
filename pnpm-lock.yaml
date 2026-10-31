@@ -179,9 +179,6 @@ catalogs:
     cookie-es:
       specifier: ^3.1.1
       version: 3.1.1
-    dotenv:
-      specifier: ^18.0.9
-      version: 18.0.9
     eslint:
       specifier: ^10.14.0
       version: 10.14.0
@@ -229,9 +226,6 @@ importers:
       cookie-es:
         specifier: 'catalog:'
         version: 3.1.1
-      dotenv:
-        specifier: 'catalog:'
-        version: 18.0.9
       exsolve:
         specifier: 'catalog:'
         version: 1.2.0
@@ -1932,11 +1926,6 @@ packages:
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
-  dotenv@18.0.9:
-    resolution: {integrity: sha512-3fVOW4cB02R066PUSwn8O4TJyz9NckQl7F81blIbaq9jKBm2tSmOKky7ZHIXzGvkVPXCSn6jkpziBPZdGFs8Tw==}
-    engines: {node: '>=12'}
-    hasBin: true
 
   dts-resolver@3.0.0:
     resolution: {integrity: sha512-1T1f+z+4tl9XD+m+0HBgWoL/nm0bOIffyWaUuUSBlFg/86IWvfx+wjNaO/ybU0AJzG9/Mi5hBUgGV6zCmWEN7Q==}
@@ -4803,8 +4792,6 @@ snapshots:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
       domhandler: 5.0.3
-
-  dotenv@18.0.9: {}
 
   dts-resolver@3.0.0: {}
 

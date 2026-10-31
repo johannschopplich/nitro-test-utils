@@ -120,7 +120,9 @@ async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Prom
       : path.resolve(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')
   }
   else {
-    const options = await loadNitroOptions()
+    // Vitest workers inherit this process's environment, where a variable loaded here from `.env`
+    // would count as a shell variable and beat `.env.test`.
+    const options = await loadNitroOptions({}, { dotenv: false })
     const dir = typeof options.serverDir === 'string'
       ? options.serverDir
       : options.rootDir

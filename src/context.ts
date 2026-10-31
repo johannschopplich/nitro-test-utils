@@ -4,7 +4,6 @@ import type { NitroTestOptions } from './types'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
-import * as dotenv from 'dotenv'
 import { resolveModulePath } from 'exsolve'
 import { createNitro } from 'nitro/builder'
 
@@ -49,8 +48,6 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     ? undefined
     : resolveProductionPreset(userPreset)
 
-  setupDotenv({ rootDir })
-
   const nitro = await createNitro(
     {
       // Without a preset, development mode emulates the one from the Nitro config or `NITRO_PRESET`,
@@ -67,6 +64,10 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       }),
     },
     {
+      // Nitro's default files plus `.env.test`. Later files win; variables from the shell beat all of them.
+      dotenv: {
+        fileName: ['.env', '.env.local', '.env.test'],
+      },
       c12: {
         envName: 'test',
         // Nitro's own asset handler respects `baseURL`; the preview's fallback for `standard` doesn't.
@@ -179,31 +180,6 @@ function resolveWranglerBin(rootDir: string): string {
 
   const { bin } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { bin: Record<string, string> }
   return path.resolve(path.dirname(packageJsonPath), bin.wrangler!)
-}
-
-function setupDotenv({
-  rootDir = process.cwd(),
-  fileName = '.env.test',
-  override = true,
-}: {
-  rootDir?: string
-  fileName?: string
-  override?: boolean
-} = {}): Record<string, string> {
-  const environment: Record<string, string> = Object.create(null)
-  const dotenvFile = path.resolve(rootDir, fileName)
-
-  if (fs.existsSync(dotenvFile)) {
-    const parsed = dotenv.parse(fs.readFileSync(dotenvFile, 'utf8'))
-    Object.assign(environment, parsed)
-  }
-
-  for (const key in environment) {
-    if (override || process.env[key] === undefined)
-      process.env[key] = environment[key]
-  }
-
-  return environment
 }
 
 function resolveTestBuilder(): 'rollup' | 'rolldown' {

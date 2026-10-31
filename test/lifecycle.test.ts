@@ -40,6 +40,26 @@ describe('server lifecycle', () => {
     await expect(startServer()).rejects.toThrow()
   })
 
+  it('lets the shell environment override .env.test', async () => {
+    // Inside the repository, so the build resolves `nitro` from its `node_modules`.
+    const envRootDir = fs.mkdtempSync(path.join(import.meta.dirname, '.tmp-'))
+    onTestFinished(() => fs.rmSync(envRootDir, { recursive: true, force: true }))
+    fs.writeFileSync(path.join(envRootDir, 'nitro.config.ts'), 'export default { serverDir: \'.\' }')
+    fs.writeFileSync(path.join(envRootDir, '.env.test'), 'NITRO_TEST_UTILS_SOURCE=dotenv')
+    fs.mkdirSync(path.join(envRootDir, 'routes'))
+    fs.writeFileSync(path.join(envRootDir, 'routes/index.ts'), 'export default () => ({ source: process.env.NITRO_TEST_UTILS_SOURCE })')
+    process.env.NITRO_TEST_UTILS_SOURCE = 'shell'
+    onTestFinished(() => {
+      delete process.env.NITRO_TEST_UTILS_SOURCE
+    })
+
+    await createTestContext({ rootDir: envRootDir, mode: 'production' })
+    await startServer()
+
+    const { data } = await $serverFetch('/')
+    expect(data).toEqual({ source: 'shell' })
+  })
+
   it('serves node-server again on a second start in the same worker', async () => {
     for (let index = 0; index < 2; index++) {
       await createTestContext({ rootDir, mode: 'production', preset: 'node-server' })

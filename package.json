@@ -53,7 +53,6 @@
   },
   "dependencies": {
     "cookie-es": "catalog:",
-    "dotenv": "catalog:",
     "exsolve": "catalog:",
     "get-port-please": "catalog:",
     "httpxy": "catalog:",
