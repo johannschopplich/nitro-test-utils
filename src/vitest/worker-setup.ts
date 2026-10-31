@@ -15,14 +15,12 @@ declare global {
  * @remarks
  * Nitro initialization lives here (not in `global-setup.ts`) because `isolate: false`
  * keeps the app instance cached as module-level state across test files, which is what
- * lets tests reach the in-process dispatcher.
+ * lets tests reach the app's dispatcher.
  */
 if (!globalThis.__nitroTestInitialized__) {
   const nitroTestConfig = inject('nitroTestConfig')
 
   if (nitroTestConfig?.global) {
-    globalThis.__nitroTestInitialized__ = true
-
     // A previous file inside the same worker may already have created a per-suite context.
     // Only create a global one when nothing else owns the worker's context yet.
     if (!injectTestContext()) {
@@ -32,5 +30,8 @@ if (!globalThis.__nitroTestInitialized__) {
       })
       await startServer()
     }
+
+    // Set only after a successful start, so a rejected config fails every file with its own error.
+    globalThis.__nitroTestInitialized__ = true
   }
 }

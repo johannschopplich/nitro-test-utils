@@ -33,7 +33,17 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), '.output/server/index.mjs'),
+        path.resolve(process.cwd(), 'node_modules/.nitro/output/standard/0/server/index.mjs'),
+      )
+    })
+
+    it('watches the production build output of the node-server preset', async () => {
+      const config = await defineConfig({}, {
+        global: { mode: 'production', preset: 'node-server' },
+      })
+
+      expect(config.test?.forceRerunTriggers).toContain(
+        path.resolve(process.cwd(), 'node_modules/.nitro/output/node-server/0/server/index.mjs'),
       )
     })
 
@@ -60,10 +70,10 @@ describe('defineConfig', async () => {
 
     it('passes through custom options', async () => {
       const config = await defineConfig({}, {
-        global: { rootDir: '/custom', mode: 'production', preset: 'node-middleware' },
+        global: { rootDir: '/custom', mode: 'production', preset: 'node-server' },
       })
 
-      expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-middleware' })
+      expect((config.test as { nitro: ResolvedNitroTestConfig })?.nitro?.global).toEqual({ rootDir: '/custom', mode: 'production', preset: 'node-server' })
     })
 
     it('configures worker-setup as a setupFile when global is enabled', async () => {

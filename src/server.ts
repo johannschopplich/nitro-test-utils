@@ -1,4 +1,5 @@
 import type { NitroTestContext } from './context'
+import * as fs from 'node:fs'
 import * as path from 'node:path'
 import {
   build,
@@ -6,8 +7,9 @@ import {
   createDevServer,
   prepare,
   prerender,
+  startPreview,
 } from 'nitro/builder'
-import { injectTestContext } from './context'
+import { injectTestContext, isCloudflarePreset, NITRO_BUILD_DIR } from './context'
 
 type NitroFetch = (request: Request) => Response | Promise<Response>
 
@@ -16,7 +18,12 @@ const nitroGlobal = globalThis as typeof globalThis & {
 }
 
 /**
- * Starts the Nitro app in-process and registers its request dispatcher for `serverFetch` from `nitro`.
+ * Starts the Nitro app and registers its request dispatcher for `serverFetch` from `nitro`.
+ *
+ * @remarks
+ * Development mode dispatches through the preset's dev runner. Production mode builds the app
+ * and serves the output through Nitro's `startPreview`: `standard` and `node-server` load the
+ * server entry in-process, Cloudflare presets spawn `wrangler` and proxy to it.
  */
 export async function startServer(): Promise<NitroTestContext> {
   const ctx = injectTestContext()
@@ -46,26 +53,34 @@ export async function startServer(): Promise<NitroTestContext> {
     fetch = ctx.nitro.fetch.bind(ctx.nitro)
   }
   else {
-    await prepare(ctx.nitro)
-    await copyPublicAssets(ctx.nitro)
-    await prerender(ctx.nitro)
-    await build(ctx.nitro)
+    const { rootDir } = ctx.options
+    const outputDir = ctx.nitro.options.output.dir
+    const isCloudflare = isCloudflarePreset(ctx.nitro.options.preset)
 
-    // Cache-bust the dynamic import so each `startServer()` call re-runs the entry's
-    // top-level `useNitroApp()`. Without this, Node's ESM cache returns a stale module
-    // and `globalThis.__nitro__.default` still points at the previously imported app.
-    const entryPath = path.resolve(ctx.nitro.options.output.dir, 'server', 'index.mjs')
-    await import(`${entryPath}?t=${Date.now()}`)
+    // A production build repoints Nitro's last-build pointer and, for Cloudflare, Wrangler's
+    // deploy redirect at the test build; `nitro preview` or `wrangler deploy` would pick it up.
+    // `wrangler` reads the redirect while it runs, so it's restored on stop.
+    const restoreLastBuild = snapshotFile(path.join(rootDir, NITRO_BUILD_DIR, 'last-build.json'))
+    if (isCloudflare)
+      ctx.restoreWranglerRedirect = snapshotFile(path.join(rootDir, '.wrangler/deploy/config.json'))
 
-    const runtimeApp = nitroGlobal.__nitro__?.default
-    if (!runtimeApp?.fetch) {
-      throw new Error(
-        'Nitro app was not registered on `globalThis.__nitro__` after importing the build entry. '
-        + 'Only presets that call `useNitroApp()` at module init are supported in production mode.',
-      )
+    try {
+      await prepare(ctx.nitro)
+      await copyPublicAssets(ctx.nitro)
+      await prerender(ctx.nitro)
+      await build(ctx.nitro)
+    }
+    finally {
+      restoreLastBuild()
     }
 
-    fetch = runtimeApp.fetch.bind(runtimeApp)
+    ctx.preview = await startPreview({
+      // The preview loads `.env.preview`, `.env.production`, and `.env` from this directory.
+      // In-process presets get the output directory, which has none of them; `wrangler` needs the root.
+      rootDir: isCloudflare ? rootDir : outputDir,
+      outputDir,
+    })
+    fetch = ctx.preview.fetch
   }
 
   nitroGlobal.__nitro__ = {
@@ -75,18 +90,19 @@ export async function startServer(): Promise<NitroTestContext> {
 
   if (ctx.isGlobal) {
     // eslint-disable-next-line no-console
-    console.log('[nitro] Test app ready (in-process dispatch)')
+    console.log('[nitro] Test app ready')
   }
 
   return ctx
 }
 
 /**
- * Releases the in-process Nitro app and unregisters its `serverFetch` dispatcher.
+ * Releases the Nitro app and unregisters its `serverFetch` dispatcher.
  *
  * @remarks
- * Dev mode cascades through `nitro.close()` to the worker manager and file watchers.
- * Production has no close path and leaks until the test process exits.
+ * Development mode cascades through `nitro.close()` to the worker runner and file watchers.
+ * Production mode stops a spawned preview process; an in-process entry stays loaded
+ * until the test process exits.
  */
 export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()
@@ -94,6 +110,29 @@ export async function stopServer(): Promise<void> {
   if (nitroGlobal.__nitro__)
     delete nitroGlobal.__nitro__.default
 
-  if (ctx?.nitro)
-    await ctx.nitro.close()
+  if (!ctx)
+    return
+
+  await ctx.preview?.close()
+  ctx.preview = undefined
+  ctx.restoreWranglerRedirect?.()
+  ctx.restoreWranglerRedirect = undefined
+  await ctx.nitro.close()
+}
+
+/**
+ * Captures a file's current content and returns a function that writes it back,
+ * or removes the file when it didn't exist.
+ */
+function snapshotFile(filePath: string): () => void {
+  const content = fs.existsSync(filePath)
+    ? fs.readFileSync(filePath)
+    : undefined
+
+  return () => {
+    if (content === undefined)
+      fs.rmSync(filePath, { force: true })
+    else
+      fs.writeFileSync(filePath, content)
+  }
 }

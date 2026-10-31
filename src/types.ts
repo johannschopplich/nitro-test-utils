@@ -10,10 +10,7 @@ export interface NitroTestOptions {
   rootDir?: string
 
   /**
-   * Whether to build the Nitro server in development mode or for production.
-   *
-   * @remarks
-   * The Nitro build preset is automatically set based on this option. If this is set to `development`, the preset `nitro-dev` will be used. Otherwise, Nitro is built with the `node-middleware` preset.
+   * Whether to run the Nitro app in development mode or to test its production build.
    *
    * @default 'development'
    */
@@ -22,14 +19,15 @@ export interface NitroTestOptions {
   /**
    * Nitro preset to use for the test server.
    *
-   * In development mode, Nitro automatically resolves deployment presets
-   * (e.g. `cloudflare-module`) to their dev counterpart (e.g. `cloudflare-dev`),
-   * which provides local bindings emulation via `getPlatformProxy()`.
+   * In development mode, Nitro resolves deployment presets (e.g. `cloudflare-module`) to
+   * their dev counterpart (e.g. `cloudflare-dev`), which runs the app in the miniflare
+   * runner with local bindings.
    *
-   * In production mode, only Node.js-compatible presets are supported.
-   * Attempting to use a non-Node preset in production mode will throw an error.
+   * In production mode, the app is built with this preset and served by Nitro's preview:
+   * `standard` and `node-server` in-process, Cloudflare presets through `wrangler` and only
+   * per test suite, not in global mode. Other presets are rejected.
    *
-   * @default Determined by `mode`: `'nitro-dev'` for development, `'node-middleware'` for production.
+   * @default Determined by `mode`: `'nitro-dev'` for development, `'standard'` for production.
    */
   preset?: string
 }

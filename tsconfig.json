@@ -18,6 +18,7 @@
     "test/basic-app",
     "test/cloudflare-app",
     "test/production-app",
+    "test/static-app",
     "test/vite-app"
   ]
 }

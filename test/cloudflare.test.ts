@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { $serverFetch, setup } from '../src'
@@ -16,16 +17,17 @@ describe('cloudflare bindings', async () => {
   })
 
   it('reads and writes to KV', async () => {
+    const value = randomUUID()
     await $serverFetch('/api/kv', {
       method: 'POST',
-      body: { key: 'test-key', value: 'hello' },
+      body: { key: 'test-key', value },
     })
 
     const { data } = await $serverFetch('/api/kv?key=test-key')
     if (!data || 'error' in data) {
       throw new Error(`Expected success response, got ${JSON.stringify(data)}`)
     }
-    expect(data.value).toBe('hello')
+    expect(data.value).toBe(value)
   })
 
   it('reads and writes to D1', async () => {

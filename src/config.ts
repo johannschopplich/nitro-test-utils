@@ -5,7 +5,7 @@ import process from 'node:process'
 import { loadOptions as loadNitroOptions } from 'nitro/builder'
 import { mergeConfig } from 'vite'
 import { configDefaults, defineConfig as defineVitestConfig } from 'vitest/config'
-import { NITRO_BUILD_DIR, NITRO_OUTPUT_DIR } from './context'
+import { NITRO_BUILD_DIR, resolveOutputDir, resolvePreset } from './context'
 
 export interface NitroTestConfig {
   /**
@@ -44,7 +44,7 @@ export async function defineConfig(userConfig: UserConfig = {}, testConfig: Nitr
 
   const userConfigOverrides = defineVitestConfig({
     test: {
-      // With `isolate: false` and `maxWorkers: 1`, the in-process Nitro app initialized by
+      // With `isolate: false` and `maxWorkers: 1`, the Nitro app initialized by
       // `worker-setup` persists across test files in the same worker, so we pay the build
       // cost exactly once per run.
       isolate: false,
@@ -114,8 +114,9 @@ async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Prom
     // Vitest matches `forceRerunTriggers` against absolute paths;
     // a relative pattern never matches.
     const rootDir = config.global.rootDir || process.cwd()
+    // The global app is the worker's first production build.
     watchPattern = config.global.mode === 'production'
-      ? path.resolve(rootDir, NITRO_OUTPUT_DIR, 'server', 'index.mjs')
+      ? path.join(resolveOutputDir(rootDir, resolvePreset(config.global.mode, config.global.preset), 0), 'server', 'index.mjs')
       : path.resolve(rootDir, NITRO_BUILD_DIR, 'dev', 'index.mjs')
   }
   else {

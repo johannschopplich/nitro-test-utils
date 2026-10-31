@@ -1,3 +1,4 @@
+import type { PreviewInstance } from 'nitro/builder'
 import type { Nitro } from 'nitro/types'
 import type { NitroTestOptions } from './types'
 import * as fs from 'node:fs'
@@ -11,19 +12,16 @@ export interface NitroTestContext {
   isGlobal: boolean
   isDev: boolean
   nitro: Nitro
+  preview?: PreviewInstance
+  /** Restores the Wrangler deploy redirect that a Cloudflare production build rewrote. */
+  restoreWranglerRedirect?: () => void
 }
 
-export const NITRO_OUTPUT_DIR = '.output'
+// Nitro's well-known directory, where it writes `last-build.json` whatever the `buildDir`.
 export const NITRO_BUILD_DIR = 'node_modules/.nitro'
 
-// Only presets that dispatch via `useNitroApp()` at module init
-// (without starting their own HTTP listener).
-const NODE_COMPATIBLE_PRESETS = new Set([
-  'nitro-dev',
-  'node',
-  'node-middleware',
-  'bun',
-])
+// Nitro's preview finds a fetch handler in these entries; Cloudflare presets run in `wrangler` instead.
+const IN_PROCESS_PRODUCTION_PRESETS = new Set(['standard', 'node-server'])
 
 // Store the active context on `globalThis` so it survives across multiple module copies.
 // When this project's own tests import from source while Vitest loads the built worker
@@ -31,6 +29,8 @@ const NODE_COMPATIBLE_PRESETS = new Set([
 declare global {
   // eslint-disable-next-line vars-on-top
   var __nitroTestContext__: NitroTestContext | undefined
+  // eslint-disable-next-line vars-on-top
+  var __nitroTestBuildCount__: number | undefined
 }
 
 export async function createTestContext(options: NitroTestOptions & { isGlobal?: boolean }): Promise<NitroTestContext> {
@@ -41,17 +41,44 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     isGlobal = false,
   } = options
   const isDev = mode === 'development'
-  const preset = userPreset ?? (isDev ? 'nitro-dev' : 'node-middleware')
-
-  if (!isDev && userPreset && !NODE_COMPATIBLE_PRESETS.has(userPreset)) {
-    throw new Error(
-      `Production mode is not supported for the "${userPreset}" preset. `
-      + 'Only Node.js-compatible presets can be used in production mode. '
-      + 'Use development mode instead, which provides local bindings emulation.',
-    )
-  }
+  const preset = resolvePreset(mode, userPreset)
 
   setupDotenv({ rootDir })
+
+  const nitro = await createNitro(
+    {
+      preset,
+      dev: isDev,
+      rootDir,
+      builder: resolveTestBuilder(),
+      buildDir: NITRO_BUILD_DIR,
+      ...(!isDev && {
+        output: {
+          dir: resolveOutputDir(rootDir, preset, nextBuildIndex()),
+        },
+      }),
+    },
+    {
+      c12: {
+        envName: 'test',
+        // Nitro's own asset handler respects `baseURL`; the preview's fallback for `standard` doesn't.
+        // A default, so the app's own `serveStatic` still wins.
+        ...(!isDev && !isCloudflarePreset(preset) && {
+          defaultConfig: { serveStatic: true },
+        }),
+      },
+    },
+  )
+
+  if (!isDev) {
+    try {
+      assertProductionPreset(nitro.options.preset, isGlobal)
+    }
+    catch (error) {
+      await nitro.close()
+      throw error
+    }
+  }
 
   const ctx: NitroTestContext = {
     options: {
@@ -61,27 +88,39 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     },
     isGlobal,
     isDev,
-    nitro: await createNitro(
-      {
-        preset,
-        dev: isDev,
-        rootDir,
-        builder: resolveTestBuilder(),
-        buildDir: NITRO_BUILD_DIR,
-        serveStatic: !isDev,
-        output: {
-          dir: path.resolve(rootDir, NITRO_OUTPUT_DIR),
-        },
-      },
-      {
-        c12: { envName: 'test' },
-      },
-    ),
+    nitro,
   }
 
   provideTestContext(ctx)
 
   return ctx
+}
+
+export function resolvePreset(mode: NitroTestOptions['mode'], preset?: string): string {
+  return preset ?? (mode === 'production'
+    ? 'standard'
+    : 'nitro-dev')
+}
+
+/**
+ * Resolves a separate output directory for each production build in the worker.
+ *
+ * @remarks
+ * Node caches ES modules by path for the lifetime of the worker. A build into a directory an
+ * earlier build already loaded from would serve that build's modules and app state.
+ */
+export function resolveOutputDir(rootDir: string, preset: string, buildIndex: number): string {
+  return path.resolve(rootDir, NITRO_BUILD_DIR, 'output', preset, String(buildIndex))
+}
+
+/**
+ * Mirrors the check Nitro's `startPreview` uses to run a build in `wrangler`.
+ *
+ * @remarks
+ * Case-insensitive, since a raw preset name may be camel case before Nitro resolves it.
+ */
+export function isCloudflarePreset(preset: string): boolean {
+  return preset.toLowerCase().includes('cloudflare')
 }
 
 export function injectTestContext(): NitroTestContext | undefined {
@@ -94,6 +133,30 @@ export function provideTestContext(context: NitroTestContext): void {
 
 export function clearTestContext(): void {
   globalThis.__nitroTestContext__ = undefined
+}
+
+function nextBuildIndex(): number {
+  const buildIndex = globalThis.__nitroTestBuildCount__ ?? 0
+  globalThis.__nitroTestBuildCount__ = buildIndex + 1
+  return buildIndex
+}
+
+function assertProductionPreset(preset: string, isGlobal: boolean): void {
+  if (isCloudflarePreset(preset)) {
+    if (isGlobal) {
+      throw new Error(
+        'Global production mode does not support Cloudflare presets, since nothing stops the '
+        + 'spawned `wrangler` process when Vitest ends its worker. Call `setup()` per test suite instead.',
+      )
+    }
+    return
+  }
+
+  if (!IN_PROCESS_PRODUCTION_PRESETS.has(preset)) {
+    throw new Error(
+      `Production mode supports the "standard" and "node-server" presets and Cloudflare presets, not "${preset}".`,
+    )
+  }
 }
 
 function setupDotenv({
