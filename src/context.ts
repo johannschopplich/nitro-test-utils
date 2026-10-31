@@ -55,7 +55,6 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
       preset: productionPreset ?? userPreset,
       dev: isDev,
       rootDir,
-      builder: resolveTestBuilder(),
       buildDir: NITRO_BUILD_DIR,
       ...(productionPreset && {
         output: {
@@ -180,12 +179,4 @@ function resolveWranglerBin(rootDir: string): string {
 
   const { bin } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { bin: Record<string, string> }
   return path.resolve(path.dirname(packageJsonPath), bin.wrangler!)
-}
-
-function resolveTestBuilder(): 'rollup' | 'rolldown' {
-  const builder = process.env.NITRO_BUILDER
-  if (builder === 'rollup' || builder === 'rolldown') {
-    return builder
-  }
-  return 'rolldown'
 }

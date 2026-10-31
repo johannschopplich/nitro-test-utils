@@ -69,9 +69,9 @@ it('responds successfully', async () => {
 })
 ```
 
-In watch mode, the app stays up between runs. Whenever Nitro rebuilds, the tests rerun.
+In watch mode, the app stays up between runs. Whenever Nitro rebuilds, the tests rerun. This needs `rolldown` installed in the Nitro project, or a `builder` in your Nitro config: without either, Nitro runs the dev server unbundled, and changes don't rerun the tests.
 
-Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup: Nitro Test Utils loads `nitro.config.ts` and builds a standalone Nitro app from it. If your `vite.config.ts` enables `resolve.tsconfigPaths`, as `create-nitro-app` does, mirror it in the first argument so `~/...` imports resolve in tests:
+Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup as long as their Nitro options live in `nitro.config.ts`: Nitro Test Utils doesn't read the options passed to `nitro()`. Production mode builds the app with Vite, so your Vite plugins apply. Development mode runs the Nitro dev server, which doesn't run Vite, so Vite plugins are skipped there and Nitro warns about it. If your `vite.config.ts` enables `resolve.tsconfigPaths`, as `create-nitro-app` does, mirror it in the first argument so `~/...` imports resolve in tests:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
