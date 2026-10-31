@@ -373,7 +373,7 @@ Paths resolve against `http://nitro.test`. The `.test` TLD never resolves in DNS
 
 ### `createNitroSession`
 
-Creates an ofetch instance with a cookie jar. Applies the defaults of `$serverFetch`.
+Creates an ofetch instance with a cookie jar. Applies the defaults of `$serverFetch`. `cookies` holds each value as the server encoded it and drops a cookie once the server expires it.
 
 ```ts
 function createNitroSession(): {

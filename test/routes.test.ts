@@ -139,5 +139,13 @@ describe('routes', async () => {
 
       expect(session.cookies.get('visited')).toBe('yes')
     })
+
+    it('sends a cookie back as the server encoded it', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/preferences', { method: 'POST' })
+
+      const data = await session.$fetch('/api/cookie-header')
+      expect(data).toEqual({ cookie: 'filter=a%3Db%3B%20c' })
+    })
   })
 })

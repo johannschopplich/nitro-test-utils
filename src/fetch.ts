@@ -69,7 +69,8 @@ export function createNitroSession(): NitroSession {
     },
     onResponse({ response }) {
       for (const header of response.headers.getSetCookie()) {
-        const cookie = parseSetCookie(header)
+        // Kept encoded, since a browser sends a cookie back exactly as the server set it.
+        const cookie = parseSetCookie(header, { decode: false })
         if (!cookie?.name)
           continue
 
