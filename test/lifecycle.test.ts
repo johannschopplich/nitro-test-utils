@@ -1,20 +1,22 @@
+import type { FileMap } from './utils'
 import * as fs from 'node:fs'
-import * as os from 'node:os'
 import * as path from 'node:path'
 import { serverFetch } from 'nitro'
-import { afterEach, describe, expect, it, onTestFinished } from 'vitest'
+import { getBuildInfo } from 'nitro/builder'
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { $serverFetch } from '../src'
 import { clearTestContext, createTestContext, injectTestContext } from '../src/context'
 import { startServer, stopServer } from '../src/server'
+import { createTempDir } from './utils'
 
 const rootDir = path.resolve(import.meta.dirname, 'production-app')
 const cloudflareRootDir = path.resolve(import.meta.dirname, 'cloudflare-app')
-// Counted by the `close-counter` plugin of the production app.
-const closeCounter = globalThis as typeof globalThis & { __closedNitroApps__?: number }
+const testGlobal = globalThis as typeof globalThis & { __closedNitroApps__?: number }
 
 afterEach(async () => {
   await stopServer()
   clearTestContext()
+  vi.unstubAllEnvs()
 })
 
 describe('server lifecycle', () => {
@@ -31,11 +33,7 @@ describe('server lifecycle', () => {
   })
 
   it('rejects when the dev build fails', async () => {
-    const brokenRootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nitro-test-utils-'))
-    onTestFinished(() => fs.rmSync(brokenRootDir, { recursive: true, force: true }))
-    fs.writeFileSync(path.join(brokenRootDir, 'nitro.config.ts'), 'export default { serverDir: \'.\' }')
-    fs.mkdirSync(path.join(brokenRootDir, 'routes'))
-    fs.writeFileSync(path.join(brokenRootDir, 'routes/index.ts'), 'export default (')
+    const brokenRootDir = createTempApp({ 'routes/index.ts': 'export default (' })
 
     await createTestContext({ rootDir: brokenRootDir })
 
@@ -43,17 +41,11 @@ describe('server lifecycle', () => {
   })
 
   it('lets the shell environment override .env.test', async () => {
-    // Inside the repository, so the build resolves `nitro` from its `node_modules`.
-    const envRootDir = fs.mkdtempSync(path.join(import.meta.dirname, '.tmp-'))
-    onTestFinished(() => fs.rmSync(envRootDir, { recursive: true, force: true }))
-    fs.writeFileSync(path.join(envRootDir, 'nitro.config.ts'), 'export default { serverDir: \'.\' }')
-    fs.writeFileSync(path.join(envRootDir, '.env.test'), 'NITRO_TEST_UTILS_SOURCE=dotenv')
-    fs.mkdirSync(path.join(envRootDir, 'routes'))
-    fs.writeFileSync(path.join(envRootDir, 'routes/index.ts'), 'export default () => ({ source: process.env.NITRO_TEST_UTILS_SOURCE })')
-    process.env.NITRO_TEST_UTILS_SOURCE = 'shell'
-    onTestFinished(() => {
-      delete process.env.NITRO_TEST_UTILS_SOURCE
+    const envRootDir = createTempApp({
+      '.env.test': 'NITRO_TEST_UTILS_SOURCE=dotenv',
+      'routes/index.ts': 'export default () => ({ source: process.env.NITRO_TEST_UTILS_SOURCE })',
     })
+    vi.stubEnv('NITRO_TEST_UTILS_SOURCE', 'shell')
 
     await createTestContext({ rootDir: envRootDir, mode: 'production' })
     await startServer()
@@ -62,13 +54,33 @@ describe('server lifecycle', () => {
     expect(data).toEqual({ source: 'shell' })
   })
 
-  it('leaves the dev build of a running nitro dev untouched', async () => {
-    // Inside the repository, so the build resolves `nitro` from its `node_modules`.
-    const appRootDir = fs.mkdtempSync(path.join(import.meta.dirname, '.tmp-'))
-    onTestFinished(() => fs.rmSync(appRootDir, { recursive: true, force: true }))
-    fs.writeFileSync(path.join(appRootDir, 'nitro.config.ts'), 'export default { serverDir: \'.\' }')
-    fs.mkdirSync(path.join(appRootDir, 'routes'))
-    fs.writeFileSync(path.join(appRootDir, 'routes/index.ts'), 'export default () => \'ok\'')
+  it('keeps .env.test over .env in a prerendered route', async () => {
+    const envRootDir = createTempApp({
+      'nitro.config.ts': 'export default { serverDir: \'.\', prerender: { routes: [\'/static\'] } }',
+      '.env': 'NITRO_TEST_UTILS_FILE=.env',
+      '.env.test': 'NITRO_TEST_UTILS_FILE=.env.test',
+      'routes/static.ts': 'export default () => ({ file: process.env.NITRO_TEST_UTILS_FILE })',
+    })
+    // Unstubbing removes the value Nitro loads from the `.env` files.
+    vi.stubEnv('NITRO_TEST_UTILS_FILE', undefined)
+
+    await createTestContext({ rootDir: envRootDir, mode: 'production' })
+    await startServer()
+
+    const { data } = await $serverFetch('/static', { responseType: 'json' })
+    expect(data).toEqual({ file: '.env.test' })
+  })
+
+  it('runs development mode with the preset option over the Nitro config\'s', async () => {
+    await createTestContext({ rootDir: cloudflareRootDir, preset: 'nitro-dev' })
+    await startServer()
+
+    const { data } = await $serverFetch('/api/preset')
+    expect(data).toEqual({ preset: 'nitro-dev' })
+  })
+
+  it('leaves the dev bundle of a running nitro dev untouched', async () => {
+    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
     const nitroDevEntry = path.join(appRootDir, 'node_modules/.nitro/dev/index.mjs')
     fs.mkdirSync(path.dirname(nitroDevEntry), { recursive: true })
     fs.writeFileSync(nitroDevEntry, '// nitro dev')
@@ -82,11 +94,22 @@ describe('server lifecycle', () => {
   it('runs the app\'s close hooks when an in-process production build stops', async () => {
     await createTestContext({ rootDir, mode: 'production' })
     await startServer()
-    const closedApps = closeCounter.__closedNitroApps__ ?? 0
+    const closedAppCount = testGlobal.__closedNitroApps__ ?? 0
 
     await stopServer()
 
-    expect(closeCounter.__closedNitroApps__).toBe(closedApps + 1)
+    expect(testGlobal.__closedNitroApps__).toBe(closedAppCount + 1)
+  })
+
+  it('stops an in-process production build whose close hook throws', async () => {
+    await createTestContext({ rootDir, mode: 'production' })
+    await startServer()
+    vi.stubEnv('NITRO_TEST_UTILS_FAIL_CLOSE', 'true')
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    onTestFinished(() => consoleError.mockRestore())
+
+    await expect(stopServer()).resolves.toBeUndefined()
+    expect(consoleError).toHaveBeenCalledWith('[nitro] Error while calling `close` hooks:', expect.any(Error))
   })
 
   it('serves node-server again on a second start in the same worker', async () => {
@@ -109,26 +132,27 @@ describe('server lifecycle', () => {
     expect(data).toEqual({ productionOnly: null })
   })
 
-  it.each([
-    { label: 'content', content: '{"outputDir":"../../.output"}' },
-    { label: 'absence', content: undefined },
-  ])('restores the last-build pointer\'s $label after a production build', async ({ content }) => {
+  it('restores the last-build pointer after a production build', async () => {
     const lastBuildPath = path.join(rootDir, 'node_modules/.nitro/last-build.json')
+    const content = '{"outputDir":"../../.output"}'
     onTestFinished(() => fs.rmSync(lastBuildPath, { force: true }))
-
-    fs.rmSync(lastBuildPath, { force: true })
-    if (content !== undefined) {
-      fs.mkdirSync(path.dirname(lastBuildPath), { recursive: true })
-      fs.writeFileSync(lastBuildPath, content)
-    }
+    fs.mkdirSync(path.dirname(lastBuildPath), { recursive: true })
+    fs.writeFileSync(lastBuildPath, content)
 
     await createTestContext({ rootDir, mode: 'production' })
     await startServer()
 
-    if (content === undefined)
-      expect(fs.existsSync(lastBuildPath)).toBe(false)
-    else
-      expect(fs.readFileSync(lastBuildPath, 'utf8')).toBe(content)
+    expect(fs.readFileSync(lastBuildPath, 'utf8')).toBe(content)
+  })
+
+  it('keeps nitro preview off the test build', async () => {
+    fs.rmSync(path.join(rootDir, 'node_modules/.nitro/last-build.json'), { force: true })
+
+    await createTestContext({ rootDir, mode: 'production' })
+    await startServer()
+
+    const { outputDir } = await getBuildInfo({ rootDir })
+    expect(outputDir).not.toBe(path.resolve(injectTestContext()!.nitro.options.output.dir))
   })
 
   it('stops wrangler before stopServer resolves', async () => {
@@ -190,3 +214,7 @@ describe('createTestContext', () => {
       .toThrow('Global production mode does not support Cloudflare presets')
   })
 })
+
+function createTempApp(files: FileMap): string {
+  return createTempDir({ 'nitro.config.ts': 'export default { serverDir: \'.\' }', ...files })
+}
