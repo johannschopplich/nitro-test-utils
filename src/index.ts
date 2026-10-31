@@ -1,4 +1,7 @@
-export { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from './e2e'
-export type { NitroFetchResponse, NitroRouteInfo, NitroSession } from './e2e'
+export { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch } from './fetch'
+export type { NitroFetchResponse, NitroSession } from './fetch'
+export { listRoutes } from './routes'
+export type { NitroRouteInfo } from './routes'
+export { setup } from './setup'
 
 export * from './types'

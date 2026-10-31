@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw } from '../../src/e2e'
+import { $fetchRaw } from '../../src'
 
 describe('global setup: dynamic env vars', () => {
   it('propagates process.env.NITRO_* set in a user globalSetup into runtime config', async () => {

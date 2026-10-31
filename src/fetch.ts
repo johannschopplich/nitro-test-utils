@@ -1,10 +1,7 @@
-import type { Nitro, NitroEventHandler } from 'nitro/types'
 import type { $Fetch, FetchHooks, FetchOptions, FetchRequest, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
-import type { NitroTestOptions } from './types'
 import { parseSetCookie } from 'cookie-es'
 import { ofetch } from 'ofetch'
-import { clearTestContext, createTestContext, injectTestContext } from './context'
-import { startServer, stopServer } from './server'
+import { injectTestContext } from './context'
 
 export interface NitroSession {
   $fetch: $Fetch
@@ -15,13 +12,6 @@ export interface NitroSession {
 export interface NitroFetchResponse<T> extends FetchResponse<T> {
   /** Alias for `response._data`. */
   data?: T
-}
-
-export interface NitroRouteInfo {
-  /** HTTP pathname pattern (e.g. `/api/users`, `/api/users/:id`). */
-  route: string
-  /** HTTP method, or `undefined` when the handler matches any method. */
-  method?: string
 }
 
 const SYNTHETIC_BASE_URL = 'http://nitro.test'
@@ -145,79 +135,4 @@ export function createNitroSession(): NitroSession {
     cookies,
     clearCookies: () => cookies.clear(),
   }
-}
-
-/**
- * Lists every route registered with the active Nitro test app,
- * excluding internal routes prefixed with `/_` or `/api/_`.
- *
- * @throws if called before `setup()` has started the app.
- */
-export function listRoutes(): NitroRouteInfo[] {
-  const ctx = injectTestContext()
-
-  if (!ctx?.nitro) {
-    throw new Error('Nitro test app is not running. Did you call `setup()`?')
-  }
-
-  return collectRoutes(ctx.nitro)
-}
-
-/**
- * @internal
- */
-export function collectRoutes(nitro: Nitro): NitroRouteInfo[] {
-  const sources: NitroEventHandler[] = [
-    ...nitro.scannedHandlers,
-    ...nitro.options.handlers,
-  ]
-
-  const seen = new Set<string>()
-  const routes: NitroRouteInfo[] = []
-
-  for (const { route, method } of sources) {
-    if (!route)
-      continue
-
-    if (route.startsWith('/_') || route.startsWith('/api/_'))
-      continue
-
-    const key = `${method ?? '*'} ${route}`
-    if (seen.has(key))
-      continue
-
-    seen.add(key)
-    routes.push({ route, method: method || undefined })
-  }
-
-  return routes
-}
-
-/**
- * @example
- * import { resolve } from 'node:path'
- * import { setup } from 'nitro-test-utils'
- *
- * await setup({
- *  rootDir: resolve(import.meta.dirname, 'fixture'),
- * })
- */
-export async function setup(options: NitroTestOptions = {}): Promise<void> {
-  const vitest = await import('vitest')
-
-  if (injectTestContext()?.isGlobal) {
-    throw new Error('Nitro app is already running in global setup.')
-  }
-
-  await createTestContext(options)
-
-  vitest.beforeAll(async () => {
-    await startServer()
-  })
-
-  vitest.afterAll(async () => {
-    await stopServer()
-
-    clearTestContext()
-  })
 }

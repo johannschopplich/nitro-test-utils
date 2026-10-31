@@ -29,10 +29,6 @@
     "./config": {
       "types": "./dist/config.d.mts",
       "default": "./dist/config.mjs"
-    },
-    "./e2e": {
-      "types": "./dist/e2e.d.mts",
-      "default": "./dist/e2e.mjs"
     }
   },
   "types": "./dist/index.d.mts",

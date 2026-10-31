@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, injectNitroFetch } from '../../src/e2e'
+import { $fetchRaw, injectNitroFetch } from '../../src'
 
 describe('global setup: shared server', () => {
   it('exposes an in-process request dispatcher', async () => {

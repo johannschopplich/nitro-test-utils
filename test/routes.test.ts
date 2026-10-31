@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src/e2e'
+import { $fetchRaw, createNitroFetch, createNitroSession, injectNitroFetch, listRoutes, setup } from '../src'
 
 describe('routes', async () => {
   await setup({

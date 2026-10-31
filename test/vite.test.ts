@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { $fetchRaw, setup } from '../src/e2e'
+import { $fetchRaw, setup } from '../src'
 
 describe('vite + nitro', async () => {
   await setup({
