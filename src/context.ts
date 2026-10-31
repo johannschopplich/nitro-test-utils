@@ -167,7 +167,7 @@ function assertProductionPreset(preset: string, isGlobal: boolean): void {
 
 function resolveWranglerBin(rootDir: string): string {
   const packageJsonPath = resolveModulePath('wrangler/package.json', {
-    from: path.join(rootDir, 'package.json'),
+    from: rootDir,
     try: true,
   })
 
