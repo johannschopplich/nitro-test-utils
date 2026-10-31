@@ -60,10 +60,10 @@ export async function startServer(): Promise<NitroTestContext> {
 
     // A production build repoints Nitro's last-build pointer and, for Cloudflare, Wrangler's
     // deploy redirect at the test build; `nitro preview` or `wrangler deploy` would pick it up.
-    // `wrangler` reads the redirect while it runs, so it's restored on stop.
     const restoreLastBuild = snapshotFile(path.join(rootDir, NITRO_BUILD_DIR, 'last-build.json'))
-    if (wranglerBin)
-      ctx.restoreWranglerRedirect = snapshotFile(path.join(rootDir, '.wrangler/deploy/config.json'))
+    const restoreWranglerRedirect = wranglerBin
+      ? snapshotFile(path.join(rootDir, '.wrangler/deploy/config.json'))
+      : undefined
 
     try {
       await prepare(ctx.nitro)
@@ -73,6 +73,7 @@ export async function startServer(): Promise<NitroTestContext> {
     }
     finally {
       restoreLastBuild()
+      restoreWranglerRedirect?.()
     }
 
     if (wranglerBin) {
@@ -80,7 +81,7 @@ export async function startServer(): Promise<NitroTestContext> {
       // `dash` and its `fetch` forwards the request's abort signal.
       // Imported on demand, so in-process presets never load `httpxy` and `get-port-please`.
       const { startWrangler } = await import('./wrangler')
-      ctx.preview = await startWrangler(rootDir, wranglerBin)
+      ctx.preview = await startWrangler(rootDir, wranglerBin, path.join(ctx.nitro.options.output.serverDir, 'wrangler.json'))
     }
     else {
       // `startPreview` loads `.env.preview`, `.env.production`, and `.env` from `rootDir`;
@@ -122,8 +123,6 @@ export async function stopServer(): Promise<void> {
 
   await ctx.preview?.close()
   ctx.preview = undefined
-  ctx.restoreWranglerRedirect?.()
-  ctx.restoreWranglerRedirect = undefined
   await ctx.nitro.close()
 }
 

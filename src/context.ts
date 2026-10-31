@@ -16,8 +16,6 @@ export interface NitroTestContext {
   preview?: PreviewInstance
   /** `wrangler`'s bin script, set for production builds that run in `wrangler dev`. */
   wranglerBin?: string
-  /** Restores the Wrangler deploy redirect that a Cloudflare production build rewrote. */
-  restoreWranglerRedirect?: () => void
 }
 
 // Nitro's well-known directory, where it writes `last-build.json` whatever the `buildDir`.

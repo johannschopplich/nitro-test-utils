@@ -95,7 +95,7 @@ describe('server lifecycle', () => {
     await expect(previewFetch(new Request('http://nitro.test/api/bindings'))).rejects.toThrow('ECONNREFUSED')
   })
 
-  it('restores the wrangler deploy redirect on stop', async () => {
+  it('restores the wrangler deploy redirect before serving the test build', async () => {
     const redirectPath = path.join(cloudflareRootDir, '.wrangler/deploy/config.json')
     onTestFinished(() => fs.rmSync(redirectPath, { force: true }))
 
@@ -104,9 +104,10 @@ describe('server lifecycle', () => {
 
     await createTestContext({ rootDir: cloudflareRootDir, mode: 'production', preset: 'cloudflare-module' })
     await startServer()
-    await stopServer()
 
     expect(fs.readFileSync(redirectPath, 'utf8')).toBe('{"configPath":"../../dist/server/wrangler.json"}')
+    const { status } = await $serverFetch('/api/bindings')
+    expect(status).toBe(200)
   })
 })
 

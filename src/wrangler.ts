@@ -1,6 +1,8 @@
 import type { PreviewInstance } from 'nitro/builder'
 import type { ChildProcess } from 'node:child_process'
 import { spawn } from 'node:child_process'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import process from 'node:process'
 import { getRandomPort, waitForPort } from 'get-port-please'
 import { proxyFetch } from 'httpxy'
@@ -17,13 +19,21 @@ const EXIT_TIMEOUT = 5_000
  * SIGTERM: `wrangler` and `workerd` outlive the test run and keep Vitest's worker pipes open.
  * Wrangler's own bin forwards the signal to its CLI.
  */
-export async function startWrangler(rootDir: string, wranglerBin: string): Promise<PreviewInstance> {
+export async function startWrangler(rootDir: string, wranglerBin: string, wranglerConfigPath: string): Promise<PreviewInstance> {
+  if (!fs.existsSync(wranglerConfigPath))
+    throw new Error(`The Cloudflare build wrote no \`${wranglerConfigPath}\`. Testing a Cloudflare production build needs \`cloudflare.deployConfig\` enabled.`)
+
   const port = await getRandomPort(HOST)
 
-  // `wrangler` picks up the build through the deploy redirect the build wrote into the root.
+  // `--config` points `wrangler` at the test build directly, since the deploy redirect is restored
+  // right after the build. `--persist-to` keeps local state in the root, where the redirect kept it.
   const child = spawn(process.execPath, [
     wranglerBin,
     'dev',
+    '--config',
+    wranglerConfigPath,
+    '--persist-to',
+    path.join(rootDir, '.wrangler/state'),
     '--ip',
     HOST,
     '--port',
