@@ -1,12 +1,12 @@
 # Nitro Test Utils
 
-A testing toolkit for [Nitro](https://nitro.build) servers, built on top of [Vitest](https://vitest.dev). Use it to test your API routes against the preset you deploy, in development mode or against the production build.
+A testing toolkit for [Nitro](https://nitro.build) servers, built on top of [Vitest](https://vitest.dev). Use it to test your API routes in development mode or against the production build.
 
 ## Features
 
 - 🚀 One Nitro app for all test files, or one per suite
-- 📦 Tests the production build of `standard`, `node-server`, or a Cloudflare Workers preset
-- ☁️ Runs Cloudflare apps with local KV and D1 bindings; development mode takes the preset from your Nitro config
+- 📦 Tests the production build of `standard`, `node-server`, or `cloudflare-module`
+- ☁️ Runs Cloudflare apps with local KV and D1 bindings
 - 📡 Makes [`serverFetch`](#call-the-app-with-serverfetch) from `nitro` work in tests, plus [`$serverFetch`](#serverfetch) for status, headers, and parsed body
 - 🪝 Builds with the `test` env name, so `$test` config blocks and `import.meta.envName` apply
 - ↪️ Reruns tests whenever Nitro rebuilds
@@ -20,7 +20,7 @@ Nitro ships its own [Vitest integration](https://nitro.build/docs/testing) throu
 | Project setup | `nitro()` Vite plugin | Any Nitro project, with or without Vite |
 | Development mode | Plain Node | The preset's dev runner, e.g. miniflare for `cloudflare-module` |
 | Cloudflare bindings | – | ✓ |
-| Production build | – | ✓ `standard`, `node-server`, Cloudflare Workers |
+| Production build | – | ✓ `standard`, `node-server`, `cloudflare-module` |
 | Runtime calls in test files (`useKV()`) | ✓ | Through routes only |
 | `vi.mock` for app modules | ✓ | – |
 | Env name | `development` | `test` |
@@ -71,7 +71,9 @@ it('responds successfully', async () => {
 
 In watch mode, the app stays up between runs. Whenever Nitro rebuilds, the tests rerun. This needs `rolldown` installed in the Nitro project, or a `builder` in your Nitro config: without either, Nitro runs the dev server unbundled, and changes don't rerun the tests.
 
-Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup as long as their Nitro options live in `nitro.config.ts`: Nitro Test Utils doesn't read the options passed to `nitro()`. Production mode builds the app with Vite, so your Vite plugins apply. Development mode runs the Nitro dev server, which doesn't run Vite, so Vite plugins are skipped there and Nitro warns about it. If your `vite.config.ts` enables `resolve.tsconfigPaths`, as `create-nitro-app` does, mirror it in the first argument so `~/...` imports resolve in tests:
+Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup as long as their Nitro options live in `nitro.config.ts`: Nitro Test Utils doesn't read the options passed to `nitro()`. Production mode builds the app with Vite, so your Vite plugins apply. Development mode runs the Nitro dev server, which doesn't run Vite, so Vite plugins are skipped there and Nitro warns about it.
+
+If your `vite.config.ts` enables `resolve.tsconfigPaths`, as `create-nitro-app` does, mirror it in the first argument so `~/...` imports resolve in tests:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
@@ -106,7 +108,7 @@ Production mode supports these presets:
 - **`standard`** (default) and **`node-server`** load the server entry in-process.
 - **`cloudflare-module`** runs the built worker in `wrangler dev`. Since nothing stops `wrangler` when Vitest ends its worker, it works with [`setup()` per test suite](#run-several-nitro-apps) only.
 
-Production mode rejects every other preset, e.g. `node-middleware` or `cloudflare-pages`. In development mode, any preset works, and without one the app runs with the preset from your Nitro config or `NITRO_PRESET`, as in `nitro dev`. Nitro resolves it to its dev counterpart, e.g. `cloudflare-module` to `cloudflare-dev`, and dispatches requests through that preset's dev runner.
+Production mode rejects every other preset, e.g. `node-middleware` or `cloudflare-pages`.
 
 In-process test builds serve the files in `public/` at their paths without `baseURL`, like `nitro preview`, and Nitro's static handler also serves them under `baseURL` unless your Nitro config turns `serveStatic` off. A deployed `standard` build leaves static files to the platform instead, so a test that fetches one passes where production may not.
 
@@ -136,7 +138,7 @@ describe('kv', async () => {
 })
 ```
 
-In development mode, Nitro runs the app in its miniflare runner with local bindings. To run the built worker in `wrangler dev` instead, add `mode: 'production'` and `preset: 'cloudflare-module'`, since production mode defaults to `standard`. This needs `wrangler` installed as a dev dependency.
+In development mode, Nitro resolves the preset to `cloudflare-dev` and runs the app in its miniflare runner with local bindings. To run the built worker in `wrangler dev` instead, add `mode: 'production'` and `preset: 'cloudflare-module'`, since production mode defaults to `standard`. This needs `wrangler` installed as a dev dependency.
 
 The worker reads its bindings and vars from the Wrangler config, so `.env.test` doesn't reach `env`. Inside your handlers, access bindings through `env` from `cloudflare:workers`, or through `event.req.runtime.cloudflare.env`:
 
@@ -202,7 +204,7 @@ export default defineNitroConfig({
 
 This is [c12's environment-specific config](https://github.com/unjs/c12#environment-specific-configuration), the mechanism behind `$development` and `$production` blocks. The env name stays `test` in production mode, so `$production` blocks don't apply to test builds.
 
-For environment variables, add a `.env.test` file to the Nitro project root. Nitro loads it after `.env` and `.env.local` into the test process before the app starts, in both modes. A variable already set in the shell wins over all three files:
+For environment variables, add a `.env.test` file to the Nitro project root. Nitro loads it into the test process before the app starts, in both modes, after `.env` and `.env.local`. A variable already set in the shell wins over all three files:
 
 ```ini
 # .env.test
