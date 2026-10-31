@@ -1,4 +1,4 @@
-import type { NitroTestContext } from './types'
+import type { NitroTestContext } from './context'
 import * as path from 'node:path'
 import {
   build,

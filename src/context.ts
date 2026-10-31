@@ -1,9 +1,17 @@
-import type { NitroTestContext, NitroTestOptions } from './types'
+import type { Nitro } from 'nitro/types'
+import type { NitroTestOptions } from './types'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
 import * as dotenv from 'dotenv'
 import { createNitro } from 'nitro/builder'
+
+export interface NitroTestContext {
+  options: Required<Pick<NitroTestOptions, 'rootDir' | 'mode'>> & Pick<NitroTestOptions, 'preset'>
+  isGlobal: boolean
+  isDev: boolean
+  nitro: Nitro
+}
 
 export const NITRO_OUTPUT_DIR = '.output'
 export const NITRO_BUILD_DIR = 'node_modules/.nitro'

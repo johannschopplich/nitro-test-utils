@@ -1,5 +1,3 @@
-import type { Nitro } from 'nitro/types'
-
 export interface NitroTestOptions {
   /**
    * Path to the directory with a Nitro app to be put under test.
@@ -34,14 +32,4 @@ export interface NitroTestOptions {
    * @default Determined by `mode`: `'nitro-dev'` for development, `'node-middleware'` for production.
    */
   preset?: string
-}
-
-/**
- * The context created before all tests.
- */
-export interface NitroTestContext {
-  options: Required<Pick<NitroTestOptions, 'rootDir' | 'mode'>> & Pick<NitroTestOptions, 'preset'>
-  isGlobal: boolean
-  isDev: boolean
-  nitro: Nitro
 }
