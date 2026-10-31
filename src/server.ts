@@ -10,7 +10,6 @@ import {
   startPreview,
 } from 'nitro/builder'
 import { injectTestContext, NITRO_BUILD_DIR } from './context'
-import { startWrangler } from './wrangler'
 
 type NitroFetch = (request: Request) => Response | Promise<Response>
 
@@ -74,11 +73,16 @@ export async function startServer(): Promise<NitroTestContext> {
       restoreLastBuild()
     }
 
-    ctx.preview = wranglerBin
-      ? await startWrangler(rootDir, wranglerBin)
+    if (wranglerBin) {
+      // Imported on demand, so in-process presets never load the proxy and port helpers.
+      const { startWrangler } = await import('./wrangler')
+      ctx.preview = await startWrangler(rootDir, wranglerBin)
+    }
+    else {
       // `startPreview` loads `.env.preview`, `.env.production`, and `.env` from `rootDir`;
       // the output directory has none of them.
-      : await startPreview({ rootDir: outputDir, outputDir })
+      ctx.preview = await startPreview({ rootDir: outputDir, outputDir })
+    }
     fetch = ctx.preview.fetch
   }
 
