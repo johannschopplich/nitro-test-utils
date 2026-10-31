@@ -112,7 +112,7 @@ describe('createTestContext', () => {
   it('rejects a Cloudflare production build without wrangler installed', async () => {
     await expect(createTestContext({ rootDir, mode: 'production', preset: 'cloudflare-module' }))
       .rejects
-      .toThrow('needs `wrangler` installed')
+      .toThrow('Couldn\'t resolve `wrangler` from')
   })
 
   it('rejects Cloudflare presets in global production mode', async () => {

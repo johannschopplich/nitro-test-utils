@@ -169,10 +169,12 @@ function resolveWranglerBin(rootDir: string): string {
   const packageJsonPath = resolveModulePath('wrangler/package.json', {
     from: rootDir,
     try: true,
+    // exsolve also caches failed lookups, which would outlive installing `wrangler` in watch mode.
+    cache: false,
   })
 
   if (!packageJsonPath)
-    throw new Error('Testing a Cloudflare production build needs `wrangler` installed in the Nitro project.')
+    throw new Error(`Couldn't resolve \`wrangler\` from ${rootDir}. Testing a Cloudflare production build needs it installed in the Nitro project.`)
 
   const { bin } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { bin: Record<string, string> }
   return path.resolve(path.dirname(packageJsonPath), bin.wrangler!)
