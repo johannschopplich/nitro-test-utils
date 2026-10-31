@@ -74,6 +74,7 @@ export async function startServer(): Promise<NitroTestContext> {
     }
 
     if (wranglerBin) {
+      // TODO: Switch back to `startPreview` once its `close()` stops `wrangler` on Linux.
       // Imported on demand, so in-process presets never load the proxy and port helpers.
       const { startWrangler } = await import('./wrangler')
       ctx.preview = await startWrangler(rootDir, wranglerBin)
