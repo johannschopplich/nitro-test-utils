@@ -1,3 +1,4 @@
+import type { SetCookie } from 'cookie-es'
 import type { $Fetch, FetchHooks, FetchOptions, FetchRequest, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import { parseSetCookie } from 'cookie-es'
 import { serverFetch } from 'nitro'
@@ -68,10 +69,14 @@ export function createNitroSession(): NitroSession {
     },
     onResponse({ response }) {
       for (const header of response.headers.getSetCookie()) {
-        const { name, value } = parseSetCookie(header)!
-        if (name) {
-          cookies.set(name, value)
-        }
+        const cookie = parseSetCookie(header)
+        if (!cookie?.name)
+          continue
+
+        if (isExpired(cookie))
+          cookies.delete(cookie.name)
+        else
+          cookies.set(cookie.name, cookie.value)
       }
     },
   })
@@ -98,4 +103,12 @@ function createServerFetch(hooks?: FetchHooks): $Fetch {
       fetch: (input, init) => serverFetch(input, init),
     },
   )
+}
+
+// `Max-Age` takes precedence over `Expires`, per RFC 6265.
+function isExpired(cookie: SetCookie): boolean {
+  if (cookie.maxAge !== undefined)
+    return cookie.maxAge <= 0
+
+  return cookie.expires !== undefined && cookie.expires.getTime() <= Date.now()
 }

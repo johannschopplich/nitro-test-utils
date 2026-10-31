@@ -111,5 +111,33 @@ describe('routes', async () => {
       await session.$fetch('/api/login', { method: 'POST' })
       expect(session.cookies.get('session')).toBe('abc123')
     })
+
+    it.each(['max-age', 'expires'])('drops a cookie the server expires through %s', async (via) => {
+      const session = createNitroSession()
+      await session.$fetch('/api/login', { method: 'POST' })
+      await session.$fetch('/api/logout', {
+        method: 'POST',
+        query: { via },
+      })
+
+      expect(session.cookies.has('session')).toBe(false)
+    })
+
+    it('keeps a cookie whose Max-Age outlives a past Expires', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/logout', {
+        method: 'POST',
+        query: { via: 'max-age-over-expires' },
+      })
+
+      expect(session.cookies.get('session')).toBe('fresh')
+    })
+
+    it('skips a Set-Cookie header that cookie-es rejects', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/visit', { method: 'POST' })
+
+      expect(session.cookies.get('visited')).toBe('yes')
+    })
   })
 })
