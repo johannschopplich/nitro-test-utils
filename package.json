@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.0.0",
   "packageManager": "pnpm@12.16.1",
-  "description": "Testing toolkit for Nitro full-stack servers",
+  "description": "Test Nitro apps with Vitest – development mode, production builds, and Cloudflare bindings",
   "author": "Johann Schopplich <hello@johannschopplich.com>",
   "license": "MIT",
   "homepage": "https://github.com/johannschopplich/nitro-test-utils#readme",
@@ -15,10 +15,10 @@
     "url": "https://github.com/johannschopplich/nitro-test-utils/issues"
   },
   "keywords": [
+    "cloudflare",
     "nitro",
-    "nuxt",
     "testing",
-    "vercel"
+    "vitest"
   ],
   "sideEffects": false,
   "exports": {
