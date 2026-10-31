@@ -38,7 +38,7 @@ export async function startWrangler(rootDir: string, wranglerBin: string): Promi
     await Promise.race([
       // Same retry budget as Nitro's `runPreviewCommand`.
       waitForPort(port, { host: HOST, retries: 20, delay: 500 }).catch((error) => {
-        throw new Error(`\`wrangler dev\` didn't listen on port ${port} within 10 s.`, { cause: error })
+        throw new Error(`\`wrangler dev\` didn't start listening on port ${port}.`, { cause: error })
       }),
       childExit.then(() => {
         throw new Error('`wrangler dev` exited before it was ready.')

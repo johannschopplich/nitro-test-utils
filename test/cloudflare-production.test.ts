@@ -50,4 +50,13 @@ describe('cloudflare production', async () => {
       message: expect.stringContaining('//api/bindings'),
     })
   })
+
+  it('aborts a request to wrangler through its signal', async () => {
+    const previewFetch = injectTestContext()!.preview!.fetch
+    const request = new Request('http://nitro.test/api/bindings', {
+      signal: AbortSignal.abort(),
+    })
+
+    await expect(previewFetch(request)).rejects.toThrow()
+  })
 })

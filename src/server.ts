@@ -74,8 +74,9 @@ export async function startServer(): Promise<NitroTestContext> {
     }
 
     if (wranglerBin) {
-      // TODO: Switch back to `startPreview` once its `close()` stops `wrangler` on Linux.
-      // Imported on demand, so in-process presets never load the proxy and port helpers.
+      // TODO: Switch back to `startPreview` once its `close()` stops `wrangler` where `/bin/sh` is
+      // `dash` and its `fetch` forwards the request's abort signal.
+      // Imported on demand, so in-process presets never load `httpxy` and `get-port-please`.
       const { startWrangler } = await import('./wrangler')
       ctx.preview = await startWrangler(rootDir, wranglerBin)
     }
