@@ -1,3 +1,4 @@
+import type { NitroApp } from 'nitro/types'
 import type { NitroTestContext } from './context'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -12,10 +13,10 @@ import {
 } from 'nitro/builder'
 import { injectTestContext, NITRO_WELLKNOWN_DIR } from './context'
 
-type NitroFetch = (request: Request) => Response | Promise<Response>
+type NitroFetch = NitroApp['fetch']
 
 const nitroGlobal = globalThis as typeof globalThis & {
-  __nitro__?: Record<string, { fetch: NitroFetch } | undefined>
+  __nitro__?: Record<string, Pick<NitroApp, 'fetch' | 'hooks'> | undefined>
 }
 
 /**
@@ -91,7 +92,23 @@ export async function startServer(): Promise<NitroTestContext> {
     else {
       // `startPreview` loads `.env.preview`, `.env.production`, and `.env` from `rootDir`;
       // the output directory has none of them.
-      ctx.preview = await startPreview({ rootDir: outputDir, outputDir })
+      const preview = await startPreview({ rootDir: outputDir, outputDir })
+      // The entry registered its app on import; it's replaced by the dispatcher below.
+      const app = nitroGlobal.__nitro__?.default
+      ctx.preview = {
+        fetch: preview.fetch,
+        // Nitro's `close()` of an in-process preview is a no-op, so plugins never release
+        // resources like database pools. A failing hook is logged like in Nitro's own shutdown,
+        // so the teardown still completes.
+        close: async () => {
+          try {
+            await app?.hooks?.callHook('close')
+          }
+          catch (error) {
+            console.error('[nitro] Error while calling `close` hooks:', error)
+          }
+        },
+      }
     }
     fetch = ctx.preview.fetch
   }
@@ -114,8 +131,8 @@ export async function startServer(): Promise<NitroTestContext> {
  *
  * @remarks
  * Development mode cascades through `nitro.close()` to the worker runner and file watchers.
- * Production mode stops a Cloudflare build's `wrangler` and waits for it to exit; an in-process
- * entry stays loaded until the test process exits.
+ * Production mode stops a Cloudflare build's `wrangler` and waits for it to exit. An in-process
+ * build runs the app's `close` hooks; its entry stays loaded until the test process exits.
  */
 export async function stopServer(): Promise<void> {
   const ctx = injectTestContext()

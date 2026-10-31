@@ -9,6 +9,8 @@ import { startServer, stopServer } from '../src/server'
 
 const rootDir = path.resolve(import.meta.dirname, 'production-app')
 const cloudflareRootDir = path.resolve(import.meta.dirname, 'cloudflare-app')
+// Counted by the `close-counter` plugin of the production app.
+const closeCounter = globalThis as typeof globalThis & { __closedNitroApps__?: number }
 
 afterEach(async () => {
   await stopServer()
@@ -75,6 +77,16 @@ describe('server lifecycle', () => {
     await startServer()
 
     expect(fs.readFileSync(nitroDevEntry, 'utf8')).toBe('// nitro dev')
+  })
+
+  it('runs the app\'s close hooks when an in-process production build stops', async () => {
+    await createTestContext({ rootDir, mode: 'production' })
+    await startServer()
+    const closedApps = closeCounter.__closedNitroApps__ ?? 0
+
+    await stopServer()
+
+    expect(closeCounter.__closedNitroApps__).toBe(closedApps + 1)
   })
 
   it('serves node-server again on a second start in the same worker', async () => {
