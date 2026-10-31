@@ -5,7 +5,7 @@ A testing toolkit for [Nitro](https://nitro.build) servers, built on top of [Vit
 ## Features
 
 - 🚀 One Nitro app for all test files, or one per suite
-- 📦 Tests the production build of `standard`, `node-server`, or a Cloudflare preset
+- 📦 Tests the production build of `standard`, `node-server`, or a Cloudflare Workers preset
 - ☁️ Runs Cloudflare apps with local KV, D1, and R2 bindings
 - 📡 Makes [`serverFetch`](#call-the-app-with-serverfetch) from `nitro` work in tests, plus [`$serverFetch`](#serverfetch) for status, headers, and parsed body
 - 🪝 Builds with the `test` env name, so `$test` config blocks and `import.meta.envName` apply
@@ -20,7 +20,7 @@ Nitro ships its own [Vitest integration](https://nitro.build/docs/testing) throu
 | Project setup | `nitro()` Vite plugin | Any Nitro project, with or without Vite |
 | Development mode | Plain Node | The preset's dev runner, e.g. miniflare for `cloudflare-module` |
 | Cloudflare bindings | – | ✓ |
-| Production build | – | ✓ `standard`, `node-server`, Cloudflare |
+| Production build | – | ✓ `standard`, `node-server`, Cloudflare Workers |
 | Runtime calls in test files (`useKV()`) | ✓ | Through routes only |
 | `vi.mock` for app modules | ✓ | – |
 | Env name | `development` | `test` |
@@ -88,7 +88,7 @@ export default defineConfig(
 
 ### Test the Production Build
 
-Set `mode` to `'production'` to build the app with its preset and serve the output through Nitro's preview:
+Set `mode` to `'production'` to build the app with its preset and test the build output:
 
 ```ts
 import { defineConfig } from 'nitro-test-utils/config'
@@ -104,9 +104,9 @@ export default defineConfig({}, {
 Production mode supports these presets:
 
 - **`standard`** (default) and **`node-server`** load the server entry in-process.
-- **Cloudflare presets** run the built worker in `wrangler dev`. Since nothing stops `wrangler` when Vitest ends its worker, they work with [`setup()` per test suite](#run-several-nitro-apps) only.
+- **`cloudflare-module`** and **`cloudflare-durable`** run the built worker in `wrangler dev`. Since nothing stops `wrangler` when Vitest ends its worker, they work with [`setup()` per test suite](#run-several-nitro-apps) only.
 
-Production mode rejects every other preset, e.g. `node-middleware`. In development mode, any preset works: Nitro resolves it to its dev counterpart, e.g. `cloudflare-module` to `cloudflare-dev`, and dispatches requests through that preset's dev runner.
+Production mode rejects every other preset, e.g. `node-middleware` or `cloudflare-pages`. In development mode, any preset works: Nitro resolves it to its dev counterpart, e.g. `cloudflare-module` to `cloudflare-dev`, and dispatches requests through that preset's dev runner.
 
 Test builds never overwrite your real build output, and `nitro preview` and `wrangler deploy` keep using your last `nitro build`.
 
@@ -135,7 +135,7 @@ describe('kv', async () => {
 })
 ```
 
-In development mode, Nitro runs the app in its miniflare runner with local bindings. Add `mode: 'production'` to run the built worker in `wrangler dev` instead. For that, install `wrangler` as a dev dependency – otherwise Nitro's preview fetches it through `npx`.
+In development mode, Nitro runs the app in its miniflare runner with local bindings. Add `mode: 'production'` to run the built worker in `wrangler dev` instead, which needs `wrangler` installed as a dev dependency.
 
 The worker reads its bindings and vars from the Wrangler config, so `.env.test` doesn't reach `env`. Inside your handlers, access bindings through `env` from `cloudflare:workers`, or through `event.req.runtime.cloudflare.env`:
 
@@ -393,9 +393,9 @@ function listRoutes(): { route: string, method?: string }[]
 
 ## How It Works
 
-The global setup builds the app in a Vitest setup file, once per worker. Nitro Test Utils registers the app for `serverFetch` from `nitro`, so requests go straight to its fetch handler without a port. Development mode dispatches through the preset's dev runner. Production mode builds the app and serves the output through Nitro's `startPreview`.
+The global setup builds the app in a Vitest setup file, once per worker. Nitro Test Utils registers the app for `serverFetch` from `nitro`. Development mode dispatches requests through the preset's dev runner. Production mode builds the app, loads `standard` and `node-server` builds in-process through Nitro's `startPreview`, and proxies requests to `wrangler dev` for Cloudflare builds.
 
-Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` inside the Nitro project. Node caches imported modules by path, so a second build into the same directory would serve the first build's code. Nitro's last-build pointer is restored after the build, Wrangler's deploy redirect when the app stops. Production builds with `standard` or `node-server` ignore `.env.production` and `.env.preview`.
+Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` inside the Nitro project. Node caches imported modules by path, so a second build into the same directory would serve the first build's code. Nitro's last-build pointer is restored after the build, Wrangler's deploy redirect when the app stops. Production test builds ignore `.env.production` and `.env.preview`.
 
 ## License
 

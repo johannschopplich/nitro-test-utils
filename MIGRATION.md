@@ -2,7 +2,7 @@
 
 ## From v3 to v4
 
-v4 builds on the testing primitives of Nitro 3.0.261029-rc. Requests go through Nitro's own `serverFetch`, and production mode serves the build through Nitro's preview, so Cloudflare presets work in production too.
+v4 builds on the testing primitives of Nitro 3.0.261029-rc. Requests go through Nitro's own `serverFetch`, and production mode tests your preset's build, so Cloudflare Workers presets work in production too.
 
 ### Update the Peer Dependencies
 
@@ -79,11 +79,11 @@ Nitro types `import.meta.envName` itself, so remove the `nitro-test-utils/env` r
 
 ### Production Mode Runs Your Preset's Build
 
-Production mode now builds with your preset and serves the output through Nitro's preview:
+Production mode now builds with your preset and tests the build output:
 
 - The default production preset is `standard` instead of `node-middleware`.
-- Cloudflare presets work in per-suite production mode and need `wrangler` installed. Global production mode rejects them.
-- Production mode accepts only `standard`, `node-server`, and Cloudflare presets. Others, such as `node-middleware` or `aws-lambda`, are rejected.
+- `cloudflare-module` and `cloudflare-durable` work in per-suite production mode and need `wrangler` installed. Global production mode rejects them.
+- Production mode accepts only `standard`, `node-server`, `cloudflare-module`, and `cloudflare-durable`. Others, such as `node-middleware` or `cloudflare-pages`, are rejected.
 - Each production build goes to its own directory under `node_modules/.nitro/output/<preset>` instead of `.output`.
 
 ### Drop `NitroTestContext` Imports
