@@ -2,11 +2,11 @@
 
 ## From v3 to v4
 
-v4 builds on the testing primitives of Nitro 3.0.261029-rc. Requests go through Nitro's own `serverFetch`, and production mode tests your preset's build, so Cloudflare Workers presets work in production too.
+v4 builds on the testing primitives of Nitro 3.0.261029-rc. Requests go through Nitro's own `serverFetch`, and production mode tests your preset's build, so `cloudflare-module` works in production too.
 
-### Update the Peer Dependencies
+### Update Nitro, Vitest, and Node.js
 
-v4 requires `nitro@^3.0.261029-rc` and Vitest v4 or v5.
+v4 requires `nitro@^3.0.261029-rc`, Vitest v4 or v5, and Node.js 22.22 or later, the same minimum as Nitro.
 
 ### Import From the Package Root
 
