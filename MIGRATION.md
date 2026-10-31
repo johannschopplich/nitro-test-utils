@@ -100,6 +100,10 @@ Nitro's loader also expands `${VAR}` references and skips variables whose name s
 
 `session.cookies` now holds each value as the server encoded it, e.g. `a%3Db` instead of `a=b`, and the session sends it back unchanged, like a browser. Decode a value with `decodeURIComponent` before asserting on it.
 
+### Remove `listRoutes`
+
+`listRoutes` and its `NitroRouteInfo` type are gone.
+
 ### Drop `NitroTestContext` Imports
 
 The type is no longer exported. No public API returns or accepts it.

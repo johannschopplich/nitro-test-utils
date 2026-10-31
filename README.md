@@ -276,22 +276,6 @@ it('keeps the session cookie', async () => {
 })
 ```
 
-### Check Registered Routes
-
-`listRoutes` returns the routes of the running app, e.g. to assert that a handler is registered or to drive one test per endpoint:
-
-```ts
-import { listRoutes } from 'nitro-test-utils'
-import { expect, it } from 'vitest'
-
-it('registers the auth routes', () => {
-  const routes = listRoutes()
-
-  expect(routes).toContainEqual({ route: '/api/login', method: 'post' })
-  expect(routes).toContainEqual({ route: '/api/profile', method: 'get' })
-})
-```
-
 ### Call the App With `serverFetch`
 
 While a test app runs, Nitro's own `serverFetch` dispatches to it in both modes and returns a plain `Response`:
@@ -382,14 +366,6 @@ function createNitroSession(): {
   cookies: Map<string, string>
   clearCookies: () => void
 }
-```
-
-### `listRoutes`
-
-Returns the scanned and configured routes of the running app, without internal routes under `/_` or `/api/_`. `method` is `undefined` for handlers that match any method.
-
-```ts
-function listRoutes(): { route: string, method?: string }[]
 ```
 
 ## How It Works

@@ -1,4 +1,4 @@
-import { $serverFetch, listRoutes } from 'nitro-test-utils'
+import { $serverFetch } from 'nitro-test-utils'
 import { describe, expectTypeOf, it } from 'vitest'
 
 describe('$serverFetch types', () => {
@@ -15,11 +15,5 @@ describe('$serverFetch types', () => {
   it('falls back to `any` without a generic', async () => {
     const response = await $serverFetch('/api/health')
     expectTypeOf(response.data).toBeAny()
-  })
-})
-
-describe('listRoutes types', () => {
-  it('returns the documented shape', () => {
-    expectTypeOf(listRoutes).returns.toEqualTypeOf<{ route: string, method?: string }[]>()
   })
 })

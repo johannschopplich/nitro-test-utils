@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 import { serverFetch } from 'nitro'
 import { describe, expect, it } from 'vitest'
-import { $serverFetch, createNitroSession, listRoutes, setup } from '../src'
+import { $serverFetch, createNitroSession, setup } from '../src'
 
 describe('routes', async () => {
   await setup({
@@ -61,33 +61,6 @@ describe('routes', async () => {
 
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toEqual({ ok: true })
-  })
-
-  describe('introspection', () => {
-    it('lists every user-defined route from the scanned handlers', () => {
-      const routes = listRoutes()
-
-      expect(routes).toEqual(
-        expect.arrayContaining([
-          { route: '/api/echo', method: 'post' },
-          { route: '/api/env', method: 'get' },
-          { route: '/api/error', method: 'get' },
-          { route: '/api/health', method: 'get' },
-          { route: '/api/login', method: 'post' },
-          { route: '/api/profile', method: 'get' },
-          { route: '/api/runtime-config', method: 'get' },
-        ]),
-      )
-    })
-
-    it('filters out nitro-internal routes', () => {
-      const routes = listRoutes()
-
-      for (const { route } of routes) {
-        expect(route.startsWith('/_')).toBe(false)
-        expect(route.startsWith('/api/_')).toBe(false)
-      }
-    })
   })
 
   describe('cookies', () => {
