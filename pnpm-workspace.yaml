@@ -2,7 +2,7 @@ minimumReleaseAgeExcludePrune: true
 minimumReleaseAgeExclude:
   - '@cloudflare/workers-types@5.20261030.1'
   - eslint@10.14.0
-  - nitro@3.0.261029-rc
+  - nitro@3.0.261102-rc
 
 trustPolicy: no-downgrade
 shellEmulator: true
@@ -28,7 +28,7 @@ catalog:
   exsolve: ^1.2.0
   get-port-please: ^3.2.0
   httpxy: ^0.5.6
-  nitro: ^3.0.261029-rc
+  nitro: ^3.0.261102-rc
   ofetch: ^2.0.0-alpha.3
   tsdown: ^0.23.4
   typescript: ^6.0.3

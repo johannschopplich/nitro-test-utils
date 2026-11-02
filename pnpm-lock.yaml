@@ -195,8 +195,8 @@ catalogs:
       specifier: ^0.5.6
       version: 0.5.6
     nitro:
-      specifier: ^3.0.261029-rc
-      version: 3.0.261029-rc
+      specifier: ^3.0.261102-rc
+      version: 3.0.261102-rc
     ofetch:
       specifier: ^2.0.0-alpha.3
       version: 2.0.0-alpha.3
@@ -256,7 +256,7 @@ importers:
         version: 3.2.0
       nitro:
         specifier: 'catalog:'
-        version: 3.0.261029-rc
+        version: 3.0.261102-rc
       tsdown:
         specifier: 'catalog:'
         version: 0.23.4(typescript@6.0.3)
@@ -277,7 +277,7 @@ importers:
     devDependencies:
       nitro:
         specifier: 'catalog:'
-        version: 3.0.261029-rc
+        version: 3.0.261102-rc
       nitro-test-utils:
         specifier: workspace:*
         version: link:../..
@@ -292,7 +292,7 @@ importers:
         version: 5.20261030.1
       nitro:
         specifier: 'catalog:'
-        version: 3.0.261029-rc
+        version: 3.0.261102-rc
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -304,7 +304,7 @@ importers:
     devDependencies:
       nitro:
         specifier: 'catalog:'
-        version: 3.0.261029-rc
+        version: 3.0.261102-rc
       nitro-test-utils:
         specifier: workspace:*
         version: link:../..
@@ -316,7 +316,7 @@ importers:
     devDependencies:
       nitro:
         specifier: 'catalog:'
-        version: 3.0.261029-rc
+        version: 3.0.261102-rc
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1959,8 +1959,8 @@ packages:
     resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
     engines: {node: '>=20.19.0'}
 
-  env-runner@0.3.10:
-    resolution: {integrity: sha512-DOmiJsUH4gUIdLIvTZhO0UmXSPTM6pQbU7hdBt9rfHZQuUaXtGrGOXyL+zfCWuV972q1eF0wjiaVbCjhRM3WeQ==}
+  env-runner@0.3.11:
+    resolution: {integrity: sha512-jKG29hxqGrL9ktunIwmt9aHbP3n995DGUY1KyXS7iGYFoD/yDdpc2CjJt6remFI3x2H1JOmBBMo0KXxjEQ2G6g==}
     hasBin: true
 
   error-stack-parser-es@1.0.5:
@@ -2764,8 +2764,8 @@ packages:
     resolution: {integrity: sha512-kKHJhxwpR/Okycz4HhQKKlhWe4ASEfPgkSWNmKFHd7+ezuQlxkA5cM3+XkBPvm1gmHen3w53qsYAv+8GwRrBlg==}
     engines: {node: '>=18'}
 
-  nitro@3.0.261029-rc:
-    resolution: {integrity: sha512-BQvzAV0HgcsJCkDqZAbGYlGNi9ALJznhsihugYAIi+8IcItz320FNaxbAJvn/pMNxGOYo2MGs10mTU9tcnB9jQ==}
+  nitro@3.0.261102-rc:
+    resolution: {integrity: sha512-Qbje+O758prySsNhyRercCVkgP3qar0i28dDlCRpzq02EIO6i4FTqmTfL5tY+UKzAEoujxxa7WiQtPJ4SylbKA==}
     engines: {node: '>=22.22.0'}
     hasBin: true
 
@@ -4810,7 +4810,7 @@ snapshots:
 
   entities@8.1.0: {}
 
-  env-runner@0.3.10:
+  env-runner@0.3.11:
     dependencies:
       crossws: 0.4.17(srvx@1.0.8)
       srvx: 1.0.8
@@ -5861,10 +5861,10 @@ snapshots:
 
   natural-orderby@5.0.0: {}
 
-  nitro@3.0.261029-rc:
+  nitro@3.0.261102-rc:
     dependencies:
       crossws: 0.4.17(srvx@1.0.8)
-      env-runner: 0.3.10
+      env-runner: 0.3.11
       h3: 2.0.8(crossws@0.4.17(srvx@1.0.8))(ocache@0.3.1)
       ocache: 0.3.1
       rou3: 1.0.0
