@@ -6,7 +6,7 @@ v4 builds on the testing primitives of Nitro 3.0.261029-rc. Requests go through 
 
 ### Update Nitro, Vitest, and Node.js
 
-v4 requires `nitro@^3.0.261029-rc`, Vitest v4 or v5, and Node.js 22.22 or later, the same minimum as Nitro.
+v4 requires Nitro 3.0.261029-rc or later, Vitest v4 or v5, and Node.js 22.22 or later, the same minimum as Nitro.
 
 ### Import From the Package Root
 

@@ -39,7 +39,7 @@ npm install -D nitro-test-utils nitro vitest
 ```
 
 > [!IMPORTANT]
-> Requires Nitro 3.0.261029-rc and Vitest v4 or v5.
+> Requires Nitro 3.0.261029-rc or later and Vitest v4 or v5.
 >
 > Upgrading from an earlier major? See [MIGRATION.md](./MIGRATION.md). Looking for Nitro v2 support? Use [v0.11](https://github.com/johannschopplich/nitro-test-utils/tree/v0) (`nitro-test-utils@^0.11`).
 
