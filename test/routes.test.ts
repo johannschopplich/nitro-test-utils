@@ -71,6 +71,18 @@ describe('routes', async () => {
       expect(profile).toEqual({ user: 'authenticated' })
     })
 
+    it('persists cookies past a per-request onRequest and onResponse hook', async () => {
+      const session = createNitroSession()
+      await session.$fetch('/api/login', {
+        method: 'POST',
+        onResponse() {},
+      })
+      const profile = await session.$fetch('/api/profile', {
+        onRequest() {},
+      })
+      expect(profile).toEqual({ user: 'authenticated' })
+    })
+
     it('clears cookies', async () => {
       const session = createNitroSession()
       await session.$fetch('/api/login', { method: 'POST' })

@@ -1,5 +1,5 @@
 import type { SetCookie } from 'cookie-es'
-import type { $Fetch, FetchHooks, FetchOptions, FetchRequest, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
+import type { $Fetch, FetchOptions, FetchRequest, FetchResponse, MappedResponseType, ResponseType } from 'ofetch'
 import { parseSetCookie } from 'cookie-es'
 import { serverFetch } from 'nitro'
 import { ofetch } from 'ofetch'
@@ -51,35 +51,38 @@ export async function $serverFetch<T = any, R extends ResponseType = 'json'>(
 export function createNitroSession(): NitroSession {
   const cookies = new Map<string, string>()
 
-  const $fetch = createServerFetch({
-    onRequest({ options }) {
-      if (cookies.size > 0) {
-        const cookieHeader = Array.from(
-          cookies.entries(),
-          ([name, value]) => `${name}=${value}`,
-        ).join('; ')
+  // The cookie jar wraps the fetch rather than living in hooks, since ofetch replaces a default hook
+  // with a per-request one of the same name.
+  const $fetch = createServerFetch(async (input, init) => {
+    const headers = new Headers(init?.headers)
 
-        const headers = new Headers(options.headers)
-        const existingCookie = headers.get('cookie')
-        headers.set('cookie', existingCookie
-          ? `${existingCookie}; ${cookieHeader}`
-          : cookieHeader)
-        options.headers = headers
-      }
-    },
-    onResponse({ response }) {
-      for (const header of response.headers.getSetCookie()) {
-        // Kept encoded, since a browser sends a cookie back exactly as the server set it.
-        const cookie = parseSetCookie(header, { decode: false })
-        if (!cookie?.name)
-          continue
+    if (cookies.size > 0) {
+      const cookieHeader = Array.from(
+        cookies.entries(),
+        ([name, value]) => `${name}=${value}`,
+      ).join('; ')
 
-        if (isExpired(cookie))
-          cookies.delete(cookie.name)
-        else
-          cookies.set(cookie.name, cookie.value)
-      }
-    },
+      const existingCookie = headers.get('cookie')
+      headers.set('cookie', existingCookie
+        ? `${existingCookie}; ${cookieHeader}`
+        : cookieHeader)
+    }
+
+    const response = await serverFetch(input, { ...init, headers })
+
+    for (const header of response.headers.getSetCookie()) {
+      // Kept encoded, since a browser sends a cookie back exactly as the server set it.
+      const cookie = parseSetCookie(header, { decode: false })
+      if (!cookie?.name)
+        continue
+
+      if (isExpired(cookie))
+        cookies.delete(cookie.name)
+      else
+        cookies.set(cookie.name, cookie.value)
+    }
+
+    return response
   })
 
   return {
@@ -89,7 +92,7 @@ export function createNitroSession(): NitroSession {
   }
 }
 
-function createServerFetch(hooks?: FetchHooks): $Fetch {
+function createServerFetch(dispatch: typeof serverFetch = serverFetch): $Fetch {
   return ofetch.create(
     {
       baseURL: SYNTHETIC_BASE_URL,
@@ -98,10 +101,9 @@ function createServerFetch(hooks?: FetchHooks): $Fetch {
       headers: {
         accept: 'application/json',
       },
-      ...hooks,
     },
     {
-      fetch: (input, init) => serverFetch(input, init),
+      fetch: dispatch,
     },
   )
 }
