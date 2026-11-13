@@ -12,7 +12,7 @@ const SOURCE_FILE_PATTERN = '{+(!(coverage|.*)/),}!(*.test|*.spec|*.test-d|*.spe
 
 export interface NitroTestConfig {
   /**
-   * Whether to rerun all tests when a JavaScript or TypeScript file under Vitest's working directory changes.
+   * Whether to rerun all tests when a source file under Vitest's working directory changes.
    *
    * @default true
    */

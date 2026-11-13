@@ -9,7 +9,7 @@ A testing toolkit for [Nitro](https://nitro.build) servers, built on top of [Vit
 - ☁️ Runs Cloudflare apps with local KV and D1 bindings
 - 📡 Makes [`serverFetch`](#call-the-app-with-serverfetch) from `nitro` work in tests, plus [`$serverFetch`](#serverfetch) for status, headers, and parsed body
 - 🪝 Builds with the `test` env name, so `$test` config blocks and `import.meta.envName` apply
-- ↪️ Reruns tests whenever a JavaScript or TypeScript file under Vitest's working directory changes
+- ↪️ Reruns tests whenever a source file under Vitest's working directory changes
 
 ## Nitro's Built-In Testing or Nitro Test Utils?
 
@@ -69,7 +69,7 @@ it('responds successfully', async () => {
 })
 ```
 
-In watch mode, a change to a JavaScript or TypeScript file under Vitest's working directory reruns all tests against a fresh build of the app. Test files and files in `node_modules`, `coverage`, or dot directories don't count. A Nitro app outside the working directory is not watched. A test that writes source files into the project triggers reruns too, so write them to `os.tmpdir()` or a dot directory. Vitest reads these rerun triggers only from the root config, so a project listed in `test.projects` does not rerun on a source change.
+In watch mode, a change to a source file under Vitest's working directory reruns all tests against a fresh build of the app. Test files and files in `node_modules`, `coverage`, or dot directories don't count. A Nitro app outside the working directory is not watched. A test that writes source files into the project triggers reruns too, so write them to `os.tmpdir()` or a dot directory. Vitest reads these rerun triggers only from the root config, so a project listed in `test.projects` does not rerun on a source change.
 
 Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup as long as their Nitro options live in `nitro.config.ts`: Nitro Test Utils does not read the options passed to `nitro()`. Production mode builds the app with Vite, so your Vite plugins apply. Development mode runs the Nitro dev server, which does not run Vite, so Vite plugins are skipped there and Nitro warns about it.
 
@@ -325,7 +325,7 @@ function defineConfig(userConfig?: UserConfig, testConfig?: NitroTestConfig): Pr
 `NitroTestConfig`:
 
 - `global` – `true`, or `NitroTestOptions`, to start one app for all test files. Default: off.
-- `rerunOnSourceChanges` – Rerun tests when a JavaScript or TypeScript file under Vitest's working directory changes. Default: `true`.
+- `rerunOnSourceChanges` – Rerun tests when a source file under Vitest's working directory changes. Default: `true`.
 
 `NitroTestOptions`:
 
