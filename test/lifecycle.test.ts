@@ -1,5 +1,6 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import process from 'node:process'
 import { serverFetch } from 'nitro'
 import { getBuildInfo } from 'nitro/builder'
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
@@ -204,6 +205,22 @@ describe('server lifecycle', () => {
     await stopServer()
 
     await expect(previewFetch(new Request('http://nitro.test/api/bindings'))).rejects.toThrow('ECONNREFUSED')
+  })
+
+  it('keeps the wrangler state of a relative rootDir in the Nitro project', async () => {
+    const relativeRootDir = path.relative(process.cwd(), cloudflareRootDir)
+    const nestedStateDir = path.join(cloudflareRootDir, relativeRootDir, '.wrangler/state')
+    onTestFinished(() => fs.rmSync(nestedStateDir, { recursive: true, force: true }))
+
+    await createTestContext({ rootDir: relativeRootDir, mode: 'production', preset: 'cloudflare-module' })
+    await startServer()
+    const { status } = await $serverFetch('/api/kv', {
+      method: 'POST',
+      body: { key: 'relative-root-key', value: 'stored' },
+    })
+
+    expect(status).toBe(200)
+    expect(fs.existsSync(nestedStateDir)).toBe(false)
   })
 
   it('restores the wrangler deploy redirect before serving the test build', async () => {

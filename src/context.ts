@@ -42,10 +42,11 @@ declare global {
 export async function createTestContext(options: NitroTestOptions & { isGlobal?: boolean }): Promise<NitroTestContext> {
   const {
     mode = 'development',
-    rootDir = process.cwd(),
     preset: userPreset,
     isGlobal = false,
   } = options
+  // Absolute, since `wrangler` runs in `rootDir` and would resolve a relative path into it a second time.
+  const rootDir = path.resolve(options.rootDir ?? process.cwd())
   const isDev = mode === 'development'
   const productionPreset = isDev
     ? undefined
