@@ -2,14 +2,17 @@ import type { ViteUserConfig as UserConfig } from 'vitest/config'
 import type { NitroTestOptions } from './types'
 import * as path from 'node:path'
 import process from 'node:process'
-import { loadOptions as loadNitroOptions } from 'nitro/builder'
-import { mergeConfig } from 'vite'
+import { mergeConfig, normalizePath } from 'vite'
 import { configDefaults, defineConfig as defineVitestConfig } from 'vitest/config'
-import { resolveOutputDir, resolveProductionPreset, TEST_BUILD_DIR } from './context'
+
+// Source files outside dot directories and directories whose names start with `coverage`, at any
+// depth, which hold coverage reports and generated files. Vite's watcher already ignores
+// `node_modules`. Test files rerun on their own, and a trigger would rerun every file instead.
+const SOURCE_FILE_PATTERN = '{+(!(coverage|.*)/),}!(*.test|*.spec|*.test-d|*.spec-d).{js,mjs,cjs,ts,mts,cts,tsx,jsx}'
 
 export interface NitroTestConfig {
   /**
-   * Whether to add the Nitro source directory to rerun tests when source files change.
+   * Whether to rerun all tests when a JavaScript or TypeScript file under Vitest's working directory changes.
    *
    * @default true
    */
@@ -51,7 +54,7 @@ export async function defineConfig(userConfig: UserConfig = {}, testConfig: Nitr
       maxWorkers: 1,
       forceRerunTriggers: [
         ...configDefaults.forceRerunTriggers,
-        ...await resolveSourceRerunTriggers(resolvedTestConfig),
+        ...resolveSourceRerunTriggers(resolvedTestConfig),
       ],
       // @ts-expect-error: `nitro` is a custom property used internally by the setup script.
       nitro: resolvedTestConfig,
@@ -104,30 +107,13 @@ function resolveSetupFiles(
   ]
 }
 
-async function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): Promise<string[]> {
+function resolveSourceRerunTriggers(config: ResolvedNitroTestConfig): string[] {
   if (!config.rerunOnSourceChanges)
     return []
 
-  let watchPattern: string
-
-  if (config.global) {
-    // Vitest matches `forceRerunTriggers` against absolute paths;
-    // a relative pattern never matches.
-    const rootDir = config.global.rootDir || process.cwd()
-    // The global app is the worker's first production build.
-    watchPattern = config.global.mode === 'production'
-      ? path.join(resolveOutputDir(rootDir, resolveProductionPreset(config.global.preset), 0), 'server', 'index.mjs')
-      : path.resolve(rootDir, TEST_BUILD_DIR, 'dev', 'index.mjs')
-  }
-  else {
-    // Vitest workers inherit this process's environment, where a variable loaded here from `.env`
-    // would count as a shell variable and beat `.env.test`.
-    const options = await loadNitroOptions({}, { dotenv: false })
-    const dir = typeof options.serverDir === 'string'
-      ? options.serverDir
-      : options.rootDir
-    watchPattern = path.join(dir, '**/*.ts')
-  }
-
-  return [watchPattern]
+  // Vitest matches `forceRerunTriggers` against absolute paths with forward slashes, and picomatch
+  // reads a backslash as an escape.
+  return [
+    path.posix.join(normalizePath(process.cwd()), SOURCE_FILE_PATTERN),
+  ]
 }

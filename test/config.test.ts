@@ -1,32 +1,23 @@
+import type { ViteUserConfig as UserConfig } from 'vitest/config'
 import type { ResolvedNitroTestConfig } from '../src/config'
 import * as path from 'node:path'
-import process from 'node:process'
-import { describe, expect, it, onTestFinished, vi } from 'vitest'
+import { resolveModulePath } from 'exsolve'
+import { describe, expect, it } from 'vitest'
 import { defineConfig } from '../src/config'
-import { createTempDir } from './utils'
+
+const { default: picomatch } = await import(resolveModulePath('picomatch', {
+  from: resolveModulePath('vitest/package.json'),
+}))
 
 describe('defineConfig', async () => {
   describe('rerunOnSourceChanges', () => {
-    it('watches source directory by default', async () => {
+    it.each([
+      'test/basic-app/api/health.get.ts',
+      'test/basic-app/routes/index.mjs',
+    ])('reruns on a change to %s', async (filePath) => {
       const config = await defineConfig()
 
-      expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
-    })
-
-    it('leaves .env out of the Vitest process', async () => {
-      const cwd = createTempDir({ '.env': 'NITRO_TEST_UTILS_LEAKED=true' })
-      const originalCwd = process.cwd()
-      process.chdir(cwd)
-      // Unstubbing removes the value in case `defineConfig` loads it.
-      vi.stubEnv('NITRO_TEST_UTILS_LEAKED', undefined)
-      onTestFinished(() => {
-        process.chdir(originalCwd)
-        vi.unstubAllEnvs()
-      })
-
-      await defineConfig()
-
-      expect(process.env.NITRO_TEST_UTILS_LEAKED).toBeUndefined()
+      expect(rerunsOn(config, path.resolve(filePath))).toBe(true)
     })
 
     it('skips source watching when disabled', async () => {
@@ -34,45 +25,29 @@ describe('defineConfig', async () => {
         rerunOnSourceChanges: false,
       })
 
-      expect(config.test?.forceRerunTriggers).not.toContain(`${process.cwd()}/**/*.ts`)
+      expect(rerunsOn(config, path.resolve('test/basic-app/api/health.get.ts'))).toBe(false)
     })
 
-    it('watches dev build output for global dev mode', async () => {
-      const config = await defineConfig({}, { global: true })
+    it.each([
+      'index.test.ts',
+      'index.spec.ts',
+      'index.test-d.ts',
+      'index.spec-d.ts',
+    ])('leaves %s to its own rerun', async (fileName) => {
+      const config = await defineConfig()
 
-      expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), 'node_modules/.nitro/test/dev/index.mjs'),
-      )
+      expect(rerunsOn(config, path.resolve('test/basic-app/api', fileName))).toBe(false)
     })
 
-    it('watches production build output for global production mode', async () => {
-      const config = await defineConfig({}, {
-        global: { mode: 'production' },
-      })
+    it.each([
+      'coverage/prettify.js',
+      '.output/server/index.mjs',
+      'test/basic-app/coverage/prettify.js',
+      'test/cloudflare-app/.wrangler/tmp/bundle/index.js',
+    ])('leaves out %s', async (filePath) => {
+      const config = await defineConfig()
 
-      expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), 'node_modules/.nitro/test/output/standard/0/server/index.mjs'),
-      )
-    })
-
-    it('watches the production build output of the node-server preset', async () => {
-      const config = await defineConfig({}, {
-        global: { mode: 'production', preset: 'node-server' },
-      })
-
-      expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve(process.cwd(), 'node_modules/.nitro/test/output/node-server/0/server/index.mjs'),
-      )
-    })
-
-    it('watches dev build output for a custom rootDir', async () => {
-      const config = await defineConfig({}, {
-        global: { rootDir: '/custom' },
-      })
-
-      expect(config.test?.forceRerunTriggers).toContain(
-        path.resolve('/custom', 'node_modules/.nitro/test/dev/index.mjs'),
-      )
+      expect(rerunsOn(config, path.resolve(filePath))).toBe(false)
     })
   })
 
@@ -189,7 +164,7 @@ describe('defineConfig', async () => {
       })
 
       expect(config.test?.forceRerunTriggers).toContain('test/foo.test.ts')
-      expect(config.test?.forceRerunTriggers).toContain(`${process.cwd()}/**/*.ts`)
+      expect(rerunsOn(config, path.resolve('test/basic-app/api/health.get.ts'))).toBe(true)
     })
 
     it('passes through custom vitest config', async () => {
@@ -203,3 +178,8 @@ describe('defineConfig', async () => {
     })
   })
 })
+
+// Matches a changed file against `forceRerunTriggers` the way Vitest's watcher does.
+function rerunsOn(config: UserConfig, filePath: string): boolean {
+  return picomatch.isMatch(filePath, config.test?.forceRerunTriggers ?? [], { dot: true })
+}

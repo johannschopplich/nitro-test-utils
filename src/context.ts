@@ -21,7 +21,7 @@ export interface NitroTestContext {
 export const NITRO_WELLKNOWN_DIR = 'node_modules/.nitro'
 // Apart from Nitro's default `buildDir`, so a running `nitro dev` and the tests don't overwrite
 // each other's build.
-export const TEST_BUILD_DIR: string = `${NITRO_WELLKNOWN_DIR}/test`
+const TEST_BUILD_DIR = `${NITRO_WELLKNOWN_DIR}/test`
 
 // Nitro's preview finds a fetch handler in these entries.
 const IN_PROCESS_PRODUCTION_PRESETS = new Set(['standard', 'node-server'])
@@ -115,7 +115,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
   return ctx
 }
 
-export function resolveProductionPreset(preset?: string): string {
+function resolveProductionPreset(preset?: string): string {
   return preset ?? 'standard'
 }
 
@@ -126,7 +126,7 @@ export function resolveProductionPreset(preset?: string): string {
  * Node caches ES modules by path for the lifetime of the worker. A build into a directory an
  * earlier build already loaded from would serve that build's modules and app state.
  */
-export function resolveOutputDir(rootDir: string, preset: string, buildIndex: number): string {
+function resolveOutputDir(rootDir: string, preset: string, buildIndex: number): string {
   return path.resolve(rootDir, TEST_BUILD_DIR, 'output', preset, String(buildIndex))
 }
 
