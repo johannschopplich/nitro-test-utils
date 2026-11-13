@@ -91,6 +91,18 @@ describe('server lifecycle', () => {
     expect(fs.readFileSync(nitroDevEntry, 'utf8')).toBe('// nitro dev')
   })
 
+  it('stopServer calls the close hooks of a development app', async () => {
+    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
+    await createTestContext({ rootDir: appRootDir })
+    await startServer()
+    const onClose = vi.fn()
+    injectTestContext()!.nitro.hooks.hook('close', onClose)
+
+    await stopServer()
+
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
   it('runs the app\'s close hooks when an in-process production build stops', async () => {
     await createTestContext({ rootDir, mode: 'production' })
     await startServer()

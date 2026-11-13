@@ -33,10 +33,6 @@ export async function startServer(): Promise<NitroTestContext> {
     throw new Error('Nitro test context is not initialized.')
   }
 
-  if (!ctx.isGlobal) {
-    await stopServer()
-  }
-
   let fetch: NitroFetch
 
   if (ctx.isDev) {
