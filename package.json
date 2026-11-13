@@ -65,6 +65,7 @@
     "eslint": "catalog:",
     "eslint-flat-config-utils": "catalog:",
     "nitro": "catalog:",
+    "tinyexec": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "unbuild": "catalog:",

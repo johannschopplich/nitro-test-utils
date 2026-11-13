@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { $serverFetch } from '../src'
 import { clearTestContext, createTestContext, injectTestContext } from '../src/context'
 import { startServer, stopServer } from '../src/server'
-import { createTempDir } from './utils'
+import { createTempDir, packageDir, runVitest } from './utils'
 
 const rootDir = path.resolve(import.meta.dirname, 'production-app')
 const cloudflareRootDir = path.resolve(import.meta.dirname, 'cloudflare-app')
@@ -89,6 +89,65 @@ describe('server lifecycle', () => {
     await startServer()
 
     expect(fs.readFileSync(nitroDevEntry, 'utf8')).toBe('// nitro dev')
+  })
+
+  it('restores the dev build info of a running nitro dev once a development app stops', async () => {
+    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
+    const devBuildInfoPath = path.join(appRootDir, 'node_modules/.nitro/nitro.dev.json')
+    const content = '{"dev":{"pid":99999}}'
+    fs.mkdirSync(path.dirname(devBuildInfoPath), { recursive: true })
+    fs.writeFileSync(devBuildInfoPath, content)
+
+    await createTestContext({ rootDir: appRootDir })
+    await startServer()
+    await $serverFetch('/')
+    await stopServer()
+
+    expect(fs.readFileSync(devBuildInfoPath, 'utf8')).toBe(content)
+  })
+
+  it('keeps a dev build info that a nitro dev wrote while the development app ran', async () => {
+    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
+    const devBuildInfoPath = path.join(appRootDir, 'node_modules/.nitro/nitro.dev.json')
+    // The parent process stands in for a live `nitro dev`.
+    const newerContent = JSON.stringify({
+      dev: { pid: process.ppid },
+    })
+
+    await createTestContext({ rootDir: appRootDir })
+    await startServer()
+    await $serverFetch('/')
+    fs.writeFileSync(devBuildInfoPath, newerContent)
+    await stopServer()
+
+    expect(fs.readFileSync(devBuildInfoPath, 'utf8')).toBe(newerContent)
+  })
+
+  it('restores the dev build info of a running nitro dev once a global development run ends', { timeout: 30_000 }, async () => {
+    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
+    const devBuildInfoPath = path.join(appRootDir, 'node_modules/.nitro/nitro.dev.json')
+    const content = '{"dev":{"pid":99999}}'
+    fs.mkdirSync(path.dirname(devBuildInfoPath), { recursive: true })
+    fs.writeFileSync(devBuildInfoPath, content)
+    const fixtureDir = createTempDir({
+      'vitest.config.ts': [
+        `import { defineConfig } from ${JSON.stringify(path.join(packageDir, 'dist/config.mjs'))}`,
+        `export default defineConfig({}, { global: { rootDir: ${JSON.stringify(appRootDir)} } })`,
+      ].join('\n'),
+      'app.test.ts': [
+        `import { expect, it } from 'vitest'`,
+        `import { $serverFetch } from ${JSON.stringify(path.join(packageDir, 'src/index.ts'))}`,
+        `it('serves the global app', async () => {`,
+        `  const { data } = await $serverFetch('/')`,
+        `  expect(data).toBe('ok')`,
+        `})`,
+      ].join('\n'),
+    })
+
+    const { statusByTitle } = await runVitest(fixtureDir)
+
+    expect(statusByTitle).toEqual({ 'serves the global app': 'passed' })
+    expect(fs.readFileSync(devBuildInfoPath, 'utf8')).toBe(content)
   })
 
   it('stopServer calls the close hooks of a development app', async () => {

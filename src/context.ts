@@ -15,6 +15,7 @@ export interface NitroTestContext {
   preview?: PreviewInstance
   /** `wrangler`'s bin script, set for production builds that run in `wrangler dev`. */
   wranglerBin?: string
+  restoreDevBuildInfo?: () => void
 }
 
 // Nitro's well-known directory, where it writes `last-build.json` whatever the `buildDir`.
@@ -141,6 +142,36 @@ export function clearTestContext(): void {
   globalThis.__nitroTestContext__ = undefined
 }
 
+interface DevBuildInfoRecord {
+  envName?: string
+  dev?: { pid?: number }
+}
+
+export function snapshotFile(filePath: string): () => void {
+  const content = fs.existsSync(filePath)
+    ? fs.readFileSync(filePath)
+    : undefined
+
+  return () => {
+    if (content === undefined)
+      fs.rmSync(filePath, { force: true })
+    else
+      fs.writeFileSync(filePath, content)
+  }
+}
+
+/** Returns a restore that keeps a record `isTestRecord` rejects, such as a live `nitro dev`'s newer one. */
+export function snapshotDevBuildInfo(rootDir: string, isTestRecord: (record: DevBuildInfoRecord) => boolean): () => void {
+  const filePath = path.join(rootDir, NITRO_WELLKNOWN_DIR, 'nitro.dev.json')
+  const restore = snapshotFile(filePath)
+
+  return () => {
+    const record = readDevBuildInfo(filePath)
+    if (record && isTestRecord(record))
+      restore()
+  }
+}
+
 function nextBuildIndex(): number {
   const buildIndex = globalThis.__nitroTestBuildCount__ ?? 0
   globalThis.__nitroTestBuildCount__ = buildIndex + 1
@@ -183,4 +214,13 @@ function resolveWranglerBin(rootDir: string): string {
 
   const { bin } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { bin: Record<string, string> }
   return path.resolve(path.dirname(packageJsonPath), bin.wrangler!)
+}
+
+function readDevBuildInfo(filePath: string): DevBuildInfoRecord | undefined {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8')) as DevBuildInfoRecord
+  }
+  catch {
+    return undefined
+  }
 }

@@ -1,6 +1,5 @@
 import type { NitroApp } from 'nitro/types'
 import type { NitroTestContext } from './context'
-import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
 import {
@@ -11,7 +10,7 @@ import {
   prerender,
   startPreview,
 } from 'nitro/builder'
-import { injectTestContext, NITRO_WELLKNOWN_DIR } from './context'
+import { injectTestContext, NITRO_WELLKNOWN_DIR, snapshotDevBuildInfo, snapshotFile } from './context'
 
 type NitroFetch = NitroApp['fetch']
 
@@ -39,6 +38,9 @@ export async function startServer(): Promise<NitroTestContext> {
     // Side-effect: wires `ctx.nitro.fetch` + the worker runner. The instance is
     // closed automatically via the `nitro.close()` hook registered in its constructor.
     createDevServer(ctx.nitro)
+    // The dev server records its worker in Nitro's dev build info whenever the worker is ready, so a
+    // running `nitro dev` gets its record back only once the app stops.
+    ctx.restoreDevBuildInfo = snapshotDevBuildInfo(ctx.options.rootDir, record => record.dev?.pid === process.pid)
 
     await prepare(ctx.nitro)
     // A failed build fires `dev:error` instead of `dev:reload`.
@@ -142,23 +144,8 @@ export async function stopServer(): Promise<void> {
   await ctx.preview?.close()
   ctx.preview = undefined
   await ctx.nitro.close()
-}
-
-/**
- * Captures a file's current content and returns a function that writes it back,
- * or removes the file when it didn't exist.
- */
-function snapshotFile(filePath: string): () => void {
-  const content = fs.existsSync(filePath)
-    ? fs.readFileSync(filePath)
-    : undefined
-
-  return () => {
-    if (content === undefined)
-      fs.rmSync(filePath, { force: true })
-    else
-      fs.writeFileSync(filePath, content)
-  }
+  ctx.restoreDevBuildInfo?.()
+  ctx.restoreDevBuildInfo = undefined
 }
 
 function snapshotEnv(): () => void {

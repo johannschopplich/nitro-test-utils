@@ -1,11 +1,20 @@
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
+import { x } from 'tinyexec'
 import { onTestFinished } from 'vitest'
 
 export interface FileMap {
   [relativePath: string]: string
 }
+
+export interface VitestRun {
+  statusByTitle: Record<string, string>
+  /** The default reporter's output, which holds the errors of a suite's hooks that the JSON report leaves out. */
+  stderr: string
+}
+
+export const packageDir: string = path.resolve(import.meta.dirname, '..')
 
 /**
  * Writes the files into a temporary directory and removes it once the test finishes.
@@ -25,4 +34,41 @@ export function createTempDir(files: FileMap = {}): string {
   }
 
   return directory
+}
+
+/**
+ * Runs Vitest in a separate process, so a fixture's failing hook does not fail the calling suite.
+ *
+ * @remarks
+ * Runs from the package, since a production build under `NITRO_BUILDER=rollup` hangs from a cwd
+ * outside it.
+ */
+export async function runVitest(fixtureDir: string): Promise<VitestRun> {
+  fs.symlinkSync(path.join(packageDir, 'node_modules'), path.join(fixtureDir, 'node_modules'))
+  const reportPath = path.join(fixtureDir, 'report.json')
+
+  const { stderr } = await x(
+    'vitest',
+    [
+      'run',
+      '--root',
+      fixtureDir,
+      '--reporter=default',
+      '--reporter=json',
+      `--outputFile.json=${reportPath}`,
+    ],
+    {
+      nodeOptions: { cwd: packageDir },
+    },
+  )
+  const { testResults } = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as {
+    testResults: { assertionResults: { title: string, status: string }[] }[]
+  }
+
+  return {
+    statusByTitle: Object.fromEntries(
+      testResults.flatMap(result => result.assertionResults).map(result => [result.title, result.status]),
+    ),
+    stderr,
+  }
 }
