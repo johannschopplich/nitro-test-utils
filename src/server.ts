@@ -1,5 +1,6 @@
-import type { NitroApp } from 'nitro/types'
+import type { NitroApp, NitroBuildInfo } from 'nitro/types'
 import type { NitroTestContext } from './context'
+import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
 import {
@@ -10,7 +11,7 @@ import {
   prerender,
   startPreview,
 } from 'nitro/builder'
-import { injectTestContext, NITRO_WELLKNOWN_DIR, snapshotDevBuildInfo, snapshotFile } from './context'
+import { injectTestContext, NITRO_WELLKNOWN_DIR } from './context'
 
 type NitroFetch = NitroApp['fetch']
 
@@ -38,9 +39,6 @@ export async function startServer(): Promise<NitroTestContext> {
     // Side-effect: wires `ctx.nitro.fetch` + the worker runner. The instance is
     // closed automatically via the `nitro.close()` hook registered in its constructor.
     createDevServer(ctx.nitro)
-    // The dev server records its worker in Nitro's dev build info whenever the worker is ready, so a
-    // running `nitro dev` gets its record back only once the app stops.
-    ctx.restoreDevBuildInfo = snapshotDevBuildInfo(ctx.options.rootDir, record => record.dev?.pid === process.pid)
 
     await prepare(ctx.nitro)
     // A failed build fires `dev:error` instead of `dev:reload`.
@@ -141,20 +139,43 @@ export async function stopServer(): Promise<void> {
   if (!ctx)
     return
 
-  try {
-    await ctx.preview?.close()
-    ctx.preview = undefined
-    await ctx.nitro.close()
-  }
-  finally {
-    ctx.restoreDevBuildInfo?.()
-    ctx.restoreDevBuildInfo = undefined
-    ctx.restoreEnv?.()
-    ctx.restoreEnv = undefined
+  await ctx.preview?.close()
+  ctx.preview = undefined
+  await ctx.nitro.close()
+}
+
+function snapshotFile(filePath: string): () => void {
+  const content = fs.existsSync(filePath)
+    ? fs.readFileSync(filePath)
+    : undefined
+
+  return () => {
+    if (content === undefined)
+      fs.rmSync(filePath, { force: true })
+    else
+      fs.writeFileSync(filePath, content)
   }
 }
 
-function snapshotEnv(): () => void {
+/**
+ * Nitro's dev server records its worker in this file for `nitro fetch` and `nitro task`. The
+ * restore keeps a record a running `nitro dev` wrote after the test app's.
+ */
+export function snapshotDevBuildInfo(rootDir: string = process.cwd()): () => void {
+  const filePath = path.resolve(rootDir, NITRO_WELLKNOWN_DIR, 'nitro.dev.json')
+  const restore = snapshotFile(filePath)
+
+  return () => {
+    try {
+      const { envName } = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Partial<NitroBuildInfo>
+      if (envName === 'test')
+        restore()
+    }
+    catch {}
+  }
+}
+
+export function snapshotEnv(): () => void {
   const env = { ...process.env }
 
   return () => {

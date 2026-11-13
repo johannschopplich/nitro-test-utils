@@ -36,6 +36,10 @@ export function createTempDir(files: FileMap = {}): string {
   return directory
 }
 
+export function createTempApp(files: FileMap): string {
+  return createTempDir({ 'nitro.config.ts': 'export default { serverDir: \'.\' }', ...files })
+}
+
 /**
  * Runs Vitest in a separate process, so a fixture's failing hook does not fail the calling suite.
  *

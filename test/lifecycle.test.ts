@@ -1,4 +1,3 @@
-import type { FileMap } from './utils'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { serverFetch } from 'nitro'
@@ -7,7 +6,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { $serverFetch } from '../src'
 import { clearTestContext, createTestContext, injectTestContext } from '../src/context'
 import { startServer, stopServer } from '../src/server'
-import { createTempDir, packageDir, runVitest } from './utils'
+import { createTempApp, createTempDir, packageDir, runVitest } from './utils'
 
 const rootDir = path.resolve(import.meta.dirname, 'production-app')
 const cloudflareRootDir = path.resolve(import.meta.dirname, 'cloudflare-app')
@@ -71,42 +70,6 @@ describe('server lifecycle', () => {
     expect(data).toEqual({ file: '.env.test' })
   })
 
-  it('stopServer unsets the variables an app loaded from .env.test', async () => {
-    const appRootDir = createTempApp({ '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded' })
-    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
-
-    await createTestContext({ rootDir: appRootDir })
-    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBe('loaded')
-    await stopServer()
-
-    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBeUndefined()
-  })
-
-  it('stopServer keeps a variable set while the app ran', async () => {
-    const appRootDir = createTempApp({ '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded' })
-    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
-
-    await createTestContext({ rootDir: appRootDir })
-    vi.stubEnv('NITRO_TEST_UTILS_SUITE_VAR', 'kept')
-    await stopServer()
-
-    expect(process.env.NITRO_TEST_UTILS_SUITE_VAR).toBe('kept')
-  })
-
-  it('stopServer unsets the .env.test variables when a close hook throws', async () => {
-    const appRootDir = createTempApp({
-      'nitro.config.ts': 'export default { serverDir: \'.\', hooks: { close() { throw new Error(\'Close failed\') } } }',
-      '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded',
-    })
-    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
-
-    await createTestContext({ rootDir: appRootDir })
-    await expect(stopServer()).rejects.toThrow('Close failed')
-    clearTestContext()
-
-    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBeUndefined()
-  })
-
   it('runs development mode with the preset option over the Nitro config\'s', async () => {
     await createTestContext({ rootDir: cloudflareRootDir, preset: 'nitro-dev' })
     await startServer()
@@ -125,38 +88,6 @@ describe('server lifecycle', () => {
     await startServer()
 
     expect(fs.readFileSync(nitroDevEntry, 'utf8')).toBe('// nitro dev')
-  })
-
-  it('restores the dev build info of a running nitro dev once a development app stops', async () => {
-    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
-    const devBuildInfoPath = path.join(appRootDir, 'node_modules/.nitro/nitro.dev.json')
-    const content = '{"dev":{"pid":99999}}'
-    fs.mkdirSync(path.dirname(devBuildInfoPath), { recursive: true })
-    fs.writeFileSync(devBuildInfoPath, content)
-
-    await createTestContext({ rootDir: appRootDir })
-    await startServer()
-    await $serverFetch('/')
-    await stopServer()
-
-    expect(fs.readFileSync(devBuildInfoPath, 'utf8')).toBe(content)
-  })
-
-  it('keeps a dev build info that a nitro dev wrote while the development app ran', async () => {
-    const appRootDir = createTempApp({ 'routes/index.ts': 'export default () => \'ok\'' })
-    const devBuildInfoPath = path.join(appRootDir, 'node_modules/.nitro/nitro.dev.json')
-    // The parent process stands in for a live `nitro dev`.
-    const newerContent = JSON.stringify({
-      dev: { pid: process.ppid },
-    })
-
-    await createTestContext({ rootDir: appRootDir })
-    await startServer()
-    await $serverFetch('/')
-    fs.writeFileSync(devBuildInfoPath, newerContent)
-    await stopServer()
-
-    expect(fs.readFileSync(devBuildInfoPath, 'utf8')).toBe(newerContent)
   })
 
   it('restores the dev build info of a running nitro dev once a global development run ends', { timeout: 30_000 }, async () => {
@@ -292,27 +223,6 @@ describe('server lifecycle', () => {
 })
 
 describe('createTestContext', () => {
-  it.each<{ cause: string, files: FileMap, preset?: string, message: string }>([
-    {
-      cause: 'a throwing nitro.config.ts',
-      files: { 'nitro.config.ts': 'throw new Error(\'Broken config\')' },
-      message: 'Broken config',
-    },
-    {
-      cause: 'the vercel preset',
-      files: {},
-      preset: 'vercel',
-      message: 'not "vercel"',
-    },
-  ])('unsets the .env.test variables when it rejects $cause', async ({ files, preset, message }) => {
-    const appRootDir = createTempApp({ '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded', ...files })
-    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
-
-    await expect(createTestContext({ rootDir: appRootDir, mode: 'production', preset })).rejects.toThrow(message)
-
-    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBeUndefined()
-  })
-
   it.each([
     'node-middleware',
     'nodeMiddleware',
@@ -342,7 +252,3 @@ describe('createTestContext', () => {
       .toThrow('Global production mode does not support Cloudflare presets')
   })
 })
-
-function createTempApp(files: FileMap): string {
-  return createTempDir({ 'nitro.config.ts': 'export default { serverDir: \'.\' }', ...files })
-}

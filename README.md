@@ -217,6 +217,8 @@ A `NITRO_` variable only fills a key that `runtimeConfig` declares, so `NITRO_DA
 
 Variables that a Vitest `globalSetup` file sets on `process.env` reach the app as well, e.g. the URL of a database container started for the test run. Like shell variables, they win over the `.env` files.
 
+With `setup()`, the `.env` files load when the suite starts, not when Vitest collects the file, so a check like `describe.skipIf(!process.env.NITRO_DATABASE_URL)` does not see the variables.
+
 ### Detect the Test Environment
 
 Check `import.meta.envName` for `'test'` to run code only in tests. Nitro types it itself:

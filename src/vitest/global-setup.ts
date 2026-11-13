@@ -1,8 +1,6 @@
 import type { TestProject } from 'vitest/node'
 import type { ResolvedNitroTestConfig } from '../config'
-import * as path from 'node:path'
-import process from 'node:process'
-import { snapshotDevBuildInfo } from '../context'
+import { snapshotDevBuildInfo } from '../server'
 
 type GlobalSetupContextWithNitro = TestProject & {
   config: { nitro: ResolvedNitroTestConfig }
@@ -25,12 +23,8 @@ async function globalSetup(project: GlobalSetupContextWithNitro): Promise<(() =>
 
   project.provide('nitroTestConfig', project.config.nitro)
 
-  if (global.mode === 'production')
-    return
-
-  // Restored here, since Vitest ends the worker that runs the global app without stopping it. The
-  // worker may still run at this point, so the test's record is the one with the `test` env name.
-  return snapshotDevBuildInfo(path.resolve(global.rootDir ?? process.cwd()), record => record.envName === 'test')
+  // Restored here, since Vitest ends the worker that runs the global app without stopping it.
+  return snapshotDevBuildInfo(global.rootDir)
 }
 
 export default globalSetup
