@@ -69,9 +69,9 @@ it('responds successfully', async () => {
 })
 ```
 
-In watch mode, the app stays up between runs. Whenever Nitro rebuilds, the tests rerun. This needs `rolldown` installed in the Nitro project, or a `builder` in your Nitro config: without either, Nitro runs the dev server unbundled, and changes don't rerun the tests.
+In watch mode, the app stays up between runs. Whenever Nitro rebuilds, the tests rerun. This needs `rolldown` installed in the Nitro project, or a `builder` in your Nitro config: without either, Nitro runs the dev server unbundled, and changes do not rerun the tests.
 
-Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup as long as their Nitro options live in `nitro.config.ts`: Nitro Test Utils doesn't read the options passed to `nitro()`. Production mode builds the app with Vite, so your Vite plugins apply. Development mode runs the Nitro dev server, which doesn't run Vite, so Vite plugins are skipped there and Nitro warns about it.
+Projects that use Nitro as a Vite plugin (`nitro/vite`) need no extra setup as long as their Nitro options live in `nitro.config.ts`: Nitro Test Utils does not read the options passed to `nitro()`. Production mode builds the app with Vite, so your Vite plugins apply. Development mode runs the Nitro dev server, which does not run Vite, so Vite plugins are skipped there and Nitro warns about it.
 
 If your `vite.config.ts` enables `resolve.tsconfigPaths`, as `create-nitro-app` does, mirror it in the first argument so `~/...` imports resolve in tests:
 
@@ -140,7 +140,7 @@ describe('kv', async () => {
 
 In development mode, Nitro resolves the preset to `cloudflare-dev` and runs the app in its miniflare runner with local bindings. To run the built worker in `wrangler dev` instead, add `mode: 'production'` and `preset: 'cloudflare-module'`, since production mode defaults to `standard`. This needs `wrangler` installed as a dev dependency.
 
-The worker reads its bindings and vars from the Wrangler config, so `.env.test` doesn't reach `env`. Inside your handlers, access bindings through `env` from `cloudflare:workers`, or through `event.req.runtime.cloudflare.env`:
+The worker reads its bindings and vars from the Wrangler config, so `.env.test` does not reach `env`. Inside your handlers, access bindings through `env` from `cloudflare:workers`, or through `event.req.runtime.cloudflare.env`:
 
 ```ts
 import { env } from 'cloudflare:workers'
@@ -150,6 +150,8 @@ export default defineHandler(() => {
   return env.KV.get('my-key')
 })
 ```
+
+Local bindings keep their data in `.wrangler/state` between runs, so assert on values unique to the run or delete what a test created.
 
 ### Run Several Nitro Apps
 
@@ -202,7 +204,7 @@ export default defineNitroConfig({
 })
 ```
 
-This is [c12's environment-specific config](https://github.com/unjs/c12#environment-specific-configuration), the mechanism behind `$development` and `$production` blocks. The env name stays `test` in production mode, so `$production` blocks don't apply to test builds.
+This is [c12's environment-specific config](https://github.com/unjs/c12#environment-specific-configuration), the mechanism behind `$development` and `$production` blocks. The env name is `test` in both modes, so neither `$development` nor `$production` blocks apply to a test app.
 
 For environment variables, add a `.env.test` file to the Nitro project root. Nitro loads it into the test process before the app starts, in both modes, after `.env` and `.env.local`. A variable already set in the shell wins over all three files:
 
@@ -210,6 +212,8 @@ For environment variables, add a `.env.test` file to the Nitro project root. Nit
 # .env.test
 NITRO_DATABASE_URL=postgres://localhost:5432/test
 ```
+
+A `NITRO_` variable only fills a key that `runtimeConfig` declares, so `NITRO_DATABASE_URL` needs `runtimeConfig: { databaseUrl: '' }` in `nitro.config.ts`.
 
 Variables that a Vitest `globalSetup` file sets on `process.env` reach the app as well, e.g. the URL of a database container started for the test run. Like shell variables, they win over the `.env` files.
 
@@ -258,7 +262,7 @@ The `.dev` suffix keeps the route out of production builds, production test buil
 
 ### Test Login Flows
 
-`createNitroSession` returns an ofetch instance that stores the cookies of each response and sends them with later requests:
+`createNitroSession` returns a session whose `$fetch` is an ofetch instance that stores the cookies of each response and sends them with later requests:
 
 ```ts
 import { createNitroSession } from 'nitro-test-utils'
@@ -294,7 +298,7 @@ it('answers with JSON', async () => {
 })
 ```
 
-To reach the app over HTTP – from a browser, a shell script, or any other process – put an [srvx](https://github.com/h3js/srvx) server in front of `serverFetch`:
+To reach the app over HTTP – from a browser, a shell script, or any other process – install [srvx](https://github.com/h3js/srvx) and put its server in front of `serverFetch`:
 
 ```ts
 import { serverFetch } from 'nitro'
@@ -360,7 +364,7 @@ Paths resolve against `http://nitro.test`. The `.test` TLD never resolves in DNS
 
 ### `createNitroSession`
 
-Creates an ofetch instance with a cookie jar. Applies the defaults of `$serverFetch`. `cookies` holds each value as the server encoded it and drops a cookie once the server expires it.
+Creates a session whose `$fetch` is an ofetch instance with a cookie jar and the defaults of `$serverFetch`. `cookies` holds each value as the server encoded it and drops a cookie once the server expires it.
 
 ```ts
 function createNitroSession(): {
