@@ -13,7 +13,7 @@ A testing toolkit for [Nitro](https://nitro.build) servers, built on top of [Vit
 
 ## Nitro's Built-In Testing or Nitro Test Utils?
 
-Nitro ships its own [Vitest integration](https://nitro.build/docs/testing) through the `nitro()` Vite plugin. It runs your test files inside the Nitro Vite environment in plain Node, so tests can call `useKV()` directly and use `vi.mock`. It ignores the preset's dev runner, though, and never builds for production.
+Nitro ships its own [Vitest integration](https://nitro.build/docs/testing) through the `nitro()` Vite plugin.
 
 | | Nitro's Vitest integration | Nitro Test Utils |
 | --- | --- | --- |
@@ -204,7 +204,7 @@ export default defineNitroConfig({
 })
 ```
 
-This is [c12's environment-specific config](https://github.com/unjs/c12#environment-specific-configuration), the mechanism behind `$development` and `$production` blocks. The env name is `test` in both modes, so neither `$development` nor `$production` blocks apply to a test app.
+The env name is `test` in both modes, so neither `$development` nor `$production` blocks apply to a test app.
 
 For environment variables, add a `.env.test` file to the Nitro project root. Nitro loads it into the test process before the app starts, in both modes, after `.env` and `.env.local`. A variable already set in the shell wins over all three files:
 
@@ -378,7 +378,7 @@ function createNitroSession(): {
 
 The global setup builds the app in a Vitest setup file, once per worker. Nitro Test Utils registers the app for `serverFetch` from `nitro`. Development mode dispatches requests through the preset's dev runner. Production mode builds the app, loads `standard` and `node-server` builds in-process through Nitro's `startPreview`, and proxies requests to `wrangler dev` for Cloudflare builds.
 
-Test builds go to `node_modules/.nitro/test` inside the Nitro project, apart from the build of a running `nitro dev`. Each production build gets its own directory under `node_modules/.nitro/test/output/<preset>`. Node caches imported modules by path, so a second build into the same directory would serve the first build's code. Nitro's last-build pointer and Wrangler's deploy redirect are restored right after the build, and `wrangler dev` gets the test build's config through `--config`. Production test builds ignore `.env.production` and `.env.preview`.
+Test builds go to `node_modules/.nitro/test` inside the Nitro project, apart from the build of a running `nitro dev`. Each production build gets its own directory under `node_modules/.nitro/test/output/<preset>`. Production test builds ignore `.env.production` and `.env.preview`.
 
 ## License
 
