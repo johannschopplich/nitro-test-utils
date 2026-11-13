@@ -71,6 +71,42 @@ describe('server lifecycle', () => {
     expect(data).toEqual({ file: '.env.test' })
   })
 
+  it('stopServer unsets the variables an app loaded from .env.test', async () => {
+    const appRootDir = createTempApp({ '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded' })
+    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
+
+    await createTestContext({ rootDir: appRootDir })
+    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBe('loaded')
+    await stopServer()
+
+    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBeUndefined()
+  })
+
+  it('stopServer keeps a variable set while the app ran', async () => {
+    const appRootDir = createTempApp({ '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded' })
+    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
+
+    await createTestContext({ rootDir: appRootDir })
+    vi.stubEnv('NITRO_TEST_UTILS_SUITE_VAR', 'kept')
+    await stopServer()
+
+    expect(process.env.NITRO_TEST_UTILS_SUITE_VAR).toBe('kept')
+  })
+
+  it('stopServer unsets the .env.test variables when a close hook throws', async () => {
+    const appRootDir = createTempApp({
+      'nitro.config.ts': 'export default { serverDir: \'.\', hooks: { close() { throw new Error(\'Close failed\') } } }',
+      '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded',
+    })
+    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
+
+    await createTestContext({ rootDir: appRootDir })
+    await expect(stopServer()).rejects.toThrow('Close failed')
+    clearTestContext()
+
+    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBeUndefined()
+  })
+
   it('runs development mode with the preset option over the Nitro config\'s', async () => {
     await createTestContext({ rootDir: cloudflareRootDir, preset: 'nitro-dev' })
     await startServer()
@@ -256,6 +292,27 @@ describe('server lifecycle', () => {
 })
 
 describe('createTestContext', () => {
+  it.each<{ cause: string, files: FileMap, preset?: string, message: string }>([
+    {
+      cause: 'a throwing nitro.config.ts',
+      files: { 'nitro.config.ts': 'throw new Error(\'Broken config\')' },
+      message: 'Broken config',
+    },
+    {
+      cause: 'the vercel preset',
+      files: {},
+      preset: 'vercel',
+      message: 'not "vercel"',
+    },
+  ])('unsets the .env.test variables when it rejects $cause', async ({ files, preset, message }) => {
+    const appRootDir = createTempApp({ '.env.test': 'NITRO_TEST_UTILS_ONLY_APP=loaded', ...files })
+    vi.stubEnv('NITRO_TEST_UTILS_ONLY_APP', undefined)
+
+    await expect(createTestContext({ rootDir: appRootDir, mode: 'production', preset })).rejects.toThrow(message)
+
+    expect(process.env.NITRO_TEST_UTILS_ONLY_APP).toBeUndefined()
+  })
+
   it.each([
     'node-middleware',
     'nodeMiddleware',

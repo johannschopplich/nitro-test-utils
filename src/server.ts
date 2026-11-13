@@ -141,11 +141,17 @@ export async function stopServer(): Promise<void> {
   if (!ctx)
     return
 
-  await ctx.preview?.close()
-  ctx.preview = undefined
-  await ctx.nitro.close()
-  ctx.restoreDevBuildInfo?.()
-  ctx.restoreDevBuildInfo = undefined
+  try {
+    await ctx.preview?.close()
+    ctx.preview = undefined
+    await ctx.nitro.close()
+  }
+  finally {
+    ctx.restoreDevBuildInfo?.()
+    ctx.restoreDevBuildInfo = undefined
+    ctx.restoreEnv?.()
+    ctx.restoreEnv = undefined
+  }
 }
 
 function snapshotEnv(): () => void {

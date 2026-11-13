@@ -16,6 +16,8 @@ export interface NitroTestContext {
   /** `wrangler`'s bin script, set for production builds that run in `wrangler dev`. */
   wranglerBin?: string
   restoreDevBuildInfo?: () => void
+  /** Resets the variables Nitro loaded from the app's `.env` files. */
+  restoreEnv?: () => void
 }
 
 // Nitro's well-known directory, where it writes `last-build.json` whatever the `buildDir`.
@@ -51,51 +53,54 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
   const productionPreset = isDev
     ? undefined
     : resolveProductionPreset(userPreset)
+  const envBeforeLoad = { ...process.env }
 
-  const nitro = await createNitro(
-    {
-      // Without a preset, development mode emulates the one from the Nitro config or `NITRO_PRESET`,
-      // like `nitro dev`.
-      preset: productionPreset ?? userPreset,
-      dev: isDev,
-      rootDir,
-      buildDir: TEST_BUILD_DIR,
-      ...(productionPreset && {
-        output: {
-          dir: resolveOutputDir(rootDir, productionPreset, nextBuildIndex()),
-        },
-      }),
-    },
-    {
-      // Nitro's default files plus `.env.test`. Later files win; variables from the shell beat all of them.
-      dotenv: {
-        fileName: ['.env', '.env.local', '.env.test'],
-      },
-      c12: {
-        envName: 'test',
-        // Nitro's own asset handler respects `baseURL`; the static middleware `startPreview` puts in
-        // front of the entry doesn't.
-        // A default, so the app's own `serveStatic` still wins.
-        ...(productionPreset && !isCloudflarePreset(productionPreset) && {
-          defaultConfig: { serveStatic: true },
-        }),
-      },
-    },
-  )
-
+  let nitro: Nitro | undefined
   let wranglerBin: string | undefined
 
-  if (!isDev) {
-    try {
+  try {
+    nitro = await createNitro(
+      {
+        // Without a preset, development mode emulates the one from the Nitro config or `NITRO_PRESET`,
+        // like `nitro dev`.
+        preset: productionPreset ?? userPreset,
+        dev: isDev,
+        rootDir,
+        buildDir: TEST_BUILD_DIR,
+        ...(productionPreset && {
+          output: {
+            dir: resolveOutputDir(rootDir, productionPreset, nextBuildIndex()),
+          },
+        }),
+      },
+      {
+        // Nitro's default files plus `.env.test`. Later files win; variables from the shell beat all of them.
+        dotenv: {
+          fileName: ['.env', '.env.local', '.env.test'],
+        },
+        c12: {
+          envName: 'test',
+          // Nitro's own asset handler respects `baseURL`; the static middleware `startPreview` puts in
+          // front of the entry doesn't.
+          // A default, so the app's own `serveStatic` still wins.
+          ...(productionPreset && !isCloudflarePreset(productionPreset) && {
+            defaultConfig: { serveStatic: true },
+          }),
+        },
+      },
+    )
+
+    if (!isDev) {
       assertProductionPreset(nitro.options.preset, isGlobal)
       // Resolved before the build, so a missing `wrangler` fails fast.
       if (WRANGLER_PRODUCTION_PRESETS.has(nitro.options.preset))
         wranglerBin = resolveWranglerBin(rootDir)
     }
-    catch (error) {
-      await nitro.close()
-      throw error
-    }
+  }
+  catch (error) {
+    await nitro?.close()
+    trackEnvChanges(envBeforeLoad)()
+    throw error
   }
 
   const ctx: NitroTestContext = {
@@ -108,6 +113,7 @@ export async function createTestContext(options: NitroTestOptions & { isGlobal?:
     isDev,
     nitro,
     wranglerBin,
+    restoreEnv: trackEnvChanges(envBeforeLoad),
   }
 
   provideTestContext(ctx)
@@ -214,6 +220,19 @@ function resolveWranglerBin(rootDir: string): string {
 
   const { bin } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { bin: Record<string, string> }
   return path.resolve(path.dirname(packageJsonPath), bin.wrangler!)
+}
+
+function trackEnvChanges(envBeforeLoad: NodeJS.ProcessEnv): () => void {
+  const changedKeys = Object.keys(process.env).filter(key => process.env[key] !== envBeforeLoad[key])
+
+  return () => {
+    for (const key of changedKeys) {
+      if (key in envBeforeLoad)
+        process.env[key] = envBeforeLoad[key]
+      else
+        delete process.env[key]
+    }
+  }
 }
 
 function readDevBuildInfo(filePath: string): DevBuildInfoRecord | undefined {
