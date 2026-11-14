@@ -6,7 +6,7 @@ import { getBuildInfo } from 'nitro/builder'
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { $serverFetch } from '../src'
 import { clearTestContext, createTestContext, injectTestContext } from '../src/context'
-import { startServer, stopServer } from '../src/server'
+import { snapshotDevBuildInfo, startServer, stopServer } from '../src/server'
 import { createTempApp, createTempDir, packageDir, runVitest } from './utils'
 
 const rootDir = path.resolve(import.meta.dirname, 'production-app')
@@ -72,6 +72,7 @@ describe('server lifecycle', () => {
   })
 
   it('runs development mode with the preset option over the Nitro config\'s', async () => {
+    onTestFinished(snapshotDevBuildInfo(cloudflareRootDir))
     await createTestContext({ rootDir: cloudflareRootDir, preset: 'nitro-dev' })
     await startServer()
 
